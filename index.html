@@ -37,6 +37,11 @@ input:focus,textarea:focus{border-color:#1565c0;background:#fff}
 .ct{font-size:14px;font-weight:800;color:#1a237e;margin-bottom:12px}
 .wknav{display:flex;align-items:center;justify-content:space-between;background:#eef2fb;border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:13px;font-weight:700;color:#1565c0}
 .wknav button{background:none;border:none;color:#1565c0;font-weight:700;font-size:13px;cursor:pointer;padding:2px 6px}
+.wkbtns{display:flex;gap:8px;margin:-4px 0 12px}
+.wkbtns button{flex:1;padding:9px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer}
+#wk-today{background:#e7f0ff;color:#1565c0}
+#wk-edit{background:#fff2e0;color:#e8862e}
+#wk-edit.on{background:#e8862e;color:#fff}
 .camp{background:#e8f0fe;color:#1565c0;font-weight:800;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:10px}
 table{width:100%;border-collapse:collapse;font-size:11px}
 th,td{border:1px solid #e8eaf0;padding:5px 3px;text-align:center}
@@ -81,8 +86,10 @@ td.rk{color:#fff;font-weight:700}
 td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td.jo{background:#1976d2}td.bk{background:#16a08c}
 .tlbl{display:block;font-size:9px;color:#e8862e;font-weight:800;animation:blink .9s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.today-box{position:absolute;pointer-events:none;border-radius:7px;z-index:6;background:linear-gradient(90deg,#f5a623 50%,transparent 0) repeat-x,linear-gradient(90deg,#f5a623 50%,transparent 0) repeat-x,linear-gradient(0deg,#f5a623 50%,transparent 0) repeat-y,linear-gradient(0deg,#f5a623 50%,transparent 0) repeat-y;background-size:14px 3px,14px 3px,3px 14px,3px 14px;background-position:0 0,0 100%,0 0,100% 0;animation:ants .5s infinite linear}
-@keyframes ants{to{background-position:14px 0,-14px 100%,0 -14px,100% 14px}}
+@property --sa{syntax:"<angle>";initial-value:0deg;inherits:false}
+.today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:6;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
+@keyframes spin{to{--sa:360deg}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,140,0,.5))}50%{filter:drop-shadow(0 0 9px rgba(255,140,0,1))}}
 </style>
 </head>
 <body>
@@ -113,6 +120,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <!-- 스케줄 -->
       <div class="scr on" id="s-sched">
         <div class="wknav"><button id="wk-prev">◀ 지난주</button><span id="wk-lbl"></span><button id="wk-next">다음주 ▶</button></div>
+        <div class="wkbtns"><button id="wk-today">📍 오늘로</button><button id="wk-edit">✏️ 수정</button></div>
         <div id="sc-body"><div class="center">불러오는 중…</div></div>
         <div class="notice" id="sc-note"></div>
       </div>
@@ -157,7 +165,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 const SUPABASE_URL="https://xmydkovpxivdyjxagnou.supabase.co";
 const SUPABASE_KEY="sb_publishable_Fyp35Hgs7ECBiAnAqbWirQ_25BTo9R8";
 const H={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
-let S=null, weekStart=null;
+let S=null, weekStart=null, editMode=false;
 const RANKMAP={"김소원":"대표","손영균":"총괄","김민형":"팀장","고아람":"백업","김찬미":"백업","김주형":"백업","이승하":"백업","김정수":"백업","장균상":"백업","최호선":"백업","진태훈":"백업"};
 const RMARK={"대표":"◈","총괄":"●","팀장":"★","조장":"◆","백업":"▣"};
 const RCLS={"대표":"dae","총괄":"chg","팀장":"tea","조장":"jo","백업":"bk"};
@@ -208,9 +216,11 @@ function switchView(v){
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
 $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();};
+$("#wk-today").onclick=()=>{weekStart=mondayOf(new Date());loadSched();};
+$("#wk-edit").onclick=()=>{editMode=!editMode;const b=$("#wk-edit");b.classList.toggle("on",editMode);b.textContent=editMode?"✅ 수정완료":"✏️ 수정";loadSched();};
 async function loadSched(){
   $("#wk-lbl").textContent="8/2(일) ~ 8/8(토)";
-  $("#sc-note").textContent=CAN_EDIT()?"셀을 눌러 기사 변경 (대표·총괄·팀장). 변경은 자동 기록됩니다.":"조회 전용";
+  $("#sc-note").textContent=(CAN_EDIT()&&editMode)?"✏️ 수정중 — 셀을 눌러 기사 변경 (자동 기록)":(CAN_EDIT()?"✏️ 수정 버튼을 누르면 편집 가능":"조회 전용");
   $("#sc-body").innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(weekStart)});
@@ -220,7 +230,7 @@ async function loadSched(){
     rows.forEach(r=>{map[r.route+"|"+r.work_date]=r.driver_name;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(r.route);});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
     const t=new Date();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
-    const WD=["일","월","화","수","목","금","토"];const ed=CAN_EDIT();
+    const WD=["일","월","화","수","목","금","토"];const ed=CAN_EDIT()&&editMode;
     function headCells(){let s='<th>라우트</th>';dates.forEach(d=>{const dd=new Date(d+"T00:00");const g=dd.getDay();const we=(g===0||g===6)?" we":"";const to=(d===today)?" tcol":"";s+='<th class="'+(we+to).trim()+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br>'+WD[g]+(d===today?'<span class="tlbl">🚚 오늘</span>':'')+'</th>';});return s;}
     let h="";
     camps.forEach(cp=>{
