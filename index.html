@@ -68,12 +68,16 @@ label.fl{display:block;font-size:11px;color:#888;font-weight:700;margin:10px 0 5
 
 table.sched{width:100%;border-collapse:collapse;font-size:11px}
 table.sched th,table.sched td{border:1px solid #dfe3ea;padding:5px 4px;text-align:center;white-space:nowrap}
-table.sched th{background:#6aa06a;color:#fff;font-weight:700;line-height:1.2}
+table.sched thead th{background:#6aa06a;color:#fff;font-weight:700;line-height:1.2;position:sticky;top:0;z-index:3}
 table.sched th.we{background:#2e8b8b}
+.sc-wrap{max-height:calc(100vh - 205px);overflow:auto;border:1px solid #dfe3ea;border-radius:8px}
 .camp-band td{background:#2f5b3f;color:#fff;font-weight:800;text-align:left;font-size:12px;padding:7px 10px}
-td.cCamp{background:#eaf3ea;color:#3a6b45;font-weight:700;font-size:10px}
 td.cRoute{background:#eef1fa;color:#26324a;font-weight:800}
-th.today,td.today{background:#fff7de}
+@keyframes tblink{0%,100%{box-shadow:0 0 0 0 rgba(229,57,53,.5)}50%{box-shadow:0 0 9px 2px rgba(229,57,53,.9)}}
+th.tcol{border:2px solid #e53935 !important;background:#ffe3e0;color:#b71c1c;animation:tblink 1s infinite}
+td.tcol{border-left:2px solid #e53935;border-right:2px solid #e53935}
+td.tbg{background:#fff2f0}
+.tlbl{display:block;font-size:9px;color:#e53935;font-weight:800}
 td.rk{color:#fff;font-weight:700}
 td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td.jo{background:#1976d2}td.bk{background:#16a08c}
 </style>
@@ -207,23 +211,24 @@ async function loadSched(){
   $("#sc-body").innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(weekStart)});
-    if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.<br>PC 프로그램에서 올리면 표시됩니다.</div>';return;}
+    if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.</div>';return;}
     const dates=[...new Set(rows.map(r=>r.work_date))].sort();
     const map={},campR={};
     rows.forEach(r=>{map[r.route+"|"+r.work_date]=r.driver_name;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(r.route);});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
     const t=new Date();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
     const WD=["일","월","화","수","목","금","토"];const ed=CAN_EDIT();
-    let h='<div class="card" style="padding:0;overflow-x:auto"><table class="sched"><thead><tr><th>캠프</th><th>라우트</th>';
-    dates.forEach(d=>{const dd=new Date(d+"T00:00");const g=dd.getDay();const we=(g===0||g===6)?" we":"";const to=(d===today)?" today":"";h+='<th class="'+we+to+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br>'+WD[g]+'</th>';});
+    let h='<div class="sc-wrap"><table class="sched"><thead><tr><th>라우트</th>';
+    dates.forEach(d=>{const dd=new Date(d+"T00:00");const g=dd.getDay();const we=(g===0||g===6)?" we":"";const to=(d===today)?" tcol":"";h+='<th class="'+we+to+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br>'+WD[g]+(d===today?'<span class="tlbl">오늘</span>':'')+'</th>';});
     h+='</tr></thead><tbody>';
     camps.forEach(cp=>{
-      h+='<tr class="camp-band"><td colspan="'+(2+dates.length)+'">📦 '+cp+'</td></tr>';
+      h+='<tr class="camp-band"><td colspan="'+(1+dates.length)+'">📦 '+cp+'</td></tr>';
       [...campR[cp]].sort().forEach(rt=>{
-        h+='<tr><td class="cCamp">'+cp+'</td><td class="cRoute">'+rt+'</td>';
-        dates.forEach(d=>{const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];const to=(d===today)?" today":"";
+        h+='<tr><td class="cRoute">'+rt+'</td>';
+        dates.forEach(d=>{const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];const to=(d===today);
           const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+nm+'" style="cursor:pointer"':'';
-          h+='<td class="'+(rk?"rk "+RCLS[rk]:to.trim())+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+nm+'</td>';});
+          let cls;if(rk){cls="rk "+RCLS[rk]+(to?" tcol":"");}else{cls=to?"tcol tbg":"";}
+          h+='<td class="'+cls+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+nm+'</td>';});
         h+='</tr>';
       });
     });
