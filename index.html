@@ -90,6 +90,17 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:6;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
 @keyframes spin{to{--sa:360deg}}
 @keyframes glow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,140,0,.5))}50%{filter:drop-shadow(0 0 9px rgba(255,140,0,1))}}
+.ad-grp{background:#eef2f6;color:#3a4a5a;font-weight:800;font-size:12px;padding:5px 10px;border-radius:6px;margin:10px 0 6px}
+.adr{border:1px solid #eee;border-radius:10px;padding:9px;margin-bottom:8px;font-size:12px}
+.adr.off{opacity:.55;background:#fafafa}
+.adr-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}.adr-top b{font-size:14px}
+.abadge{background:#efe9fb;color:#7e57c2;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+.obadge{background:#fdecea;color:#c0392b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
+.adr-id{margin-left:auto;color:#9aa0ad;font-size:10px}
+.adr-ctrl{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px}
+.adr-ctrl select,.adr-ctrl button{font-size:11px;padding:5px 8px;border-radius:7px;border:1px solid #dcdfe6;background:#fff;font-weight:700;cursor:pointer}
+.adr-ct{display:flex;align-items:center;gap:4px}.adr-ct input{flex:1;padding:5px 7px;font-size:11px;border:1px solid #e0e0e0;border-radius:7px;min-width:0}
+.adr-ct button{font-size:11px;padding:5px 9px;border-radius:7px;border:none;background:#1565c0;color:#fff;font-weight:700}
 </style>
 </head>
 <body>
@@ -150,6 +161,9 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
           <label class="fl">새 비밀번호</label><input id="pw-new" type="password">
           <button class="btn-p" id="pw-btn">변경</button><div class="msg" id="pw-msg"></div></div>
         <div class="card"><div class="ct">ℹ️ 내 정보</div><div id="me-info"></div></div>
+        <div class="card hide" id="admin-card"><div class="ct">🛡️ 권한 관리</div>
+          <div class="row" style="gap:8px;margin-bottom:8px"><input id="ad-search" placeholder="이름 검색" style="flex:2"><button class="btn-p" id="ad-add" style="flex:1;margin:0;padding:10px">+ 기사추가</button></div>
+          <div id="ad-list"><div class="center">불러오는 중…</div></div></div>
       </div>
     </div>
     <div class="bn">
@@ -190,7 +204,7 @@ $("#li-btn").onclick=async()=>{
   try{
     const rows=await rpc("driver_login",{p_name:name,p_pw:pw});
     if(!rows.length){msg("#li-msg","err","이름 또는 비밀번호가 틀렸습니다.");$("#li-btn").disabled=false;return;}
-    S={token:rows[0].token,name:rows[0].name,rank:rows[0].rank,role:rows[0].role};
+    S={token:rows[0].token,name:rows[0].name,rank:rows[0].rank,role:rows[0].role,is_admin:rows[0].is_admin};
     localStorage.setItem("sowon_session",JSON.stringify(S));enterApp();
   }catch(e){msg("#li-msg","err",e.message);}
   $("#li-btn").disabled=false;
@@ -212,6 +226,7 @@ function switchView(v){
   if(v==="sched")loadSched();
   if(v==="settle")loadMonths();
   if(v==="pback")loadPback();
+  if(v==="set"){const adm=IS_ADMIN();$("#admin-card").classList.toggle("hide",!adm);if(adm)loadAdmin();}
 }
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
@@ -313,6 +328,33 @@ async function loadPback(){
   }catch(e){$("#pb-list").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 /* 설정 */
+const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
+const RANKS=["대표","총괄","팀장","조장","일반","백업"];
+async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{window.__adrows=await rpc("admin_list_drivers",{p_token:S.token});renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
+function renderAdmin(){
+  const q=($("#ad-search").value||"").trim();let rows=window.__adrows||[];if(q)rows=rows.filter(r=>r.name.includes(q));
+  let h="",cur=null;
+  rows.forEach(r=>{if(r.rank!==cur){cur=r.rank;h+='<div class="ad-grp">'+r.rank+'</div>';}
+    const off=r.status!=="active";
+    h+='<div class="adr'+(off?" off":"")+'" data-name="'+r.name+'"><div class="adr-top"><b>'+r.name+'</b>'
+      +(r.is_admin?'<span class="abadge">관리자</span>':'')+(off?'<span class="obadge">'+r.status+'</span>':'')
+      +'<span class="adr-id">'+(r.driver_id||'')+'</span></div>'
+      +'<div class="adr-ctrl"><select class="ad-rank">'+RANKS.map(rk=>'<option'+(rk===r.rank?" selected":"")+'>'+rk+'</option>').join('')+'</select>'
+      +'<button class="ad-adm">'+(r.is_admin?"관리자해제":"관리자지정")+'</button>'
+      +'<button class="ad-stat">'+(off?"복구":"정지")+'</button><button class="ad-pw">PW초기화</button></div>'
+      +'<div class="adr-ct">📞<input class="ad-ph" value="'+(r.phone||'')+'" placeholder="전화"><input class="ad-vh" value="'+(r.vehicle_no||'')+'" placeholder="차량번호"><button class="ad-save">저장</button></div></div>';});
+  $("#ad-list").innerHTML=h||'<div class="center">기사가 없습니다.</div>';
+  $("#ad-list").querySelectorAll(".adr").forEach(row=>{const nm=row.dataset.name;const cur=()=>window.__adrows.find(x=>x.name===nm);
+    row.querySelector(".ad-rank").onchange=e=>adUpd(nm,{p_rank:e.target.value});
+    row.querySelector(".ad-adm").onclick=()=>adUpd(nm,{p_is_admin:!cur().is_admin});
+    row.querySelector(".ad-stat").onclick=()=>adUpd(nm,{p_status:cur().status==="active"?"정지":"active"});
+    row.querySelector(".ad-pw").onclick=()=>adResetPw(nm);
+    row.querySelector(".ad-save").onclick=()=>adUpd(nm,{p_phone:row.querySelector(".ad-ph").value,p_vehicle_no:row.querySelector(".ad-vh").value});});
+}
+async function adUpd(name,fields){try{await rpc("admin_update_driver",Object.assign({p_token:S.token,p_name:name,p_rank:null,p_status:null,p_is_admin:null,p_phone:null,p_vehicle_no:null,p_vehicle_type:null,p_birth:null,p_is_ev:null,p_is_public:null},fields));await loadAdmin();}catch(e){alert(e.message);}}
+async function adResetPw(name){if(!confirm(name+" 비밀번호를 1234로 초기화할까요?"))return;try{await rpc("admin_reset_pw",{p_token:S.token,p_name:name});alert("초기화됨 (비번 1234)");}catch(e){alert(e.message);}}
+document.addEventListener("input",e=>{if(e.target.id==="ad-search")renderAdmin();});
+document.addEventListener("click",e=>{if(e.target.id==="ad-add"){(async()=>{const name=prompt("기사명");if(!name)return;const rank=prompt("직급 (대표/총괄/팀장/조장/일반/백업)","일반")||"일반";const phone=prompt("전화번호(선택)","")||"";const vh=prompt("차량번호(선택)","")||"";try{await rpc("admin_add_driver",{p_token:S.token,p_name:name,p_rank:rank,p_phone:phone,p_vehicle_no:vh});await loadAdmin();alert(name+" 추가됨 (비번 1234)");}catch(err){alert(err.message);}})();}});
 $("#pw-btn").onclick=async()=>{
   const o=$("#pw-old").value,n=$("#pw-new").value;if(!o||!n){msg("#pw-msg","err","입력하세요.");return;}
   try{const ok=await rpc("change_password",{p_token:S.token,p_old:o,p_new:n});
