@@ -382,13 +382,17 @@ window.openDetail=async(y,m)=>{
     let h='';
     // 상단 요약
     h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
-    // 수익 내역
+    // 수익 내역 — 발행금액에 정확히 맞춰 배송/반품 기본금액을 건수 비례로 산정
+    const cD=g("배송건수"),cR=g("반품건수"),inc=g("추가인센"),fb=g("프백정산금"),loss=g("분실차감");
+    const base=발행-inc-fb+loss; // 배송+반품 기본금액 합
+    const subD=(cD+cR)>0?Math.round(base*cD/(cD+cR)):base, subR=base-subD;
+    const uD=cD>0?Math.round(subD/cD):0, uR=cR>0?Math.round(subR/cR):0;
     h+='<div class="card"><div class="ct">📦 수익 내역</div><table class="stbl"><thead><tr><th>항목</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
-    h+='<tr><td>배송</td><td>'+(g("배송건수").toLocaleString())+'</td><td>'+won(bdan)+'</td><td>'+won(g("배송소계"))+'</td></tr>';
-    h+='<tr><td>반품</td><td>'+(g("반품건수").toLocaleString())+'</td><td>'+won(bdan)+'</td><td>'+won(g("반품소계"))+'</td></tr>';
-    if(g("추가인센"))h+='<tr><td>추가 인센티브</td><td>-</td><td>-</td><td>'+won(g("추가인센"))+'</td></tr>';
-    h+='<tr><td>프레시백 정산금</td><td>-</td><td>-</td><td>'+won(g("프백정산금"))+'</td></tr>';
-    if(g("분실차감"))h+='<tr class="minus"><td>분실·파손 차감</td><td>-</td><td>-</td><td>-'+won(g("분실차감"))+'</td></tr>';
+    h+='<tr><td>배송</td><td>'+cD.toLocaleString()+'</td><td>'+won(uD)+'</td><td>'+won(subD)+'</td></tr>';
+    h+='<tr><td>반품</td><td>'+cR.toLocaleString()+'</td><td>'+won(uR)+'</td><td>'+won(subR)+'</td></tr>';
+    if(inc)h+='<tr><td>추가 인센티브</td><td>-</td><td>-</td><td>'+won(inc)+'</td></tr>';
+    if(fb)h+='<tr><td>프레시백 정산금</td><td>-</td><td>-</td><td>'+won(fb)+'</td></tr>';
+    if(loss)h+='<tr class="minus"><td>분실·파손 차감</td><td>-</td><td>-</td><td>-'+won(loss)+'</td></tr>';
     h+='<tr class="tot"><td colspan="3">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
     h+='</tbody></table></div>';
     // 차감 내역
