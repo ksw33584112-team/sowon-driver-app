@@ -74,9 +74,12 @@ label.fl{display:block;font-size:11px;color:#888;font-weight:700;margin:10px 0 5
 .camp-card{background:#fff;border:1px solid #dfe3ea;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .camp-head{background:linear-gradient(135deg,#2f5b3f,#3f7a52);color:#fff;font-weight:800;font-size:13px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
 .camp-head .rc{font-size:11px;font-weight:600;opacity:.92}
-.tbl-wrap{position:relative;overflow-x:auto}
-table.sched{width:100%;border-collapse:collapse;font-size:11px}
-table.sched th,table.sched td{border:1px solid #e3e6ec;padding:6px 4px;text-align:center;white-space:nowrap}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-inner{position:relative;width:max-content;min-width:100%}
+table.sched{width:max-content;min-width:100%;border-collapse:collapse;font-size:10px}
+table.sched th,table.sched td{border:1px solid #e3e6ec;padding:6px 4px;text-align:center;white-space:nowrap;min-width:42px}
+td.cRoute{min-width:52px}
+th.tcol,td.tcol{font-size:13px;font-weight:800;min-width:62px}
 table.sched th{background:#eef2f6;color:#3a4a5a;font-weight:700;line-height:1.25}
 table.sched th.we{background:#d9efef;color:#1c6b6b}
 th.tcol{background:#ffe4c2;color:#8a5300}
@@ -90,7 +93,13 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:6;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
 @keyframes spin{to{--sa:360deg}}
 @keyframes glow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,140,0,.5))}50%{filter:drop-shadow(0 0 9px rgba(255,140,0,1))}}
-.ad-grp{background:#eef2f6;color:#3a4a5a;font-weight:800;font-size:12px;padding:5px 10px;border-radius:6px;margin:10px 0 6px}
+.ad-grp{font-weight:800;font-size:12px;padding:6px 11px;border-radius:8px;margin:12px 0 7px;border-left:5px solid #ccc;background:#eef2f6;color:#3a4a5a}
+.g-dae{background:#fff6e0;color:#a9781a;border-color:#e6c266}
+.g-chg{background:#f2effe;color:#6a4bd0;border-color:#b7a8f0}
+.g-tea{background:#fff0e2;color:#cf7521;border-color:#f2b27a}
+.g-bk{background:#e4f6f1;color:#12907d;border-color:#7fd3c4}
+.g-jo{background:#e9f2ff;color:#1565c0;border-color:#93c0f0}
+.g-il{background:#eef1f5;color:#5a6472;border-color:#c2c9d4}
 .adr{border:1px solid #eee;border-radius:10px;padding:9px;margin-bottom:8px;font-size:12px}
 .adr.off{opacity:.55;background:#fafafa}
 .adr-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}.adr-top b{font-size:14px}
@@ -197,7 +206,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 const SUPABASE_URL="https://xmydkovpxivdyjxagnou.supabase.co";
 const SUPABASE_KEY="sb_publishable_Fyp35Hgs7ECBiAnAqbWirQ_25BTo9R8";
 const H={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
-let S=null, weekStart=null, editMode=false;
+let S=null, weekStart=null, editMode=false, schedCache={};
 const RANKMAP={"김소원":"대표","손영균":"총괄","김민형":"팀장","고아람":"백업","김찬미":"백업","김주형":"백업","이승하":"백업","김정수":"백업","장균상":"백업","최호선":"백업","진태훈":"백업"};
 const RMARK={"대표":"◈","총괄":"●","팀장":"★","조장":"◆","백업":"▣"};
 const RCLS={"대표":"dae","총괄":"chg","팀장":"tea","조장":"jo","백업":"bk"};
@@ -256,7 +265,7 @@ async function loadSched(){
   $("#sc-note").textContent=(CAN_EDIT()&&editMode)?"✏️ 수정중 — 셀을 눌러 기사 변경 (자동 기록)":(CAN_EDIT()?"✏️ 수정 버튼을 누르면 편집 가능":"조회 전용");
   $("#sc-body").innerHTML='<div class="center">불러오는 중…</div>';
   try{
-    const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(weekStart)});
+    const _ws=iso(weekStart);let rows=schedCache[_ws];if(!rows){rows=await rpc("list_schedules",{p_token:S.token,p_week_start:_ws});schedCache[_ws]=rows;}
     if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.</div>';return;}
     const dates=[...new Set(rows.map(r=>r.work_date))].sort();
     const map={},campR={};
@@ -268,7 +277,7 @@ async function loadSched(){
     let h="";
     camps.forEach(cp=>{
       const rts=[...campR[cp]].sort();
-      h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
+      h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><div class="tbl-inner"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
       rts.forEach(rt=>{
         h+='<tr><td class="cRoute">'+rt+'</td>';
         dates.forEach(d=>{const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];const to=(d===today);
@@ -277,21 +286,20 @@ async function loadSched(){
           h+='<td class="'+cls+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+nm+'</td>';});
         h+='</tr>';
       });
-      h+='</tbody></table><div class="today-box"></div></div></div>';
+      h+='</tbody></table><div class="today-box"></div></div></div></div>';
     });
     $("#sc-body").innerHTML=h;
-    function place(){$("#sc-body").querySelectorAll(".tbl-wrap").forEach(wrap=>{
-      const th=wrap.querySelector("th.tcol"),box=wrap.querySelector(".today-box"),tbl=wrap.querySelector("table");
+    function place(){$("#sc-body").querySelectorAll(".tbl-inner").forEach(inner=>{
+      const th=inner.querySelector("th.tcol"),box=inner.querySelector(".today-box"),tbl=inner.querySelector("table");
       if(!th||!box){if(box)box.style.display="none";return;}
-      const wr=wrap.getBoundingClientRect(),tr=th.getBoundingClientRect();
-      box.style.left=(tr.left-wr.left)+"px";box.style.top="0px";box.style.width=tr.width+"px";box.style.height=tbl.offsetHeight+"px";});}
+      box.style.left=th.offsetLeft+"px";box.style.top="0px";box.style.width=th.offsetWidth+"px";box.style.height=tbl.offsetHeight+"px";});}
     place();setTimeout(place,150);window.onresize=place;
     if(ed){$("#sc-body").querySelectorAll('td[data-rt]').forEach(td=>{td.onclick=()=>editCell(td.dataset.d,td.dataset.rt,td.dataset.cp,td.dataset.nm);});}
   }catch(e){$("#sc-body").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 window.editCell=async(wd,rt,camp,cur)=>{
   const nv=prompt("기사명 ("+rt+" · "+md(wd)+")",cur||"");if(nv===null)return;
-  try{await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});loadSched();}
+  try{await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});delete schedCache[iso(weekStart)];loadSched();}
   catch(e){alert(e.message);}
 };
 /* 정산 */
@@ -353,9 +361,10 @@ document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();ret
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
 async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{window.__adrows=await rpc("admin_list_drivers",{p_token:S.token});renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
-  const q=($("#ad-search").value||"").trim();let rows=window.__adrows||[];if(q)rows=rows.filter(r=>r.name.includes(q));
+  const RORD={"대표":0,"총괄":1,"팀장":2,"백업":3,"조장":4,"일반":5};const GCLS={"대표":"g-dae","총괄":"g-chg","팀장":"g-tea","백업":"g-bk","조장":"g-jo","일반":"g-il"};
+  const q=($("#ad-search").value||"").trim();let rows=(window.__adrows||[]).slice().sort((a,b)=>((RORD[a.rank]??9)-(RORD[b.rank]??9))||a.name.localeCompare(b.name));if(q)rows=rows.filter(r=>r.name.includes(q));
   let h="",cur=null;
-  rows.forEach(r=>{if(r.rank!==cur){cur=r.rank;h+='<div class="ad-grp">'+r.rank+'</div>';}
+  rows.forEach(r=>{if(r.rank!==cur){cur=r.rank;h+='<div class="ad-grp '+(GCLS[r.rank]||'')+'">'+r.rank+'</div>';}
     const off=r.status!=="active";
     h+='<div class="adr'+(off?" off":"")+'" data-name="'+r.name+'"><div class="adr-top"><b>'+r.name+'</b>'
       +(r.is_admin?'<span class="abadge">관리자</span>':'')+(off?'<span class="obadge">'+r.status+'</span>':'')
