@@ -101,6 +101,15 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .adr-ctrl select,.adr-ctrl button{font-size:11px;padding:5px 8px;border-radius:7px;border:1px solid #dcdfe6;background:#fff;font-weight:700;cursor:pointer}
 .adr-ct{display:flex;align-items:center;gap:4px}.adr-ct input{flex:1;padding:5px 7px;font-size:11px;border:1px solid #e0e0e0;border-radius:7px;min-width:0}
 .adr-ct button{font-size:11px;padding:5px 9px;border-radius:7px;border:none;background:#1565c0;color:#fff;font-weight:700}
+.menu-item{display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:14px;margin-bottom:11px;cursor:pointer;border:1px solid #edeff4}
+.menu-item .mi-ic{font-size:23px;width:26px;text-align:center}
+.menu-item .mi-tx{display:flex;flex-direction:column;flex:1}
+.menu-item .mi-tx b{font-size:15px;color:#2a2f45}
+.menu-item .mi-tx i{font-size:12px;color:#8a90a0;font-style:normal;margin-top:2px}
+.menu-item .mi-ar{color:#b9bfca;font-size:20px;font-weight:700}
+.mi-purple{background:#f4f1fe}.mi-blue{background:#eef4ff}.mi-green{background:#eefaf1}.mi-red{background:#fdeeee}
+.mi-purple b{color:#6a4bd0}.mi-blue b{color:#1565c0}.mi-green b{color:#2e8b57}.mi-red b{color:#d0392b}
+.btn-back{background:#eef2f6;border:none;color:#3a4a5a;font-weight:800;padding:9px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -156,16 +165,25 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       </div>
       <!-- 설정 -->
       <div class="scr" id="s-set">
-        <div class="card"><div class="ct">🔑 비밀번호 변경</div>
-          <label class="fl">현재 비밀번호</label><input id="pw-old" type="password">
-          <label class="fl">새 비밀번호</label><input id="pw-new" type="password">
-          <button class="btn-p" id="pw-btn">변경</button><div class="msg" id="pw-msg"></div></div>
-        <div class="card"><div class="ct">ℹ️ 내 정보</div><div id="me-info"></div></div>
-        <div class="card hide" id="admin-card"><div class="ct">🛡️ 권한 관리</div>
-          <div class="row" style="gap:8px;margin-bottom:8px"><input id="ad-search" placeholder="이름 검색" style="flex:2"><button class="btn-p" id="ad-add" style="flex:1;margin:0;padding:10px">+ 기사추가</button></div>
-          <div id="ad-list"><div class="center">불러오는 중…</div></div></div>
+        <div class="ct" style="text-align:center;font-size:16px;margin-bottom:14px">⚙️ 관리 메뉴</div>
+        <div id="set-menu">
+          <div class="menu-item mi-purple hide" id="mi-perm"><span class="mi-ic">🛡️</span><span class="mi-tx"><b>권한 관리</b><i>기사 직급·정지·PW·관리자</i></span><span class="mi-ar">›</span></div>
+          <div class="menu-item mi-blue" id="mi-pw"><span class="mi-ic">🔑</span><span class="mi-tx"><b>비밀번호 변경</b><i>내 로그인 비밀번호</i></span><span class="mi-ar">›</span></div>
+          <div class="menu-item mi-green" id="mi-me"><span class="mi-ic">ℹ️</span><span class="mi-tx"><b>내 정보</b><i>이름·직급 확인</i></span><span class="mi-ar">›</span></div>
+          <div class="menu-item mi-red" id="mi-logout"><span class="mi-ic">🚪</span><span class="mi-tx"><b>로그아웃</b><i>앱에서 나가기</i></span><span class="mi-ar">›</span></div>
+        </div>
+        <div id="set-sub" class="hide">
+          <button class="btn-back" id="set-back">← 메뉴로</button>
+          <div id="sub-pw" class="card hide"><div class="ct">🔑 비밀번호 변경</div>
+            <label class="fl">현재 비밀번호</label><input id="pw-old" type="password">
+            <label class="fl">새 비밀번호</label><input id="pw-new" type="password">
+            <button class="btn-p" id="pw-btn">변경</button><div class="msg" id="pw-msg"></div></div>
+          <div id="sub-me" class="card hide"><div class="ct">ℹ️ 내 정보</div><div id="me-info"></div></div>
+          <div id="sub-perm" class="hide"><div class="card" id="admin-card"><div class="ct">🛡️ 권한 관리</div>
+            <div class="row" style="gap:8px;margin-bottom:8px"><input id="ad-search" placeholder="이름 검색" style="flex:2"><button class="btn-p" id="ad-add" style="flex:1;margin:0;padding:10px">+ 기사추가</button></div>
+            <div id="ad-list"><div class="center">불러오는 중…</div></div></div></div>
+        </div>
       </div>
-    </div>
     <div class="bn">
       <button class="on" data-v="sched"><span class="ic">🗓️</span>스케줄</button>
       <button data-v="settle"><span class="ic">💰</span>정산</button>
@@ -226,7 +244,7 @@ function switchView(v){
   if(v==="sched")loadSched();
   if(v==="settle")loadMonths();
   if(v==="pback")loadPback();
-  if(v==="set"){const adm=IS_ADMIN();$("#admin-card").classList.toggle("hide",!adm);if(adm)loadAdmin();}
+  if(v==="set")setMenu();
 }
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
@@ -329,6 +347,9 @@ async function loadPback(){
 }
 /* 설정 */
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
+function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'');}
+function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
+document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){localStorage.removeItem("sowon_session");location.reload();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
 async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{window.__adrows=await rpc("admin_list_drivers",{p_token:S.token});renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
