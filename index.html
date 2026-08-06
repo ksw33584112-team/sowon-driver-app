@@ -384,7 +384,7 @@ window.openDetail=async(y,m)=>{
     h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
     // 수익 내역 — 발행금액에 정확히 맞춰 배송/반품 기본금액을 건수 비례로 산정
     const cD=g("배송건수"),cR=g("반품건수"),inc=g("추가인센"),fb=g("프백정산금"),loss=g("분실차감");
-    const base=발행-inc-fb+loss; // 배송+반품 기본금액 합
+    const dl0=d["일별"]||[]; const hasDetail=(dl0.length>0)||(cD+cR>0); if(!hasDetail){h+='<div class="card"><div class="center" style="color:#8a94a6;font-size:12.5px;line-height:1.6">수익·일별 세부 내역은<br>정산 프로그램 연동 시 표시됩니다.</div></div>';} if(hasDetail){ const base=발행-inc-fb+loss;
     const subD=(cD+cR)>0?Math.round(base*cD/(cD+cR)):base, subR=base-subD;
     const uD=cD>0?Math.round(subD/cD):0, uR=cR>0?Math.round(subR/cR):0;
     h+='<div class="card"><div class="ct">📦 수익 내역</div><table class="stbl"><thead><tr><th>항목</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
@@ -394,7 +394,7 @@ window.openDetail=async(y,m)=>{
     if(fb)h+='<tr><td>프레시백 정산금</td><td>-</td><td>-</td><td>'+won(fb)+'</td></tr>';
     if(loss)h+='<tr class="minus"><td>분실·파손 차감</td><td>-</td><td>-</td><td>-'+won(loss)+'</td></tr>';
     h+='<tr class="tot"><td colspan="3">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
-    h+='</tbody></table></div>';
+    h+='</tbody></table></div>'; }
     // 차감 내역
     h+='<div class="card"><div class="ct">➖ 차감 내역 (본인부담 50%)</div><table class="stbl"><tbody>';
     h+='<tr class="minus"><td>산재보험</td><td class="r">-'+won(산재)+'</td></tr>';
