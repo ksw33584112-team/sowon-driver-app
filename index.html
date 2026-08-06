@@ -292,7 +292,7 @@ async function rpc(fn,args){
   if(!r.ok)throw new Error((j&&j.message)||("오류 "+r.status));return j;
 }
 function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;}
-function iso(d){return d.toISOString().slice(0,10);}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function md(s){const d=new Date(s);const w=["일","월","화","수","목","금","토"][d.getDay()];return (d.getMonth()+1)+"/"+d.getDate()+"("+w+")";}
 
 /* 로그인 */
