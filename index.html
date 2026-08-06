@@ -291,8 +291,9 @@ async function rpc(fn,args){
   const t=await r.text();let j;try{j=JSON.parse(t);}catch(e){j=t;}
   if(!r.ok)throw new Error((j&&j.message)||("오류 "+r.status));return j;
 }
+function kstNow(){return new Date(new Date(Date.now()).toLocaleString("en-US",{timeZone:"Asia/Seoul"}));}
 function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;}
-function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function iso(d){return d.toISOString().slice(0,10);}
 function md(s){const d=new Date(s);const w=["일","월","화","수","목","금","토"][d.getDay()];return (d.getMonth()+1)+"/"+d.getDate()+"("+w+")";}
 
 /* 로그인 */
@@ -313,7 +314,7 @@ function enterApp(){
   $("#av").textContent=S.name.slice(0,1);
   $("#an").textContent=S.name;$("#ar").textContent=S.rank;
   $("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>';
-  weekStart=mondayOf(new Date());
+  weekStart=mondayOf(kstNow());
   switchView("home");
 }
 /* 네비 */
@@ -331,7 +332,7 @@ function switchView(v){
 /* 홈 */
 const WX=c=>{if(c===0)return["☀️","맑음"];if(c<=3)return["⛅","대체로 맑음"];if(c<=48)return["🌫️","안개"];if(c<=57)return["🌦️","이슬비"];if(c<=67)return["🌧️","비"];if(c<=77)return["🌨️","눈"];if(c<=82)return["🌦️","소나기"];if(c<=86)return["🌨️","눈"];return["⛈️","뇌우"];};
 const FORTUNE=["오늘은 안전운전이 곧 대박운! 🚚","서두르지 않아도 다 잘 풀리는 하루 ✨","막힘 없는 길처럼 술술 풀리는 날 🍀","커피 한 잔의 여유가 행운을 부릅니다 ☕","작은 친절이 큰 복으로 돌아옵니다 😊","오늘 만나는 고객이 당신의 귀인 🌟"];
-function homeGreet(){const h=new Date().getHours();const t=h<11?"좋은 아침이에요":h<18?"오늘도 힘내세요":"오늘 하루 수고 많으셨어요";const ico=S.rank==="대표"||IS_ADMIN()?"👑":"🚚";return '<div class="home-greet"><div class="hg-emo">'+ico+'</div><div><div class="hg-name">'+S.name+(IS_ADMIN()?" 님":" 기사님")+' 👋</div><div class="hg-sub">'+t+'</div></div></div>';}
+function homeGreet(){const h=kstNow().getHours();const t=h<11?"좋은 아침이에요":h<18?"오늘도 힘내세요":"오늘 하루 수고 많으셨어요";const ico=S.rank==="대표"||IS_ADMIN()?"👑":"🚚";return '<div class="home-greet"><div class="hg-emo">'+ico+'</div><div><div class="hg-name">'+S.name+(IS_ADMIN()?" 님":" 기사님")+' 👋</div><div class="hg-sub">'+t+'</div></div></div>';}
 async function homeWeather(){
   try{
     const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=37.76&longitude=126.78&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=3");
@@ -343,14 +344,14 @@ async function homeWeather(){
 }
 async function homeRoutes(){
   try{
-    const ws=mondayOf(new Date());const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(ws)});
-    const today=iso(new Date());const tmr=new Date();tmr.setDate(tmr.getDate()+1);const tm=iso(tmr);
+    const ws=mondayOf(kstNow());const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(ws)});
+    const today=iso(kstNow());const tmr=kstNow();tmr.setDate(tmr.getDate()+1);const tm=iso(tmr);
     const mine=rows.filter(r=>r.driver_name===S.name);
     const rt=(dt)=>{const f=mine.filter(r=>r.work_date===dt).map(r=>r.route);return f.length?f.join(", "):"휴무";};
     return '<div class="rtwrap"><div class="rtcard rt-today"><div class="rt-l">📦 오늘 라우트</div><div class="rt-v">'+rt(today)+'</div></div><div class="rtcard"><div class="rt-l">내일</div><div class="rt-v2">'+rt(tm)+'</div></div></div>';
   }catch(e){return '';}
 }
-window.vcheck=()=>{const k="sowon_vcheck_"+iso(new Date());localStorage.setItem(k,"1");loadHome();};
+window.vcheck=()=>{const k="sowon_vcheck_"+iso(kstNow());localStorage.setItem(k,"1");loadHome();};
 window.fortune=()=>{const f=FORTUNE[Math.floor(Math.random()*FORTUNE.length)];const el=document.getElementById("hm-fortune");if(el)el.innerHTML='<b>'+f+'</b>';};
 window.healthChk=()=>{alert("이달의 건강 자가체크\n\n근골격계 증상조사 · 월 1회 · 약 2분\n(연동 예정 기능입니다)");};
 async function loadHome(){
@@ -358,7 +359,7 @@ async function loadHome(){
   let h=homeGreet();
   h+='<div id="hm-wx" class="card home-card"><div class="center" style="font-size:12px;color:#9aa">날씨 불러오는 중…</div></div>';
   h+='<div id="hm-rt"></div>';
-  const vdone=localStorage.getItem("sowon_vcheck_"+iso(new Date()));
+  const vdone=localStorage.getItem("sowon_vcheck_"+iso(kstNow()));
   h+='<div class="card vcheck '+(vdone?"vdone":"")+'"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="vcheck()">작성 ▶</button>')+'</div>';
   if(!IS_ADMIN())h+='<div class="card hlth" onclick="healthChk()"><div class="vc-l"><span class="vc-ic">🩺</span><div><b>이달의 건강 자가체크</b><i>근골격계 증상조사 · 월 1회 · 약 2분</i></div></div><span class="mi-ar">›</span></div>';
   h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">탭! 물량·안전·금전운까지 한 방에 ✨</i></div></div><span class="mi-ar">›</span></div>';
@@ -378,7 +379,7 @@ async function homeAdminStat(){
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
 $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();};
-$("#wk-today").onclick=()=>{weekStart=mondayOf(new Date());loadSched();};
+$("#wk-today").onclick=()=>{weekStart=mondayOf(kstNow());loadSched();};
 $("#wk-edit").onclick=()=>{editMode=!editMode;const b=$("#wk-edit");b.classList.toggle("on",editMode);b.textContent=editMode?"✅ 수정완료":"✏️ 수정";loadSched();};
 async function loadSched(){
   $("#wk-lbl").textContent="8/2(일) ~ 8/8(토)";
@@ -391,7 +392,7 @@ async function loadSched(){
     const map={},campR={};
     rows.forEach(r=>{map[r.route+"|"+r.work_date]=r.driver_name;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(r.route);});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
-    const t=new Date();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+    const t=kstNow();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
     const WD=["일","월","화","수","목","금","토"];const ed=CAN_EDIT()&&editMode;
     function headCells(){let s='<th>라우트</th>';dates.forEach(d=>{const dd=new Date(d+"T00:00");const g=dd.getDay();const we=(g===0||g===6)?" we":"";const to=(d===today)?" tcol":"";s+='<th class="'+(we+to).trim()+'">'+(dd.getMonth()+1)+'/'+dd.getDate()+'<br>'+WD[g]+(d===today?'<span class="tlbl">🚚 오늘</span>':'')+'</th>';});return s;}
     let h="";
@@ -523,7 +524,7 @@ $("#pb-submit").onclick=async()=>{
   }catch(e){msg("#pb-msg","err",e.message);}
   $("#pb-submit").disabled=false;
 };
-function pbPeriod(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+function pbPeriod(){const d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
 async function loadPback(){
   if(IS_ADMIN()){$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";return renderPbackAdmin();}
   $("#pb-driver").style.display="block";$("#pb-admin").style.display="none";
