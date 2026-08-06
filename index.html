@@ -151,6 +151,40 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .mi-purple{background:#f4f1fe}.mi-blue{background:#eef4ff}.mi-green{background:#eefaf1}.mi-red{background:#fdeeee}
 .mi-purple b{color:#6a4bd0}.mi-blue b{color:#1565c0}.mi-green b{color:#2e8b57}.mi-red b{color:#d0392b}
 .btn-back{background:#eef2f6;border:none;color:#3a4a5a;font-weight:800;padding:9px 14px;border-radius:9px;font-size:13px;margin-bottom:12px;cursor:pointer}
+/* 홈 */
+.home-greet{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,#4a90e2,#5b6ff0);border-radius:16px;color:#fff;margin-bottom:12px}
+.home-greet .hg-emo{font-size:34px}
+.home-greet .hg-name{font-size:18px;font-weight:900}
+.home-greet .hg-sub{font-size:12px;opacity:.9;margin-top:2px}
+.wx{background:linear-gradient(135deg,#7cc0f5,#a9d5f5);border-radius:16px;padding:14px;color:#0f3a5f;margin-bottom:12px}
+.wx-top{display:flex;justify-content:space-between;align-items:flex-start}
+.wx-now{display:flex;align-items:center;gap:8px}.wx-emo{font-size:38px}
+.wx-t{font-size:34px;font-weight:900;line-height:1}.wx-d{font-size:12px;font-weight:700;opacity:.85}
+.wx-loc{text-align:right;font-size:12px;font-weight:800}.wx-hilo{font-size:11px;font-weight:600;opacity:.8;margin-top:3px}
+.wx-fc{display:flex;gap:8px;margin-top:12px}
+.wx-fi{flex:1;background:rgba(255,255,255,.4);border-radius:10px;padding:7px;font-size:11.5px;font-weight:700;text-align:center}.wx-fi span{opacity:.7;margin-right:3px}
+.rtwrap{display:flex;gap:8px;margin-bottom:12px}
+.rtcard{flex:1;background:#eef4ff;border:1px solid #dbe6fb;border-radius:14px;padding:12px;text-align:center}
+.rtcard.rt-today{flex:1.6;background:linear-gradient(135deg,#e8f0ff,#dbe7ff)}
+.rt-l{font-size:11px;color:#6a7789;font-weight:700}
+.rt-v{font-size:22px;font-weight:900;color:#f5a300;margin-top:4px;letter-spacing:.5px}
+.rt-v2{font-size:16px;font-weight:800;color:#5b6b85;margin-top:4px}
+.vcheck,.hlth,.fort{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.vc-l{display:flex;align-items:center;gap:11px}.vc-ic{font-size:24px}
+.vc-l b{font-size:14px;color:#2a2f45;display:block}.vc-l i{font-size:11.5px;color:#8a90a0;font-style:normal}
+.vcheck{background:linear-gradient(135deg,#ff8a5b,#ff6f61);border:none}.vcheck b,.vcheck i{color:#fff!important}
+.vcheck.vdone{background:#fff;border:1px solid #edeff4}.vcheck.vdone b{color:#2a2f45!important}.vcheck.vdone i{color:#2e8b57!important}
+.vc-btn{background:rgba(255,255,255,.9);color:#e8562e;border:none;font-weight:800;padding:8px 14px;border-radius:9px;font-size:12px;cursor:pointer}
+.vc-ok{color:#2e8b57;font-size:20px;font-weight:900}
+.fort{background:linear-gradient(135deg,#6a7bd0,#8a6fd0)}.fort b,.fort i{color:#fff!important}.fort .mi-ar{color:#fff}
+.hstat{display:flex;gap:8px;margin-top:2px}
+.hs{flex:1;background:#eefaf1;border:1px solid #d8f0e0;border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer}
+.hs.hs-mid{background:#eef4ff;border-color:#dbe6fb}
+.hs-n{font-size:22px;font-weight:900;color:#2a2f45}
+.hs-l{font-size:11px;color:#7a8699;margin-top:3px}
+.pb-stat .s .v{font-size:16px}.pb-stat{gap:6px}
+.pb-miss{display:flex;flex-wrap:wrap;gap:6px}
+.miss-chip{background:#fdeeee;color:#d0392b;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px}
 </style>
 </head>
 <body>
@@ -178,8 +212,10 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <button class="lo" id="logout">로그아웃</button>
     </div>
     <div class="mc">
+      <!-- 홈 -->
+      <div class="scr on" id="s-home"><div class="center">불러오는 중…</div></div>
       <!-- 스케줄 -->
-      <div class="scr on" id="s-sched">
+      <div class="scr" id="s-sched">
         <div class="wknav"><button id="wk-prev">◀ 지난주</button><span id="wk-lbl"></span><button id="wk-next">다음주 ▶</button></div>
         <div class="wkbtns"><button id="wk-today">📍 오늘로</button><button id="wk-edit">✏️ 수정</button></div>
         <div id="sc-body"><div class="center">불러오는 중…</div></div>
@@ -192,6 +228,8 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       </div>
       <!-- 프백 -->
       <div class="scr" id="s-pback">
+        <div id="pb-admin"></div>
+        <div id="pb-driver">
         <div class="card">
           <div class="ct">📸 프레시백 소명 작성</div>
           <label class="fl">정산 기간/주차</label><input id="pb-period" placeholder="예: 06월 4주차">
@@ -203,6 +241,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
         </div>
         <div class="card"><div class="ct">📋 내 소명 내역</div><div id="pb-list"><div class="center">불러오는 중…</div></div></div>
         <div class="notice">📷 사진은 소원 클라우드에 저장됩니다.</div>
+        </div>
       </div>
       <!-- 설정 -->
       <div class="scr" id="s-set">
@@ -226,7 +265,8 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
         </div>
       </div>
     <div class="bn">
-      <button class="on" data-v="sched"><span class="ic">🗓️</span>스케줄</button>
+      <button class="on" data-v="home"><span class="ic">🏠</span>홈</button>
+      <button data-v="sched"><span class="ic">🗓️</span>스케줄</button>
       <button data-v="settle"><span class="ic">💰</span>정산</button>
       <button data-v="pback"><span class="ic">📸</span>프백</button>
       <button data-v="set"><span class="ic">⚙️</span>설정</button>
@@ -274,7 +314,7 @@ function enterApp(){
   $("#an").textContent=S.name;$("#ar").textContent=S.rank;
   $("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>';
   weekStart=mondayOf(new Date());
-  switchView("sched");
+  switchView("home");
 }
 /* 네비 */
 document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.dataset.v));
@@ -282,10 +322,58 @@ function switchView(v){
   document.querySelectorAll(".bn button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));
   document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));
   $("#s-"+v).classList.add("on");window.scrollTo(0,0);
+  if(v==="home")loadHome();
   if(v==="sched")loadSched();
   if(v==="settle")loadMonths();
   if(v==="pback")loadPback();
   if(v==="set")setMenu();
+}
+/* 홈 */
+const WX=c=>{if(c===0)return["☀️","맑음"];if(c<=3)return["⛅","대체로 맑음"];if(c<=48)return["🌫️","안개"];if(c<=57)return["🌦️","이슬비"];if(c<=67)return["🌧️","비"];if(c<=77)return["🌨️","눈"];if(c<=82)return["🌦️","소나기"];if(c<=86)return["🌨️","눈"];return["⛈️","뇌우"];};
+const FORTUNE=["오늘은 안전운전이 곧 대박운! 🚚","서두르지 않아도 다 잘 풀리는 하루 ✨","막힘 없는 길처럼 술술 풀리는 날 🍀","커피 한 잔의 여유가 행운을 부릅니다 ☕","작은 친절이 큰 복으로 돌아옵니다 😊","오늘 만나는 고객이 당신의 귀인 🌟"];
+function homeGreet(){const h=new Date().getHours();const t=h<11?"좋은 아침이에요":h<18?"오늘도 힘내세요":"오늘 하루 수고 많으셨어요";const ico=S.rank==="대표"||IS_ADMIN()?"👑":"🚚";return '<div class="home-greet"><div class="hg-emo">'+ico+'</div><div><div class="hg-name">'+S.name+(IS_ADMIN()?" 님":" 기사님")+' 👋</div><div class="hg-sub">'+t+'</div></div></div>';}
+async function homeWeather(){
+  try{
+    const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=37.76&longitude=126.78&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=3");
+    const j=await r.json();const cw=WX(j.current.weather_code);const t=Math.round(j.current.temperature_2m);
+    const d=j.daily;const mx=Math.round(d.temperature_2m_max[0]),mn=Math.round(d.temperature_2m_min[0]);
+    const w1=WX(d.weather_code[1]),w2=WX(d.weather_code[2]);
+    return '<div class="wx"><div class="wx-top"><div class="wx-now"><div class="wx-emo">'+cw[0]+'</div><div><div class="wx-t">'+t+'°</div><div class="wx-d">'+cw[1]+'</div></div></div><div class="wx-loc">📍 파주시<div class="wx-hilo">최고 '+mx+'° / 최저 '+mn+'°</div></div></div><div class="wx-fc"><div class="wx-fi"><span>내일</span> '+w1[0]+' '+Math.round(d.temperature_2m_max[1])+'° / '+Math.round(d.temperature_2m_min[1])+'°</div><div class="wx-fi"><span>모레</span> '+w2[0]+' '+Math.round(d.temperature_2m_max[2])+'° / '+Math.round(d.temperature_2m_min[2])+'°</div></div></div>';
+  }catch(e){return '';}
+}
+async function homeRoutes(){
+  try{
+    const ws=mondayOf(new Date());const rows=await rpc("list_schedules",{p_token:S.token,p_week_start:iso(ws)});
+    const today=iso(new Date());const tmr=new Date();tmr.setDate(tmr.getDate()+1);const tm=iso(tmr);
+    const mine=rows.filter(r=>r.driver_name===S.name);
+    const rt=(dt)=>{const f=mine.filter(r=>r.work_date===dt).map(r=>r.route);return f.length?f.join(", "):"휴무";};
+    return '<div class="rtwrap"><div class="rtcard rt-today"><div class="rt-l">📦 오늘 라우트</div><div class="rt-v">'+rt(today)+'</div></div><div class="rtcard"><div class="rt-l">내일</div><div class="rt-v2">'+rt(tm)+'</div></div></div>';
+  }catch(e){return '';}
+}
+window.vcheck=()=>{const k="sowon_vcheck_"+iso(new Date());localStorage.setItem(k,"1");loadHome();};
+window.fortune=()=>{const f=FORTUNE[Math.floor(Math.random()*FORTUNE.length)];const el=document.getElementById("hm-fortune");if(el)el.innerHTML='<b>'+f+'</b>';};
+window.healthChk=()=>{alert("이달의 건강 자가체크\n\n근골격계 증상조사 · 월 1회 · 약 2분\n(연동 예정 기능입니다)");};
+async function loadHome(){
+  const box=$("#s-home");
+  let h=homeGreet();
+  h+='<div id="hm-wx" class="card home-card"><div class="center" style="font-size:12px;color:#9aa">날씨 불러오는 중…</div></div>';
+  h+='<div id="hm-rt"></div>';
+  const vdone=localStorage.getItem("sowon_vcheck_"+iso(new Date()));
+  h+='<div class="card vcheck '+(vdone?"vdone":"")+'"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="vcheck()">작성 ▶</button>')+'</div>';
+  if(!IS_ADMIN())h+='<div class="card hlth" onclick="healthChk()"><div class="vc-l"><span class="vc-ic">🩺</span><div><b>이달의 건강 자가체크</b><i>근골격계 증상조사 · 월 1회 · 약 2분</i></div></div><span class="mi-ar">›</span></div>';
+  h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">탭! 물량·안전·금전운까지 한 방에 ✨</i></div></div><span class="mi-ar">›</span></div>';
+  if(IS_ADMIN())h+='<div id="hm-stat" class="hstat"></div>';
+  box.innerHTML=h;
+  homeWeather().then(w=>{const el=document.getElementById("hm-wx");if(el&&w)el.outerHTML=w;});
+  if(!IS_ADMIN())homeRoutes().then(r=>{const el=document.getElementById("hm-rt");if(el)el.innerHTML=r;});
+  if(IS_ADMIN())homeAdminStat();
+}
+async function homeAdminStat(){
+  const el=$("#hm-stat");if(!el)return;
+  let drivers="–",pending="–";
+  try{const d=await rpc("admin_list_drivers",{p_token:S.token});drivers=d.length;}catch(e){}
+  try{const pb=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});pending=pb.pending_cnt||0;}catch(e){pending=0;}
+  el.innerHTML='<div class="hs" onclick="switchView(\'pback\')"><div class="hs-n">'+pending+'</div><div class="hs-l">승인 대기</div></div><div class="hs hs-mid" onclick="switchView(\'set\')"><div class="hs-n">'+drivers+'</div><div class="hs-l">활성 기사</div></div><div class="hs" onclick="switchView(\'sched\')"><div class="hs-n">🗓️</div><div class="hs-l">스케줄</div></div>';
 }
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
@@ -435,7 +523,10 @@ $("#pb-submit").onclick=async()=>{
   }catch(e){msg("#pb-msg","err",e.message);}
   $("#pb-submit").disabled=false;
 };
+function pbPeriod(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
 async function loadPback(){
+  if(IS_ADMIN()){$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";return renderPbackAdmin();}
+  $("#pb-driver").style.display="block";$("#pb-admin").style.display="none";
   $("#pb-list").innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const rows=await rpc("list_my_pback",{p_token:S.token,p_period:null});
@@ -443,6 +534,33 @@ async function loadPback(){
     let h='';rows.forEach(r=>{const done=/인정|완료/.test(r.status||"");h+='<div class="somyeong"><div class="top"><span class="rt">'+(r.route||'')+' · '+(r.period||'')+'</span><span class="pill '+(done?'p-done':'p-wait')+'">'+(r.status||'검토중')+'</span></div><div style="color:#666">'+(r.reason||'')+'</div></div>';});
     $("#pb-list").innerHTML=h;
   }catch(e){$("#pb-list").innerHTML='<div class="center">'+e.message+'</div>';}
+}
+window.pbSaveUrl=async()=>{const u=$("#pb-formurl").value.trim();try{await rpc("admin_set_pback_config",{p_token:S.token,p_period:pbPeriod(),p_form_url:u,p_submit_mode:null,p_active:true});msg("#pb-adm-msg","ok","폼 URL 저장됨");}catch(e){msg("#pb-adm-msg","err",e.message);}};
+window.pbDecide=async(id,st)=>{try{await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});renderPbackAdmin();}catch(e){alert(e.message);}};
+async function renderPbackAdmin(){
+  const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
+  try{
+    const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});
+    const cfg=d.config||{};const subs=d.submissions||[];const notsub=d.not_submitted||[];
+    let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
+    h+='<div class="admstat pb-stat"><div class="s"><div class="l">대상</div><div class="v">'+(d.target_cnt||0)+'</div></div><div class="s"><div class="l">제출완료</div><div class="v">'+(d.submitted_cnt||0)+'</div></div><div class="s"><div class="l">소명불가</div><div class="v">'+(d.impossible_cnt||0)+'</div></div><div class="s main"><div class="l">미제출</div><div class="v">'+notsub.length+'</div></div></div>';
+    h+='<div class="card"><label class="fl">📋 소명 제출 폼 URL</label><div class="adr-ct"><input id="pb-formurl" value="'+(cfg.form_url||"")+'" placeholder="https://docs.google.com/forms/..."><button onclick="pbSaveUrl()">저장</button></div><div class="msg" id="pb-adm-msg"></div><div class="note">대상 명단은 소원 스케줄 프로그램에서 업로드하면 자동 반영됩니다.</div></div>';
+    h+='<div class="card"><div class="ct">🕓 승인 대기 ('+(d.pending_cnt||0)+')</div>';
+    const pend=subs.filter(s=>/검토/.test(s.status));
+    if(!pend.length)h+='<div class="center" style="color:#9aa;font-size:12px">없음</div>';
+    pend.forEach(s=>{h+='<div class="somyeong"><div class="top"><span class="rt">'+s.name+' · '+(s.route||"")+'</span><span><button class="mini" onclick="pbDecide('+s.id+',\'인정\')">인정</button> <button class="mini" style="background:#fdeeee;color:#d0392b" onclick="pbDecide('+s.id+',\'소명불가\')">불가</button></span></div><div style="color:#666;font-size:12px">'+(s.reason||"")+'</div></div>';});
+    h+='</div>';
+    h+='<div class="card"><div class="ct">✅ 제출 완료 ('+(d.submitted_cnt||0)+')</div>';
+    const done=subs.filter(s=>/제출|인정|완료/.test(s.status));
+    if(!done.length)h+='<div class="center" style="color:#9aa;font-size:12px">없음</div>';
+    done.forEach(s=>{h+='<div class="somyeong"><div class="top"><span class="rt">'+s.name+' · '+(s.route||"")+'</span><span class="pill p-done">'+s.status+'</span></div><div style="color:#666;font-size:12px">'+(s.reason||"")+'</div></div>';});
+    h+='</div>';
+    h+='<div class="card"><div class="ct">⏳ 미제출 ('+notsub.length+')</div>';
+    if(!notsub.length)h+='<div class="center" style="color:#9aa;font-size:12px">대상 명단 없음 (스케줄 프로그램 연동 대기)</div>';
+    else h+='<div class="pb-miss">'+notsub.map(t=>'<span class="miss-chip">'+t.name+(t.route?" "+t.route:"")+'</span>').join('')+'</div>';
+    h+='</div>';
+    box.innerHTML=h;
+  }catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';}
 }
 /* 설정 */
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
