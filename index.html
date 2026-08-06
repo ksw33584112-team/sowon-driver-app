@@ -70,6 +70,7 @@ th{background:#f5f7fb;color:#5c6bc0;font-weight:700}
 .stbl tr.tot td{font-weight:900;color:#111;border-top:2px solid #dbe3f0;background:#fafbfe}
 .stbl tr.tot.main td{color:#1565c0;font-size:14px}
 .stbl td.r{text-align:right}
+.stbl tr.clk{cursor:pointer}.stbl tr.clk:active{background:#eef4ff}
 .note{font-size:10.5px;color:#98a3b3;margin-top:8px}
 .stbl-wrap{max-height:340px;overflow:auto;border:1px solid #eef1f6;border-radius:8px}
 .stbl.day th{position:sticky;top:0;text-align:center}.stbl.day th:first-child,.stbl.day th:nth-child(2){text-align:left}
@@ -365,52 +366,54 @@ async function renderAdminSettle(y,m){
     let h='<div class="admnav"><button onclick="admMonth(0,-1)">◀</button><b>'+y+'년 '+m+'월 전체 정산</b><button onclick="admMonth(0,1)">▶</button></div>';
     h+='<div class="admstat"><div class="s"><div class="l">총 기사수</div><div class="v">'+rows.length+'명</div></div><div class="s"><div class="l">세금계산서 합계</div><div class="v">'+won(tg)+'</div></div><div class="s main"><div class="l">총 지급액 합계</div><div class="v">'+won(tn)+'</div></div></div>';
     if(!rows.length){h+='<div class="card"><div class="center">해당 월 정산 내역이 없습니다.</div></div>';box.innerHTML=h;return;}
-    h+='<div class="card"><div class="ct">👥 기사별 지급액</div><table class="stbl"><thead><tr><th>기사</th><th>직급</th><th>세금계산서</th><th>실지급액</th></tr></thead><tbody>';
-    rows.forEach(r=>{h+='<tr><td>'+r.driver_name+'</td><td style="text-align:left"><span class="rkchip '+(RCLS[r.rank]||'')+'">'+r.rank+'</span></td><td>'+won(r.gross)+'</td><td><b>'+won(r.net)+'</b></td></tr>';});
+    h+='<div class="card"><div class="ct">👥 기사별 지급액 <span style="font-size:11px;color:#98a3b3;font-weight:400">(이름 클릭 → 상세)</span></div><table class="stbl"><thead><tr><th>기사</th><th>직급</th><th>세금계산서</th><th>실지급액</th></tr></thead><tbody>';
+    rows.forEach(r=>{h+='<tr class="clk" onclick="openDriverSettle(\''+r.driver_name+'\','+y+','+m+')"><td><b style="color:#1565c0">'+r.driver_name+'</b></td><td style="text-align:left"><span class="rkchip '+(RCLS[r.rank]||'')+'">'+r.rank+'</span></td><td>'+won(r.gross)+'</td><td><b>'+won(r.net)+'</b></td></tr>';});
     h+='</tbody></table></div>';
     box.innerHTML=h;
   }catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';}
+}
+function settleHTML(d){
+  const g=k=>d[k]!=null?d[k]:0;
+  const 발행=g("발행금액"),공급=g("공급가액"),실지급=(d["실지급"]!=null?d["실지급"]:g("net")),차감=g("차감"),산재=g("산재"),고용=g("고용");
+  const rev=d["수익"]||null, dl=d["일별"]||[];
+  const hasDetail=(rev&&rev.length)||dl.length>0;
+  let h='';
+  h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
+  if(rev&&rev.length){
+    h+='<div class="card"><div class="ct">📦 수익 내역</div><div class="stbl-wrap" style="max-height:none"><table class="stbl"><thead><tr><th>내역(라우트)</th><th>구분</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
+    rev.forEach(x=>{const lab=x.g==="프백"?"프레시백":(x.g==="반품"?"반품":"배송");h+='<tr><td style="font-size:11px;color:#555">'+(x.n||"-")+'</td><td>'+lab+'</td><td>'+(x.q?x.q.toLocaleString():"-")+'</td><td>'+(x.p?won(x.p):"-")+'</td><td>'+won(x.s)+'</td></tr>';});
+    h+='<tr class="tot"><td colspan="4">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
+    h+='</tbody></table></div></div>';
+  }
+  h+='<div class="card"><div class="ct">➖ 차감 내역 (본인부담 50%)</div><table class="stbl"><tbody>';
+  h+='<tr class="minus"><td>산재보험</td><td class="r">-'+won(산재)+'</td></tr>';
+  h+='<tr class="minus"><td>고용보험</td><td class="r">-'+won(고용)+'</td></tr>';
+  h+='<tr class="tot"><td>차감 합계</td><td class="r">-'+won(차감)+'</td></tr>';
+  h+='<tr class="tot main"><td>실지급액 (발행금액 − 차감)</td><td class="r">'+won(실지급)+'</td></tr>';
+  h+='</tbody></table><div class="note">공급가액 '+won(공급)+' · 경비율 34.6% 반영</div></div>';
+  if(!hasDetail){h+='<div class="card"><div class="center" style="color:#8a94a6;font-size:12.5px;line-height:1.6">수익·일별 세부 내역은<br>정산 프로그램 연동 시 표시됩니다.</div></div>';}
+  if(dl.length){
+    let s0=0,s1=0,s2=0,s3=0,rr='';
+    dl.forEach(r=>{const dt=r[0],rt=r[1],a=+r[2]||0,b=+r[3]||0,c=+r[4]||0,e=+r[5]||0;s0+=a;s1+=b;s2+=c;s3+=e;rr+='<tr><td>'+dt+'</td><td>'+rt+'</td><td>'+a+'</td><td>'+b+'</td><td>'+(c||"-")+'</td><td>'+(e?won(e):"-")+'</td></tr>';});
+    h+='<div class="card"><div class="ct">🗓️ 일별 상세</div><div class="stbl-wrap"><table class="stbl day"><thead><tr><th>날짜</th><th>라우트</th><th>배송</th><th>반품</th><th>수기</th><th>프백</th></tr></thead><tbody>'+rr+'<tr class="tot"><td colspan="2">합계</td><td>'+s0.toLocaleString()+'</td><td>'+s1.toLocaleString()+'</td><td>'+s2.toLocaleString()+'</td><td>'+won(s3)+'</td></tr></tbody></table></div></div>';
+  }
+  return h;
 }
 window.openDetail=async(y,m)=>{
   $("#st-detail").innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const d=await rpc("get_my_settlement",{p_token:S.token,p_year:y,p_month:m});
     if(!d){$("#st-detail").innerHTML='<div class="card"><div class="center">명세서 데이터가 없습니다.</div></div>';return;}
-    const g=k=>d[k]!=null?d[k]:0;
-    const 발행=g("발행금액"),공급=g("공급가액"),실지급=(d["실지급"]!=null?d["실지급"]:g("net")),차감=g("차감"),산재=g("산재"),고용=g("고용");
-    const bdan=g("단가");
-    let h='';
-    // 상단 요약
-    h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
-    // 수익 내역 — 발행금액에 정확히 맞춰 배송/반품 기본금액을 건수 비례로 산정
-    const cD=g("배송건수"),cR=g("반품건수"),inc=g("추가인센"),fb=g("프백정산금"),loss=g("분실차감");
-    const dl0=d["일별"]||[]; const hasDetail=(dl0.length>0)||(cD+cR>0); if(!hasDetail){h+='<div class="card"><div class="center" style="color:#8a94a6;font-size:12.5px;line-height:1.6">수익·일별 세부 내역은<br>정산 프로그램 연동 시 표시됩니다.</div></div>';} if(hasDetail){ const base=발행-inc-fb+loss;
-    const subD=(cD+cR)>0?Math.round(base*cD/(cD+cR)):base, subR=base-subD;
-    const uD=cD>0?Math.round(subD/cD):0, uR=cR>0?Math.round(subR/cR):0;
-    h+='<div class="card"><div class="ct">📦 수익 내역</div><table class="stbl"><thead><tr><th>항목</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
-    h+='<tr><td>배송</td><td>'+cD.toLocaleString()+'</td><td>'+won(uD)+'</td><td>'+won(subD)+'</td></tr>';
-    h+='<tr><td>반품</td><td>'+cR.toLocaleString()+'</td><td>'+won(uR)+'</td><td>'+won(subR)+'</td></tr>';
-    if(inc)h+='<tr><td>추가 인센티브</td><td>-</td><td>-</td><td>'+won(inc)+'</td></tr>';
-    if(fb)h+='<tr><td>프레시백 정산금</td><td>-</td><td>-</td><td>'+won(fb)+'</td></tr>';
-    if(loss)h+='<tr class="minus"><td>분실·파손 차감</td><td>-</td><td>-</td><td>-'+won(loss)+'</td></tr>';
-    h+='<tr class="tot"><td colspan="3">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
-    h+='</tbody></table></div>'; }
-    // 차감 내역
-    h+='<div class="card"><div class="ct">➖ 차감 내역 (본인부담 50%)</div><table class="stbl"><tbody>';
-    h+='<tr class="minus"><td>산재보험</td><td class="r">-'+won(산재)+'</td></tr>';
-    h+='<tr class="minus"><td>고용보험</td><td class="r">-'+won(고용)+'</td></tr>';
-    h+='<tr class="tot"><td>차감 합계</td><td class="r">-'+won(차감)+'</td></tr>';
-    h+='<tr class="tot main"><td>실지급액 (발행금액 − 차감)</td><td class="r">'+won(실지급)+'</td></tr>';
-    h+='</tbody></table><div class="note">공급가액 '+won(공급)+' · 경비율 34.6% 반영</div></div>';
-    // 일별 상세
-    const dl=d["일별"]||[];
-    if(dl.length){
-      let s0=0,s1=0,s2=0,s3=0;
-      let rows='';
-      dl.forEach(r=>{const dt=r[0],rt=r[1],a=+r[2]||0,b=+r[3]||0,c=+r[4]||0,e=+r[5]||0;s0+=a;s1+=b;s2+=c;s3+=e;rows+='<tr><td>'+dt+'</td><td>'+rt+'</td><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+e+'</td></tr>';});
-      h+='<div class="card"><div class="ct">🗓️ 일별 상세</div><div class="stbl-wrap"><table class="stbl day"><thead><tr><th>날짜</th><th>라우트</th><th>배송</th><th>반품</th><th>수기</th><th>프백</th></tr></thead><tbody>'+rows+'<tr class="tot"><td colspan="2">합계</td><td>'+s0.toLocaleString()+'</td><td>'+s1.toLocaleString()+'</td><td>'+s2.toLocaleString()+'</td><td>'+s3.toLocaleString()+'</td></tr></tbody></table></div></div>';
-    }
-    $("#st-detail").innerHTML=h;window.scrollTo(0,0);
+    $("#st-detail").innerHTML=settleHTML(d);window.scrollTo(0,0);
+  }catch(e){$("#st-detail").innerHTML='<div class="center">'+e.message+'</div>';}
+};
+window.openDriverSettle=async(name,y,m)=>{
+  $("#st-detail").innerHTML='<div class="center">불러오는 중…</div>';window.scrollTo(0,0);
+  try{
+    const d=await rpc("admin_get_settlement",{p_token:S.token,p_name:name,p_year:y,p_month:m});
+    if(!d){$("#st-detail").innerHTML='<div class="card"><div class="center">'+name+' 명세서가 없습니다.</div><div class="center"><button class="mini" onclick="document.getElementById(\'st-detail\').innerHTML=\'\'">닫기</button></div></div>';return;}
+    const bar='<div class="admnav"><button onclick="document.getElementById(\'st-detail\').innerHTML=\'\';window.scrollTo(0,0)">◀ 목록</button><b>'+name+' · '+y+'년 '+m+'월</b><span style="width:34px"></span></div>';
+    $("#st-detail").innerHTML=bar+settleHTML(d);window.scrollTo(0,0);
   }catch(e){$("#st-detail").innerHTML='<div class="center">'+e.message+'</div>';}
 };
 /* 프백 */
