@@ -62,9 +62,9 @@ th{background:#f5f7fb;color:#5c6bc0;font-weight:700}
 .st-head .col .l{font-size:11px;opacity:.8}.st-head .col.main .l{opacity:.9}
 .st-head .col .v{font-size:19px;font-weight:900;margin-top:3px;letter-spacing:-.5px}
 .stbl{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
-.stbl thead th{background:#33415c;color:#eaf0fb;font-weight:700;padding:10px 11px;text-align:right;font-size:11px;letter-spacing:.3px}
+.stbl thead th{background:#33415c;color:#eaf0fb;font-weight:700;padding:10px 11px;text-align:right;font-size:11px;letter-spacing:.3px;border:0}
 .stbl thead th:first-child{text-align:left}
-.stbl td{padding:10px 11px;text-align:right;border-bottom:1px solid #eef1f6;color:#2b3550;line-height:1.35}
+.stbl td{padding:10px 11px;text-align:right;border:0;border-bottom:1px solid #f1f4f9;color:#2b3550;line-height:1.35}
 .stbl td:first-child{text-align:left}
 .stbl tbody tr:last-child td{border-bottom:none}
 .stbl td.amt{color:#1565c0;font-weight:800}
@@ -105,8 +105,8 @@ th{background:#f5f7fb;color:#5c6bc0;font-weight:700}
 .dc-name{font-size:15px;font-weight:800;color:#26324a;display:flex;align-items:center;gap:6px}
 .dc-tax{font-size:11px;color:#93a0b4;margin-top:2px}
 .dc-pay{text-align:right;flex:none}.dc-pay .dc-l{font-size:10px;color:#a4afc0}.dc-pay .dc-v{font-size:17px;font-weight:900;color:#1565c0;letter-spacing:-.5px}
-.dc-body{border-top:1px solid #eef2f8;padding:10px 12px 13px;background:#f7f9fc}
-.dc-body .card{box-shadow:none}
+.dc-body{border-top:1px solid #eef2f8;padding:12px;background:#eef2f7}
+.dc-body .card{box-shadow:0 1px 3px rgba(30,50,90,.06);border:1px solid #e7edf7}
 .pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
 .p-wait{background:#fff3e0;color:#ef6c00}.p-done{background:#e8f5e9;color:#2e7d32}
 .somyeong{border:1px solid #eee;border-radius:10px;padding:10px;margin-bottom:8px;font-size:12px}
@@ -504,8 +504,8 @@ function settleHTML(d){
     let _tq=0;
     h+='<div class="card"><div class="ct">📦 수익 내역</div><div class="stbl-wrap" style="max-height:none"><table class="stbl"><thead><tr><th style="text-align:left">내역/구분</th><th>수량/단가</th><th>소계</th></tr></thead><tbody>';
     rev.forEach(x=>{const lab=(x.g==="프백"||x.g==="수당")?"수당":(x.g==="반품"?"반품(수기반영포함)":"배송");if(x.g!=="프백"&&x.g!=="수당")_tq+=(+x.q||0);const q=x.q?(+x.q).toLocaleString():"-";const p=x.p?won(x.p):"";h+='<tr><td><div style="font-weight:700;color:#26324a">'+(x.n||"-")+'</div><div style="font-size:10px;color:#93a0b4;margin-top:1px">'+lab+'</div></td><td><div style="font-weight:700">'+q+'</div>'+(p?'<div style="font-size:10px;color:#93a0b4;margin-top:1px">'+p+'</div>':'')+'</td><td class="amt">'+won(x.s)+'</td></tr>';});
-    h+='<tr class="tot rev"><td colspan="2">총 매출액 '+_tq.toLocaleString()+'건</td><td>'+won(발행)+'</td></tr>';
-    h+='<tr class="sub-row"><td colspan="2">공급가액</td><td>'+won(공급)+'</td></tr>';
+    h+='<tr class="tot rev"><td>총 매출액</td><td>'+_tq.toLocaleString()+'건</td><td>'+won(발행)+'</td></tr>';
+    h+='<tr class="sub-row"><td></td><td>공급가액</td><td>'+won(공급)+'</td></tr>';
     h+='</tbody></table></div><div class="note">※ "반품(수기반영포함)" = 일별 상세의 반품 + 수기반영 합계입니다.</div></div>';
   }
   h+='<div class="card"><div class="ct">➖ 차감 내역 (본인부담 50%)</div><table class="stbl"><tbody>';
