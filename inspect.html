@@ -222,7 +222,7 @@ function openReg(){
     h+='<button class="btn b-gray" style="width:100%;margin-top:10px;color:#c0392b;border-color:#e79a8f" onclick="reqReset()">🔄 서명·사업자명 초기화 신청</button>';
     document.getElementById('sheet').innerHTML=h;openSheet();return;
   }
-  h+='<div class="lbl">운송사업자명</div><input class="in" id="rg-comp" placeholder="예) ㈜팀플렉스" value="'+esc(REG&&REG.company||'')+'">';
+  h+='<div class="lbl">운송사업자명 (개인사업자명)</div><input class="in" id="rg-comp" placeholder="예) 소원물류" value="'+esc(REG&&REG.company||'')+'">';
   h+='<div class="lbl">차량번호</div><input class="in" id="rg-veh" placeholder="예) 82로4067" value="'+esc(REG&&REG.vehicle||'')+'">';
   h+='<div class="lbl">서명 (손으로 그려주세요)</div><canvas id="sigcv"></canvas><div style="text-align:right;margin-top:4px"><span onclick="sigClear()" style="font-size:11px;color:#5b8def;cursor:pointer">↺ 지우기</span></div>';
   h+='<div class="note">⚠️ <b>최초 1회만 등록</b>됩니다. 나중에 바꾸려면 <b>관리자에게 초기화 신청</b>이 필요해요.</div>';
