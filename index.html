@@ -470,7 +470,7 @@ function settleHTML(d){
   h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
   if(rev&&rev.length){
     h+='<div class="card"><div class="ct">📦 수익 내역</div><div class="stbl-wrap" style="max-height:none"><table class="stbl"><thead><tr><th>내역(라우트)</th><th>구분</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
-    rev.forEach(x=>{const lab=x.g==="프백"?"프레시백 정산금":(x.g==="반품"?"반품(수기포함)":"배송");h+='<tr><td style="font-size:11px;color:#555">'+(x.n||"-")+'</td><td>'+lab+'</td><td>'+(x.q?x.q.toLocaleString():"-")+'</td><td>'+(x.p?won(x.p):"-")+'</td><td>'+won(x.s)+'</td></tr>';});
+    rev.forEach(x=>{const lab=(x.g==="프백"||x.g==="수당")?"수당":(x.g==="반품"?"반품(수기포함)":"배송");h+='<tr><td style="font-size:11px;color:#555">'+(x.n||"-")+'</td><td>'+lab+'</td><td>'+(x.q?x.q.toLocaleString():"-")+'</td><td>'+(x.p?won(x.p):"-")+'</td><td>'+won(x.s)+'</td></tr>';});
     h+='<tr class="tot"><td colspan="4">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
     h+='</tbody></table></div><div class="note">※ 수익 내역의 "반품(수기포함)" = 일별 상세의 반품 + 수기반영 합계입니다.</div></div>';
   }
