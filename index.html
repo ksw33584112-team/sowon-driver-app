@@ -382,7 +382,7 @@ $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();
 $("#wk-today").onclick=()=>{weekStart=mondayOf(kstNow());loadSched();};
 $("#wk-edit").onclick=()=>{editMode=!editMode;const b=$("#wk-edit");b.classList.toggle("on",editMode);b.textContent=editMode?"✅ 수정완료":"✏️ 수정";loadSched();};
 async function loadSched(){
-  $("#wk-lbl").textContent="8/2(일) ~ 8/8(토)";
+  $("#wk-lbl").textContent=(function(){var s=new Date(weekStart);s.setDate(s.getDate()-1);var e=new Date(s);e.setDate(e.getDate()+6);var W=["일","월","화","수","목","금","토"];var f=function(d){return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";};return f(s)+" ~ "+f(e);})();
   $("#sc-note").textContent=(CAN_EDIT()&&editMode)?"✏️ 수정중 — 셀을 눌러 기사 변경 (자동 기록)":(CAN_EDIT()?"✏️ 수정 버튼을 누르면 편집 가능":"조회 전용");
   $("#sc-body").innerHTML='<div class="center">불러오는 중…</div>';
   try{
