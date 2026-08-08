@@ -469,17 +469,18 @@ function settleHTML(d){
   let h='';
   h+='<div class="st-head"><div class="col"><div class="l">세금계산서 발행금액</div><div class="v">'+won(발행)+'</div></div><div class="col main"><div class="l">실지급액</div><div class="v">'+won(실지급)+'</div></div></div>';
   if(rev&&rev.length){
-    h+='<div class="card"><div class="ct">📦 수익 내역</div><div class="stbl-wrap" style="max-height:none"><table class="stbl"><thead><tr><th>내역(라우트)</th><th>구분</th><th>수량</th><th>단가</th><th>소계</th></tr></thead><tbody>';
-    rev.forEach(x=>{const lab=(x.g==="프백"||x.g==="수당")?"수당":(x.g==="반품"?"반품(수기포함)":"배송");h+='<tr><td style="font-size:11px;color:#555">'+(x.n||"-")+'</td><td>'+lab+'</td><td>'+(x.q?x.q.toLocaleString():"-")+'</td><td>'+(x.p?won(x.p):"-")+'</td><td>'+won(x.s)+'</td></tr>';});
-    h+='<tr class="tot"><td colspan="4">세금계산서 발행금액</td><td>'+won(발행)+'</td></tr>';
-    h+='</tbody></table></div><div class="note">※ 수익 내역의 "반품(수기포함)" = 일별 상세의 반품 + 수기반영 합계입니다.</div></div>';
+    let _tq=0;
+    h+='<div class="card"><div class="ct">📦 수익 내역</div><div class="stbl-wrap" style="max-height:none"><table class="stbl"><thead><tr><th style="text-align:left">내역/구분</th><th>수량/단가</th><th>소계</th></tr></thead><tbody>';
+    rev.forEach(x=>{const lab=(x.g==="프백"||x.g==="수당")?"수당":(x.g==="반품"?"반품(수기반영포함)":"배송");if(x.g!=="프백"&&x.g!=="수당")_tq+=(+x.q||0);const q=x.q?(+x.q).toLocaleString():"-";const p=x.p?won(x.p):"";h+='<tr><td style="text-align:left"><div style="font-weight:600;color:#333">'+(x.n||"-")+'</div><div style="font-size:10px;color:#8a94a6">'+lab+'</div></td><td><div>'+q+'</div>'+(p?'<div style="font-size:10px;color:#8a94a6">'+p+'</div>':'')+'</td><td>'+won(x.s)+'</td></tr>';});
+    h+='<tr class="tot"><td colspan="2">총 매출액 '+_tq.toLocaleString()+'건</td><td>'+won(발행)+'</td></tr>';
+    h+='<tr><td colspan="2" style="color:#8a94a6">공급가액</td><td style="color:#8a94a6">'+won(공급)+'</td></tr>';
+    h+='</tbody></table></div><div class="note">※ "반품(수기반영포함)" = 일별 상세의 반품 + 수기반영 합계입니다.</div></div>';
   }
   h+='<div class="card"><div class="ct">➖ 차감 내역 (본인부담 50%)</div><table class="stbl"><tbody>';
-  h+='<tr class="minus"><td>산재보험</td><td class="r">-'+won(산재)+'</td></tr>';
-  h+='<tr class="minus"><td>고용보험</td><td class="r">-'+won(고용)+'</td></tr>';
-  h+='<tr class="tot"><td>차감 합계</td><td class="r">-'+won(차감)+'</td></tr>';
+  h+='<tr class="minus"><td>산재보험 / 고용보험</td><td class="r">-'+won(산재+고용)+'</td></tr>';
+  {const 기타=d["기타차감"]||0;if(기타)h+='<tr class="minus"><td>기타 차감</td><td class="r">-'+won(기타)+'</td></tr>';h+='<tr class="tot"><td>총 차감</td><td class="r">-'+won(산재+고용+기타)+'</td></tr>';}
   h+='<tr class="tot main"><td>실지급액 (발행금액 − 차감)</td><td class="r">'+won(실지급)+'</td></tr>';
-  h+='</tbody></table><div class="note">공급가액 '+won(공급)+' · 경비율 34.6% 반영</div></div>';
+  h+='</tbody></table><div class="note">경비율 34.6% 반영</div></div>';
   if(!hasDetail){h+='<div class="card"><div class="center" style="color:#8a94a6;font-size:12.5px;line-height:1.6">수익·일별 세부 내역은<br>정산 프로그램 연동 시 표시됩니다.</div></div>';}
   if(dl.length){
     let s0=0,s1=0,s2=0,s3=0,rr='';
