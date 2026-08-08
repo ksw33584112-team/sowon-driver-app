@@ -88,6 +88,20 @@ th{background:#f5f7fb;color:#5c6bc0;font-weight:700}
 .admstat .s .v{font-size:14px;font-weight:900;margin-top:3px;letter-spacing:-.5px}
 .rkchip{display:inline-block;font-size:10px;font-weight:800;color:#fff;padding:2px 7px;border-radius:20px;background:#9aa5b5}
 .rkchip.dae{background:#c79a1e}.rkchip.chg{background:#7e57c2}.rkchip.tea{background:#e8862e}.rkchip.jo{background:#1976d2}.rkchip.bk{background:#16a08c}
+.drvlist{display:flex;flex-direction:column;gap:9px}
+.drvcard{background:#fff;border:1px solid #e9eef7;border-left:4px solid #dfe6f0;border-radius:14px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,border-color .15s}
+.drvcard.open{box-shadow:0 6px 18px rgba(21,101,192,.12)}
+.drvcard.rc-dae{border-left-color:#e7c66b}.drvcard.rc-chg{border-left-color:#b39ddb}.drvcard.rc-tea{border-left-color:#f0b27a}.drvcard.rc-jo{border-left-color:#90caf9}.drvcard.rc-bk{border-left-color:#80cbc4}
+.dc-head{display:flex;align-items:center;gap:10px;padding:12px 13px}
+.dc-no{width:18px;text-align:center;font-size:12px;font-weight:800;color:#c2cad8;flex:none}
+.dc-av{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#fff;background:#aab4c4}
+.dc-av.dae{background:#e7c66b}.dc-av.chg{background:#b39ddb}.dc-av.tea{background:#f0b27a}.dc-av.jo{background:#90caf9}.dc-av.bk{background:#80cbc4}
+.dc-info{flex:1;min-width:0}
+.dc-name{font-size:15px;font-weight:800;color:#26324a;display:flex;align-items:center;gap:6px}
+.dc-tax{font-size:11px;color:#93a0b4;margin-top:2px}
+.dc-pay{text-align:right;flex:none}.dc-pay .dc-l{font-size:10px;color:#a4afc0}.dc-pay .dc-v{font-size:17px;font-weight:900;color:#1565c0;letter-spacing:-.5px}
+.dc-body{border-top:1px solid #eef2f8;padding:10px 12px 13px;background:#f7f9fc}
+.dc-body .card{box-shadow:none}
 .pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px}
 .p-wait{background:#fff3e0;color:#ef6c00}.p-done{background:#e8f5e9;color:#2e7d32}
 .somyeong{border:1px solid #eee;border-radius:10px;padding:10px;margin-bottom:8px;font-size:12px}
@@ -455,12 +469,23 @@ async function renderAdminSettle(y,m){
     let h='<div class="admnav"><button onclick="admMonth(0,-1)">◀</button><b>'+y+'년 '+m+'월 전체 정산</b><button onclick="admMonth(0,1)">▶</button></div>';
     h+='<div class="admstat"><div class="s"><div class="l">총 기사수</div><div class="v">'+rows.length+'명</div></div><div class="s"><div class="l">세금계산서 합계</div><div class="v">'+won(tg)+'</div></div><div class="s main"><div class="l">총 지급액 합계</div><div class="v">'+won(tn)+'</div></div></div>';
     if(!rows.length){h+='<div class="card"><div class="center">해당 월 정산 내역이 없습니다.</div></div>';box.innerHTML=h;return;}
-    h+='<div class="card"><div class="ct">👥 기사별 지급액 <span style="font-size:11px;color:#98a3b3;font-weight:400">(이름 클릭 → 상세)</span></div><table class="stbl"><thead><tr><th>기사</th><th>직급</th><th>세금계산서</th><th>실지급액</th></tr></thead><tbody>';
-    rows.forEach(r=>{h+='<tr class="clk" onclick="openDriverSettle(\''+r.driver_name+'\','+y+','+m+')"><td><b style="color:#1565c0">'+r.driver_name+'</b></td><td style="text-align:left"><span class="rkchip '+(RCLS[r.rank]||'')+'">'+r.rank+'</span></td><td>'+won(r.gross)+'</td><td><b>'+won(r.net)+'</b></td></tr>';});
-    h+='</tbody></table></div>';
+    h+='<div class="ct" style="margin:4px 2px 8px">👥 기사별 지급액 <span style="font-size:11px;color:#98a3b3;font-weight:400">(카드 클릭 → 상세, 다시 클릭 시 접힘)</span></div>';
+    h+='<div class="drvlist">';
+    rows.forEach((r,i)=>{const rc=RCLS[r.rank]||'';const ini=(r.driver_name||'?').slice(0,1);h+='<div class="drvcard rc-'+rc+'" onclick="toggleDrv(this,\''+r.driver_name+'\','+y+','+m+')"><div class="dc-head"><div class="dc-no">'+(i+1)+'</div><div class="dc-av '+rc+'">'+ini+'</div><div class="dc-info"><div class="dc-name">'+r.driver_name+' <span class="rkchip '+rc+'">'+r.rank+'</span></div><div class="dc-tax">세금계산서 '+won(r.gross)+'</div></div><div class="dc-pay"><div class="dc-l">지급액</div><div class="dc-v">'+won(r.net)+'</div></div></div><div class="dc-body" style="display:none"></div></div>';});
+    h+='</div>';
     box.innerHTML=h;
   }catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';}
 }
+window.toggleDrv=async(card,name,y,m)=>{
+  const body=card.querySelector('.dc-body');const wasOpen=card.classList.contains('open');
+  document.querySelectorAll('#st-all .drvcard.open').forEach(c=>{c.classList.remove('open');const b=c.querySelector('.dc-body');if(b){b.style.display='none';b.innerHTML='';}});
+  if(wasOpen)return;
+  card.classList.add('open');body.style.display='';body.innerHTML='<div class="center" style="padding:14px">불러오는 중…</div>';
+  try{const d=await rpc("admin_get_settlement",{p_token:S.token,p_name:name,p_year:y,p_month:m});
+    body.innerHTML=d?settleHTML(d):'<div class="center" style="padding:14px">명세서가 없습니다.</div>';
+    setTimeout(()=>card.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }catch(e){body.innerHTML='<div class="center">'+e.message+'</div>';}
+};
 function settleHTML(d){
   const g=k=>d[k]!=null?d[k]:0;
   const 발행=g("발행금액"),공급=g("공급가액"),실지급=(d["실지급"]!=null?d["실지급"]:g("net")),차감=g("차감"),산재=g("산재"),고용=g("고용");
