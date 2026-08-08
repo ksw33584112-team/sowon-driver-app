@@ -370,7 +370,8 @@ async function homeRoutes(){
     return '<div class="rtwrap"><div class="rtcard rt-today"><div class="rt-l">📦 오늘 라우트</div><div class="rt-v">'+rt(today)+'</div></div><div class="rtcard"><div class="rt-l">내일</div><div class="rt-v2">'+rt(tm)+'</div></div></div>';
   }catch(e){return '';}
 }
-window.vcheck=()=>{const k="sowon_vcheck_"+iso(kstNow());localStorage.setItem(k,"1");loadHome();};
+function inspTodayStatus(){try{var d=new Date(Date.now()+9*3600000);var ym=d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2);var day=d.getUTCDate();var nm=encodeURIComponent(S.name||'기사');var md=JSON.parse(localStorage.getItem('insp_'+nm+'_'+ym)||'null');if(md&&md.days&&md.days[day]){var dd=md.days[day];if(dd.off)return 'off';if(dd.items&&Object.keys(dd.items).length)return 'done';}return 'todo';}catch(e){return 'todo';}}
+window.inspOpen=()=>{var u=encodeURIComponent(S.name||'기사');var ov=document.createElement('div');ov.id='insp-ov';ov.style.cssText='position:fixed;inset:0;z-index:9999;background:#eef1f6;display:flex;flex-direction:column';ov.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#16306e"><button onclick="var o=document.getElementById(\'insp-ov\');if(o)o.remove();loadHome&&loadHome()" style="background:#2a4fa0;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer">← 나가기</button><div style="color:#fff;font-weight:700">🚛 차량 일상점검</div></div><iframe src="inspect.html?u='+u+'&ts='+Date.now()+'" style="flex:1;width:100%;border:none;background:#eef1f6"></iframe>';document.body.appendChild(ov);};
 window.fortune=()=>{const f=FORTUNE[Math.floor(Math.random()*FORTUNE.length)];const el=document.getElementById("hm-fortune");if(el)el.innerHTML='<b>'+f+'</b>';};
 window.healthChk=()=>{alert("이달의 건강 자가체크\n\n근골격계 증상조사 · 월 1회 · 약 2분\n(연동 예정 기능입니다)");};
 async function loadHome(){
@@ -378,8 +379,8 @@ async function loadHome(){
   let h=homeGreet();
   h+='<div id="hm-wx" class="card home-card"><div class="center" style="font-size:12px;color:#9aa">날씨 불러오는 중…</div></div>';
   h+='<div id="hm-rt"></div>';
-  const vdone=localStorage.getItem("sowon_vcheck_"+iso(kstNow()));
-  h+='<div class="card vcheck '+(vdone?"vdone":"")+'"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="vcheck()">작성 ▶</button>')+'</div>';
+  const vst=inspTodayStatus();const vdone=(vst==='done'||vst==='off');
+  h+='<div class="card vcheck '+(vdone?"vdone":"")+'" onclick="inspOpen()"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vst==='off'?"🛌 오늘 휴무 기록":vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="event.stopPropagation();inspOpen()">작성 ▶</button>')+'</div>';
   if(!IS_ADMIN())h+='<div class="card hlth" onclick="healthChk()"><div class="vc-l"><span class="vc-ic">🩺</span><div><b>이달의 건강 자가체크</b><i>근골격계 증상조사 · 월 1회 · 약 2분</i></div></div><span class="mi-ar">›</span></div>';
   h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">탭! 물량·안전·금전운까지 한 방에 ✨</i></div></div><span class="mi-ar">›</span></div>';
   if(IS_ADMIN())h+='<div id="hm-stat" class="hstat"></div>';
@@ -516,7 +517,7 @@ function settleHTML(d){
   if(dl.length){
     let s0=0,s1=0,s2=0,s3=0,rr='';
     dl.forEach(r=>{const dt=r[0],rt=r[1],a=+r[2]||0,b=+r[3]||0,c=+r[4]||0,e=+r[5]||0;s0+=a;s1+=b;s2+=c;s3+=e;rr+='<tr><td>'+dt+'</td><td>'+rt+'</td><td>'+a+'</td><td>'+b+'</td><td>'+(c||"-")+'</td><td>'+(e?won(e):"-")+'</td></tr>';});
-    h+='<div class="card"><div class="ct">🗓️ 일별 상세 ('+dl.length+'건)</div><div class="stbl-wrap"><table class="stbl day"><thead><tr><th>날짜</th><th>라우트</th><th>배송</th><th>반품</th><th>수기</th><th>프백</th></tr></thead><tbody>'+rr+'<tr class="tot"><td colspan="2">합계</td><td>'+s0.toLocaleString()+'</td><td>'+s1.toLocaleString()+'</td><td>'+s2.toLocaleString()+'</td><td>'+won(s3)+'</td></tr></tbody></table></div></div>';
+    h+='<div class="card"><div class="ct">🗓️ 일별 상세 ('+dl.length+'건)</div><div class="stbl-wrap" style="max-height:none"><table class="stbl day"><thead><tr><th>날짜</th><th>라우트</th><th>배송</th><th>반품</th><th>수기</th><th>프백</th></tr></thead><tbody>'+rr+'<tr class="tot"><td colspan="2">합계</td><td>'+s0.toLocaleString()+'</td><td>'+s1.toLocaleString()+'</td><td>'+s2.toLocaleString()+'</td><td>'+won(s3)+'</td></tr></tbody></table></div></div>';
   }
   return h;
 }
