@@ -236,7 +236,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <!-- 스케줄 -->
       <div class="scr" id="s-sched">
         <div class="wknav"><button id="wk-prev">◀ 지난주</button><span id="wk-lbl"></span><button id="wk-next">다음주 ▶</button></div>
-        <div class="wkbtns"><button id="wk-today">📍 오늘로</button><button id="wk-edit">✏️ 수정</button></div>
+        <div class="wkbtns" id="wk-btns"></div>
         <div id="sc-body"><div class="center">불러오는 중…</div></div>
         <div class="notice" id="sc-note"></div>
       </div>
@@ -302,7 +302,8 @@ const RANKMAP={"김소원":"대표","손영균":"총괄","김민형":"팀장","�
 const RMARK={"대표":"◈","총괄":"●","팀장":"★","조장":"◆","백업":"▣"};
 const RCLS={"대표":"dae","총괄":"chg","팀장":"tea","조장":"jo","백업":"bk"};
 const $=s=>document.querySelector(s);
-const CAN_EDIT=()=>S&&["대표","총괄","팀장"].includes(S.rank);
+function editRoles(){try{var r=JSON.parse(localStorage.getItem("sowon_edit_roles")||"null");if(Array.isArray(r)&&r.length){if(r.indexOf("대표")<0)r.unshift("대표");return r;}}catch(e){}return["대표","총괄","팀장"];}
+const CAN_EDIT=()=>S&&editRoles().includes(S.rank);
 function msg(el,t,x){const m=$(el);m.className="msg "+t;m.textContent=x;}
 function won(n){return n==null?"-":Number(n).toLocaleString()+"원";}
 async function rpc(fn,args){
@@ -311,7 +312,7 @@ async function rpc(fn,args){
   if(!r.ok)throw new Error((j&&j.message)||("오류 "+r.status));return j;
 }
 function kstNow(){return new Date(new Date(Date.now()).toLocaleString("en-US",{timeZone:"Asia/Seoul"}));}
-function mondayOf(d){const x=new Date(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x;}
+function mondayOf(d){var x=new Date(d);x.setDate(x.getDate()-x.getDay()+1);return x;}
 function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function md(s){const d=new Date(s);const w=["일","월","화","수","목","금","토"][d.getDay()];return (d.getMonth()+1)+"/"+d.getDate()+"("+w+")";}
 
@@ -323,7 +324,7 @@ $("#li-btn").onclick=async()=>{
   try{
     const rows=await rpc("driver_login",{p_name:name,p_pw:pw});
     if(!rows.length){msg("#li-msg","err","이름 또는 비밀번호가 틀렸습니다.");$("#li-btn").disabled=false;return;}
-    S={token:rows[0].token,name:rows[0].name,rank:rows[0].rank,role:rows[0].role,is_admin:rows[0].is_admin};
+    S={token:rows[0].token,name:rows[0].name,rank:rows[0].rank,role:rows[0].role,is_admin:rows[0].is_admin,birth:rows[0].birth};
     localStorage.setItem("sowon_session",JSON.stringify(S));enterApp();
   }catch(e){msg("#li-msg","err",e.message);}
   $("#li-btn").disabled=false;
@@ -372,7 +373,8 @@ async function homeRoutes(){
 }
 function inspTodayStatus(){try{var d=new Date(Date.now()+9*3600000);var ym=d.getUTCFullYear()+'-'+('0'+(d.getUTCMonth()+1)).slice(-2);var day=d.getUTCDate();var nm=encodeURIComponent(S.name||'기사');var md=JSON.parse(localStorage.getItem('insp_'+nm+'_'+ym)||'null');if(md&&md.days&&md.days[day]){var dd=md.days[day];if(dd.off)return 'off';if(dd.items&&Object.keys(dd.items).length)return 'done';}return 'todo';}catch(e){return 'todo';}}
 window.inspOpen=()=>{var u=encodeURIComponent(S.name||'기사');var ov=document.createElement('div');ov.id='insp-ov';ov.style.cssText='position:fixed;inset:0;z-index:9999;background:#eef1f6;display:flex;flex-direction:column';ov.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#16306e"><button onclick="var o=document.getElementById(\'insp-ov\');if(o)o.remove();loadHome&&loadHome()" style="background:#2a4fa0;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:14px;font-weight:700;cursor:pointer">← 나가기</button><div style="color:#fff;font-weight:700">🚛 차량 일상점검</div></div><iframe src="inspect.html?u='+u+'&ts='+Date.now()+'" style="flex:1;width:100%;border:none;background:#eef1f6"></iframe>';document.body.appendChild(ov);};
-window.fortune=()=>{const f=FORTUNE[Math.floor(Math.random()*FORTUNE.length)];const el=document.getElementById("hm-fortune");if(el)el.innerHTML='<b>'+f+'</b>';};
+function birthFortune(){var seed=0;var b=(S&&S.birth)?String(S.birth).replace(/\D/g,""):"";if(b){seed=parseInt(b.slice(-4)||"0",10)||0;}else{var nm=(S&&S.name)||"";for(var i=0;i<nm.length;i++)seed+=nm.charCodeAt(i);}var t=kstNow();var ds=t.getFullYear()*10000+(t.getMonth()+1)*100+t.getDate();return FORTUNE[(seed+ds)%FORTUNE.length];}
+window.fortune=()=>{const el=document.getElementById("hm-fortune");if(el)el.innerHTML='<b>'+birthFortune()+'</b>';};
 window.healthChk=()=>{alert("이달의 건강 자가체크\n\n근골격계 증상조사 · 월 1회 · 약 2분\n(연동 예정 기능입니다)");};
 async function loadHome(){
   const box=$("#s-home");
@@ -382,7 +384,7 @@ async function loadHome(){
   const vst=inspTodayStatus();const vdone=(vst==='done'||vst==='off');
   h+='<div class="card vcheck '+(vdone?"vdone":"")+'" onclick="inspOpen()"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vst==='off'?"🛌 오늘 휴무 기록":vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="event.stopPropagation();inspOpen()">작성 ▶</button>')+'</div>';
   if(!IS_ADMIN())h+='<div class="card hlth" onclick="healthChk()"><div class="vc-l"><span class="vc-ic">🩺</span><div><b>이달의 건강 자가체크</b><i>근골격계 증상조사 · 월 1회 · 약 2분</i></div></div><span class="mi-ar">›</span></div>';
-  h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">탭! 물량·안전·금전운까지 한 방에 ✨</i></div></div><span class="mi-ar">›</span></div>';
+  h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">'+birthFortune()+'</i></div></div><span class="mi-ar">›</span></div>';
   if(IS_ADMIN())h+='<div id="hm-stat" class="hstat"></div>';
   box.innerHTML=h;
   homeWeather().then(w=>{const el=document.getElementById("hm-wx");if(el&&w)el.outerHTML=w;});
@@ -399,9 +401,14 @@ async function homeAdminStat(){
 /* 스케줄 */
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
 $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();};
-$("#wk-today").onclick=()=>{weekStart=mondayOf(kstNow());loadSched();};
-$("#wk-edit").onclick=()=>{editMode=!editMode;const b=$("#wk-edit");b.classList.toggle("on",editMode);b.textContent=editMode?"✅ 수정완료":"✏️ 수정";loadSched();};
+window.wkToday=function(){weekStart=mondayOf(kstNow());loadSched();};
+window.wkEdit=function(){editMode=!editMode;loadSched();};
+window.wkSettings=function(){openEditPerm();};
+function renderWkBtns(){var bt='';if(IS_ADMIN())bt+='<button onclick="wkSettings()" style="background:#efeafc;color:#7e57c2">⚙️ 설정</button>';bt+='<button id="wk-today" onclick="wkToday()">📍 오늘</button>';if(CAN_EDIT())bt+='<button id="wk-edit" onclick="wkEdit()" class="'+(editMode?"on":"")+'">'+(editMode?"✅ 수정완료":"✏️ 수정")+'</button>';var el=document.getElementById("wk-btns");if(el)el.innerHTML=bt;}
+window.openEditPerm=function(){if(!IS_ADMIN())return;var cur=editRoles();var roles=[["총괄","총괄"],["팀장","팀장"],["조장","조장"],["백업","백업"],["일반","일반"]];var h='<div id="ep-ov" style="position:fixed;inset:0;background:rgba(15,20,40,.55);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px" onclick="if(event.target.id===\'ep-ov\')this.remove()"><div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:18px 16px" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:15px;color:#1a237e">🛡️ 스케줄 수정 권한</b><span onclick="document.getElementById(\'ep-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div><div style="font-size:11.5px;color:#8a94a6;margin-bottom:12px">수정 가능한 직급을 선택하세요 (대표는 항상 가능)</div><label style="display:flex;align-items:center;gap:9px;padding:10px;background:#f3f4f7;border-radius:10px;margin-bottom:7px;opacity:.65"><input type="checkbox" checked disabled><b>대표 (관리자)</b></label>';roles.forEach(function(r){var on=cur.indexOf(r[0])>=0;h+='<label style="display:flex;align-items:center;gap:9px;padding:10px;background:#f7f9fc;border:1px solid #e7edf7;border-radius:10px;margin-bottom:7px;cursor:pointer"><input type="checkbox" class="ep-ck" value="'+r[0]+'" '+(on?"checked":"")+'>'+r[1]+'</label>';});h+='<button onclick="saveEditPerm()" style="width:100%;margin-top:8px;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;cursor:pointer">💾 저장</button></div></div>';var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);};
+window.saveEditPerm=function(){var roles=["대표"];document.querySelectorAll("#ep-ov .ep-ck:checked").forEach(function(c){roles.push(c.value);});localStorage.setItem("sowon_edit_roles",JSON.stringify(roles));var o=document.getElementById("ep-ov");if(o)o.remove();editMode=false;loadSched();alert("저장됐어요 · 이 기기에 적용됩니다");};
 async function loadSched(){
+  renderWkBtns();
   $("#wk-lbl").textContent=(function(){var s=new Date(weekStart);s.setDate(s.getDate()-1);var e=new Date(s);e.setDate(e.getDate()+6);var W=["일","월","화","수","목","금","토"];var f=function(d){return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";};return f(s)+" ~ "+f(e);})();
   $("#sc-note").textContent=(CAN_EDIT()&&editMode)?"✏️ 수정중 — 셀을 눌러 기사 변경 (자동 기록)":(CAN_EDIT()?"✏️ 수정 버튼을 누르면 편집 가능":"조회 전용");
   $("#sc-body").innerHTML='<div class="center">불러오는 중…</div>';
