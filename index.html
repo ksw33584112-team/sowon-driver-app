@@ -342,6 +342,15 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pb-dl{border-radius:10px;padding:10px 12px;font-size:12px;font-weight:700;margin-bottom:10px}
 .pb-dl.closed{background:#fdecea;color:#c0392b;border:1px solid #f3c2c2}
 .pb-dl.open{background:#fff8ec;color:#b5620a;border:1px solid #f6dcae}
+.pbtg{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid #e5e9f2;border-radius:11px;padding:10px 12px;margin-bottom:8px;background:#fbfcff;cursor:pointer;transition:.15s}
+.pbtg:not(.done):active{transform:scale(.98)}
+.pbtg:not(.done):hover{border-color:#8fb3ec;background:#f2f7ff}
+.pbtg.done{opacity:.62;cursor:default;background:#f4f7f4}
+.pbtg-l b{font-size:14px;color:#1a3a6b}
+.pbtg-l span{display:block;font-size:11px;color:#8a93a6;margin-top:2px}
+.pbtg-s{font-size:11.5px;font-weight:800;white-space:nowrap;padding:5px 10px;border-radius:999px}
+.pbtg-s.no{background:#e8f0ff;color:#1565c0}
+.pbtg-s.ok{background:#e7f6ec;color:#1f7a4d}
 </style>
 </head>
 <body>
@@ -387,9 +396,10 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <div class="scr" id="s-pback">
         <div id="pb-admin"></div>
         <div id="pb-driver">
+        <div id="pb-targets"></div>
         <div class="card">
           <div class="ct">📸 프레시백 소명 작성</div>
-          <label class="fl">정산 기간/주차</label><input id="pb-period" placeholder="예: 06월 4주차">
+          <label class="fl">정산 기간/주차</label><input id="pb-period" placeholder="예: 2026-08">
           <label class="fl">라우트</label><input id="pb-route" placeholder="예: 302A">
           <label class="fl">사진 (최대 2장)</label><input id="pb-photos" type="file" accept="image/*" multiple>
           <label class="fl">소명 내용</label><textarea id="pb-reason" rows="3" placeholder="회수/미회수 사유"></textarea>
@@ -756,9 +766,52 @@ $("#pb-submit").onclick=async()=>{
   $("#pb-submit").disabled=false;
 };
 function pbPeriod(){const d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+/* 프백 소명 → 구글폼(서베이) 자동전송 엔진 (관리자 인정 시 호출) */
+var __PB_SUBS=[],__PB_TMAP={};
+var PB_FORM={
+  url:"",
+  defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",
+  company:"소원물류", phone:"01071398602",
+  entry:{company:"482875263",phone:"779622344",wave:"1389640317",date:"954374004",camp:"358739403",route:"380559549",reason:"895085804",confirm:"1853853931"},
+  waveMap:{"주간":"WAVE 2","야간":"WAVE 1"}, confirmVal:"확인"
+};
+async function pbFormSubmit(o){
+  var base=(PB_FORM.url||PB_FORM.defaultUrl).split("?")[0].replace(/\/viewform.*$/,"").replace(/\/formResponse.*$/,"");
+  if(!/\/forms\//.test(base))return false;
+  var url=base+"/formResponse";var E=PB_FORM.entry;var fd=new URLSearchParams();
+  fd.append("entry."+E.company,PB_FORM.company);
+  fd.append("entry."+E.phone,PB_FORM.phone);
+  fd.append("entry."+E.wave,PB_FORM.waveMap[o.wave]||o.wave||"");
+  fd.append("entry."+E.date,o.date||"");
+  fd.append("entry."+E.camp,o.camp||"");
+  fd.append("entry."+E.route,o.route||"");
+  fd.append("entry."+E.reason,o.reason||"");
+  if(E.confirm)fd.append("entry."+E.confirm,PB_FORM.confirmVal);
+  try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:fd.toString()});return true;}catch(e){return false;}
+}
+window.pbPick=function(route,camp,wave,pdate){$("#pb-route").value=route||"";$("#pb-period").value=pbPeriod();var r=$("#pb-reason");if(r){r.focus();}var el=document.querySelector("#pb-driver .card");if(el)el.scrollIntoView({behavior:"smooth",block:"center"});msg("#pb-msg","ok","'"+route+"' 대상 선택됨 · 사유를 입력하세요");};
+async function loadMyTargets(){
+  var box=$("#pb-targets");if(!box)return;
+  try{
+    var tg=await rpc("list_pback_targets",{p_token:S.token,p_period:pbPeriod()});
+    if(!tg||!tg.length){box.innerHTML='';return;}
+    var open=tg.filter(function(t){return !t.submitted;});
+    var h='<div class="card"><div class="ct">🎯 내 소명 대상 ('+open.length+'/'+tg.length+')</div>';
+    if(!open.length){h+='<div class="center" style="color:#1f7a4d;font-weight:700;font-size:12.5px;padding:8px">모든 대상 소명 완료 ✅</div>';}
+    tg.forEach(function(t){
+      var dn=t.pdate?String(t.pdate).slice(5).replace('-','/'):'';
+      h+='<div class="pbtg'+(t.submitted?' done':'')+'"'+(t.submitted?'':' onclick="pbPick(\''+(t.route||'')+'\',\''+(t.camp||'')+'\',\''+(t.wave||'')+'\',\''+(t.pdate||'')+'\')"')+'>'
+        +'<div class="pbtg-l"><b>'+escN(t.route||'')+'</b><span>'+escN(t.camp||'')+' · '+escN(t.wave||'')+(dn?' · '+dn:'')+'</span></div>'
+        +'<span class="pbtg-s '+(t.submitted?'ok':'no')+'">'+(t.submitted?'제출완료':'소명하기 ▶')+'</span></div>';
+    });
+    h+='</div>';box.innerHTML=h;
+  }catch(e){box.innerHTML='';}
+}
 async function loadPback(){pbGate();
   if(IS_ADMIN()){$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";return renderPbackAdmin();}
   $("#pb-driver").style.display="block";$("#pb-admin").style.display="none";
+  if(!$("#pb-period").value)$("#pb-period").value=pbPeriod();
+  loadMyTargets();
   $("#pb-list").innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const rows=await rpc("list_my_pback",{p_token:S.token,p_period:null});
@@ -768,12 +821,23 @@ async function loadPback(){pbGate();
   }catch(e){$("#pb-list").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 window.pbSaveUrl=async()=>{const u=$("#pb-formurl").value.trim();try{await rpc("admin_set_pback_config",{p_token:S.token,p_period:pbPeriod(),p_form_url:u,p_submit_mode:null,p_active:true});msg("#pb-adm-msg","ok","폼 URL 저장됨");}catch(e){msg("#pb-adm-msg","err",e.message);}};
-window.pbDecide=async(id,st)=>{try{await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});renderPbackAdmin();}catch(e){alert(e.message);}};
+window.pbDecide=async(id,st)=>{try{
+    await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});
+    if(st==='인정'){
+      var sub=(__PB_SUBS||[]).find(function(x){return x.id===id;});
+      var t=(sub&&__PB_TMAP[sub.route])||{};
+      var ok=await pbFormSubmit({date:t.pdate,wave:t.wave,camp:t.camp,route:sub?sub.route:'',reason:sub?sub.reason:''});
+      msg("#pb-adm-msg",ok?"ok":"err",ok?("✅ "+(sub?sub.name:'')+" · "+(sub?sub.route:'')+" 서베이 전송됨"):"서베이 전송 실패(폼 URL 확인)");
+    }
+    renderPbackAdmin();
+  }catch(e){alert(e.message);}};
 async function renderPbackAdmin(){
   const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});
     const cfg=d.config||{};const subs=d.submissions||[];const notsub=d.not_submitted||[];
+    __PB_SUBS=subs;PB_FORM.url=cfg.form_url||"";
+    try{var _tg=await rpc("list_pback_targets",{p_token:S.token,p_period:pbPeriod()});__PB_TMAP={};(_tg||[]).forEach(function(r){__PB_TMAP[r.route]={pdate:r.pdate,camp:r.camp,wave:r.wave};});}catch(e){__PB_TMAP={};}
     let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
     h+='<div class="admstat pb-stat"><div class="s"><div class="l">대상</div><div class="v">'+(d.target_cnt||0)+'</div></div><div class="s"><div class="l">제출완료</div><div class="v">'+(d.submitted_cnt||0)+'</div></div><div class="s"><div class="l">소명불가</div><div class="v">'+(d.impossible_cnt||0)+'</div></div><div class="s main"><div class="l">미제출</div><div class="v">'+notsub.length+'</div></div></div>';
     h+='<div class="card"><label class="fl">📋 소명 제출 폼 URL</label><div class="adr-ct"><input id="pb-formurl" value="'+(cfg.form_url||"")+'" placeholder="https://docs.google.com/forms/..."><button onclick="pbSaveUrl()">저장</button></div><div class="msg" id="pb-adm-msg"></div><div class="note">대상 명단은 소원 스케줄 프로그램에서 업로드하면 자동 반영됩니다.</div></div>';
