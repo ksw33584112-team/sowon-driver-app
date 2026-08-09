@@ -89,6 +89,8 @@ th{background:#f5f7fb;color:#5c6bc0;font-weight:700}
 .stbl.day th{position:sticky;top:0;text-align:center}.stbl.day th:first-child,.stbl.day th:nth-child(2){text-align:left}
 .stbl.day td{text-align:center}.stbl.day td:first-child,.stbl.day td:nth-child(2){text-align:left}
 .stbl.day tr.tot td{position:sticky;bottom:0;background:#eef7f0}
+.stbl.day th,.stbl.day td{padding:8px 5px;font-size:11.5px;white-space:nowrap}
+.stbl.day td:first-child{font-variant-numeric:tabular-nums}
 .segtab{display:flex;gap:6px;margin-bottom:12px}
 .segtab button{flex:1;padding:9px;border:1px solid #dbe3f0;background:#fff;color:#7a8699;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
 .segtab button.on{background:#1565c0;color:#fff;border-color:#1565c0}
@@ -397,9 +399,13 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pbmd{flex:1;border:1.5px solid #e6e9f4;border-radius:10px;padding:9px 4px;text-align:center;font-size:11px;color:#8791ab;background:#fff;font-weight:700;cursor:pointer}
 .pbmd b{display:block;font-size:14px;color:#c3cbe0}
 .pbmd.on{border-color:#1f9d64;background:#eafaf1;color:#1f7a4d}.pbmd.on b{color:#1f9d64}
-.pbmm{width:100%;border-collapse:collapse;margin-top:6px}
-.pbmm th{font-size:10px;color:#98a3bd;font-weight:700;text-align:left;padding:4px 3px;border-bottom:1px solid #eef1f7}
-.pbmm td{font-size:12px;padding:8px 3px;border-bottom:1px solid #f4f6fb;color:#33405e}
+.pbmm{width:100%;border-collapse:collapse;margin-top:6px;table-layout:fixed}
+.pbmm th{font-size:10px;color:#98a3bd;font-weight:700;text-align:left;padding:4px 4px;border-bottom:1px solid #eef1f7}
+.pbmm td{font-size:12px;padding:8px 4px;border-bottom:1px solid #f4f6fb;color:#33405e;overflow-wrap:break-word;word-break:break-all}
+.pbmm th:nth-child(1),.pbmm td:nth-child(1){width:26%}
+.pbmm th:nth-child(2),.pbmm td:nth-child(2){width:36%}
+.pbmm th:nth-child(3),.pbmm td:nth-child(3){width:16%}
+.pbmm th:nth-child(4),.pbmm td:nth-child(4){width:22%;padding-right:2px}
 .pbmm td b{color:#c0392b}
 .pbmm .s-todo{color:#c0392b;font-weight:800;font-size:10.5px}
 .pbmm .s-rej{color:#7e3fb0;font-weight:800;font-size:10.5px}
