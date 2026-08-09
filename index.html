@@ -491,6 +491,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
           <div id="sub-me" class="card hide"><div class="ct">ℹ️ 내 정보</div><div id="me-info"></div></div>
           <div id="sub-perm" class="hide"><div class="card" id="admin-card"><div class="ct">🛡️ 권한 관리</div>
             <div class="row" style="gap:8px;margin-bottom:8px"><input id="ad-search" placeholder="이름 검색" style="flex:2"><button class="btn-p" id="ad-add" style="flex:1;margin:0;padding:10px">+ 기사추가</button></div>
+            <div class="row" style="gap:8px;margin-bottom:8px"><input type="file" id="ad-xlsx" accept=".xlsx,.xls" style="display:none" onchange="adImportXlsx(this)"><button class="btn-p" onclick="document.getElementById('ad-xlsx').click()" style="flex:1;margin:0;padding:10px;background:#0a7a6a">📊 엑셀로 기사 권한·정보 불러오기</button></div>
             <div id="ad-list"><div class="center">불러오는 중…</div></div></div></div>
         </div>
       </div>
@@ -602,7 +603,7 @@ async function loadVolume(){var box=$("#vol-body");box.innerHTML=lcBack('월초 
     var dates=[],routes=[],map={};
     rows.forEach(function(r){var rt=r.route||'',d=r.fdate||'';if(routes.indexOf(rt)<0)routes.push(rt);if(dates.indexOf(d)<0)dates.push(d);map[rt]=map[rt]||{};map[rt][d]=(map[rt][d]||0)+(+r.qty||0);});
     dates.sort();routes.sort();
-    function dayLabel(d){var p=String(d).split('-');if(p.length!==3)return d;var wd=['일','월','화','수','목','금','토'][new Date(+p[0],+p[1]-1,+p[2]).getDay()];return '<div style="font-weight:800">'+(+p[2])+'</div><div style="font-size:9px;opacity:.9">'+wd+'</div>';}
+    function dayLabel(d){var p=String(d).split('-');if(p.length!==3)return d;var wd=['일','월','화','수','목','금','토'][new Date(+p[0],+p[1]-1,+p[2]).getDay()];return '<div style="font-weight:800">'+(+p[1])+'/'+(+p[2])+'</div><div style="font-size:9px;opacity:.9;margin-top:1px">'+wd+'</div>';}
     h+='<div class="lc-sub">📦 '+month+' · 총 '+tot.toLocaleString()+'개 · 라우트 '+routes.length+'개</div>';
     h+='<div class="volwrap"><table class="voltbl"><thead><tr><th class="vhr">라우트</th>';
     dates.forEach(function(d){h+='<th>'+dayLabel(d)+'</th>';});
@@ -664,7 +665,6 @@ async function loadHome(){
   h+='<div id="hm-rt"></div>';
   const vst=inspTodayStatus();const vdone=(vst==='done'||vst==='off');
   h+='<div class="card vcheck '+(vdone?"vdone":"")+'" onclick="inspOpen()"><div class="vc-l"><span class="vc-ic">🚚</span><div><b>차량 일상점검</b><i>'+(vst==='off'?"🛌 오늘 휴무 기록":vdone?"✅ 오늘 점검 완료":"🔺 오늘 점검 전!")+'</i></div></div>'+(vdone?'<span class="vc-ok">✔</span>':'<button class="vc-btn" onclick="event.stopPropagation();inspOpen()">작성 ▶</button>')+'</div>';
-  if(!IS_ADMIN())h+='<div class="card hlth" onclick="healthChk()"><div class="vc-l"><span class="vc-ic">🩺</span><div><b>이달의 건강 자가체크</b><i>근골격계 증상조사 · 월 1회 · 약 2분</i></div></div><span class="mi-ar">›</span></div>';
   h+='<div class="card fort" onclick="fortune()"><div class="vc-l"><span class="vc-ic">🔮</span><div><b>오늘의 운세 보러가기</b><i id="hm-fortune">'+birthFortune()+'</i></div></div><span class="mi-ar">›</span></div>';
   if(IS_ADMIN())h+='<div id="hm-stat" class="hstat"></div>';
   box.innerHTML=h;
@@ -974,6 +974,31 @@ function renderAdmin(){
 }
 async function adUpd(name,fields){try{await rpc("admin_update_driver",Object.assign({p_token:S.token,p_name:name,p_rank:null,p_status:null,p_is_admin:null,p_phone:null,p_vehicle_no:null,p_vehicle_type:null,p_birth:null,p_is_ev:null,p_is_public:null},fields));await loadAdmin();}catch(e){alert(e.message);}}
 async function adSaveInfo(name,row){try{await rpc("admin_save_driver_info",{p_token:S.token,p_name:name,p_phone:row.querySelector(".ad-ph").value,p_vehicle_no:row.querySelector(".ad-vh").value,p_birth:row.querySelector(".ad-bd").value,p_coupang_id:row.querySelector(".ad-cp").value});await loadAdmin();}catch(e){alert(e.message);}}
+window.adImportXlsx=function(inp){
+  var f=inp.files&&inp.files[0];inp.value="";if(!f)return;
+  function go(){
+    var rd=new FileReader();
+    rd.onload=function(e){
+      try{
+        var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        var ws=wb.Sheets['기사연락처']||wb.Sheets['기사정보']||wb.Sheets[wb.SheetNames[0]];
+        var arr=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        if(!arr.length){alert('빈 파일입니다.');return;}
+        var hdr=arr[0].map(function(x){return String(x||'').trim();});
+        function ci(names){for(var i=0;i<hdr.length;i++){if(names.indexOf(hdr[i])>=0)return i;}return -1;}
+        var cN=ci(['기사명','이름','성명']),cI=ci(['아이디','ID','id']),cP=ci(['전화번호','전화','연락처']),cS=ci(['상태']),cR=ci(['역할','직급']),cB=ci(['생년월일','생일']),cV=ci(['차량번호','차량']);
+        if(cN<0){alert('기사명 컬럼을 찾지 못했습니다.\n헤더: 기사명·아이디·전화번호·상태·역할·생년월일·차량번호');return;}
+        var rows=[];
+        for(var r=1;r<arr.length;r++){var row=arr[r]||[];var nm=String(row[cN]||'').trim();if(!nm)continue;
+          rows.push({name:nm,id:cI>=0?String(row[cI]||'').trim():'',phone:cP>=0?String(row[cP]||'').trim():'',status:cS>=0?String(row[cS]||'').trim():'',role:cR>=0?String(row[cR]||'').trim():'',birth:cB>=0?String(row[cB]||'').trim():'',vehicle:cV>=0?String(row[cV]||'').trim():''});}
+        if(!rows.length){alert('인식된 기사가 없습니다.');return;}
+        rpc("admin_import_drivers",{p_token:S.token,p_rows:rows}).then(function(res){alert('✅ 기사 권한·정보 적용 완료 (앱에 저장됨)\n\n· 업데이트: '+(res.updated||0)+'명'+(res.missing?('\n· 미매칭(앱에 없는 이름): '+res.missing+'명'):''));loadAdmin();}).catch(function(err){alert(err.message);});
+      }catch(err){alert('엑셀 처리 오류: '+err.message);}
+    };rd.readAsArrayBuffer(f);
+  }
+  if(window.XLSX)go();
+  else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=go;s.onerror=function(){alert('엑셀 라이브러리 로드 실패 (인터넷 연결을 확인하세요)');};document.head.appendChild(s);}
+};
 async function adResetPw(name){if(!confirm(name+" 비밀번호를 1234로 초기화할까요?"))return;try{await rpc("admin_reset_pw",{p_token:S.token,p_name:name});alert("초기화됨 (비번 1234)");}catch(e){alert(e.message);}}
 document.addEventListener("input",e=>{if(e.target.id==="ad-search")renderAdmin();});
 document.addEventListener("click",e=>{if(e.target.id==="ad-add"){(async()=>{const name=prompt("기사명");if(!name)return;const rank=prompt("직급 (대표/총괄/팀장/조장/일반/백업)","일반")||"일반";const phone=prompt("전화번호(선택)","")||"";const vh=prompt("차량번호(선택)","")||"";try{await rpc("admin_add_driver",{p_token:S.token,p_name:name,p_rank:rank,p_phone:phone,p_vehicle_no:vh});await loadAdmin();alert(name+" 추가됨 (비번 1234)");}catch(err){alert(err.message);}})();}});
