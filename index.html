@@ -351,6 +351,14 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pbtg-s{font-size:11.5px;font-weight:800;white-space:nowrap;padding:5px 10px;border-radius:999px}
 .pbtg-s.no{background:#e8f0ff;color:#1565c0}
 .pbtg-s.ok{background:#e7f6ec;color:#1f7a4d}
+.miss-chip.clk{cursor:pointer;transition:.12s}
+.miss-chip.clk:hover{background:#e8f0ff;border-color:#8fb3ec}
+.miss-chip.clk:active{transform:scale(.96)}
+.miss-chip i{font-style:normal;color:#98a3b3;font-size:10px;margin-left:3px}
+.pd-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pd-grid>div{background:#f7f9fc;border-radius:9px;padding:8px 10px}
+.pd-grid i{display:block;font-style:normal;font-size:10.5px;color:#8a93a6}
+.pd-grid b{font-size:14px;color:#26324a}
 </style>
 </head>
 <body>
@@ -767,7 +775,7 @@ $("#pb-submit").onclick=async()=>{
 };
 function pbPeriod(){const d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
 /* 프백 소명 → 구글폼(서베이) 자동전송 엔진 (관리자 인정 시 호출) */
-var __PB_SUBS=[],__PB_TMAP={};
+var __PB_SUBS=[],__PB_TMAP={},__PB_TARGETS=[];
 var PB_FORM={
   url:"",
   defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",
@@ -831,13 +839,28 @@ window.pbDecide=async(id,st)=>{try{
     }
     renderPbackAdmin();
   }catch(e){alert(e.message);}};
+window.pbTargetDetail=async function(id){
+  try{
+    var rows=await rpc("pback_target_detail",{p_token:S.token,p_id:id});
+    var t=(rows&&rows[0])||{};
+    var wd=t.pdate?(function(){var d=new Date(t.pdate+"T00:00");var W=["일","월","화","수","목","금","토"];return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";})():"-";
+    var imgs=[t.photo1,t.photo2].filter(function(x){return x;});
+    var h='<div id="pd-ov" style="position:fixed;inset:0;background:rgba(15,20,40,.6);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto" onclick="if(event.target.id===\'pd-ov\')this.remove()"><div class="afbox" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px;color:#1a237e">📷 프백 소명 대상 상세</b><span onclick="document.getElementById(\'pd-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div>';
+    h+='<div class="pd-grid"><div><i>라우트</i><b>'+escN(t.route||"-")+'</b></div><div><i>소명일자</i><b>'+wd+'</b></div><div><i>캠프</i><b>'+escN(t.camp||"-")+'</b></div><div><i>주·야</i><b>'+escN(t.wave||"-")+'</b></div><div style="grid-column:1/3"><i>담당기사</i><b>'+escN(t.driver_name||"미매핑")+'</b></div></div>';
+    h+='<div class="afl" style="margin-top:12px">🖼 원본 사진 <span class="afsub">(누르면 확대)</span></div>';
+    if(imgs.length)h+='<div style="display:flex;flex-wrap:wrap;gap:8px">'+imgs.map(function(s){return '<img src="'+s+'" onclick="annZoom(this.src)" style="width:calc(50% - 4px);border-radius:10px;cursor:zoom-in;border:1px solid #e3e7f0">';}).join('')+'</div>';
+    else h+='<div class="center" style="color:#9aa;font-size:12px;padding:14px;background:#f7f9fc;border-radius:10px">원본 사진은 스케줄 프로그램에서 소명자료 PDF 업로드 시 표시됩니다.</div>';
+    h+='<button onclick="document.getElementById(\'pd-ov\').remove()" style="width:100%;margin-top:14px;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;cursor:pointer">닫기</button></div></div>';
+    var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
+  }catch(e){alert(e.message);}
+};
 async function renderPbackAdmin(){
   const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
   try{
     const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});
     const cfg=d.config||{};const subs=d.submissions||[];const notsub=d.not_submitted||[];
     __PB_SUBS=subs;PB_FORM.url=cfg.form_url||"";
-    try{var _tg=await rpc("list_pback_targets",{p_token:S.token,p_period:pbPeriod()});__PB_TMAP={};(_tg||[]).forEach(function(r){__PB_TMAP[r.route]={pdate:r.pdate,camp:r.camp,wave:r.wave};});}catch(e){__PB_TMAP={};}
+    try{var _tg=await rpc("list_pback_targets",{p_token:S.token,p_period:pbPeriod()});__PB_TARGETS=_tg||[];__PB_TMAP={};(_tg||[]).forEach(function(r){if(!__PB_TMAP[r.route])__PB_TMAP[r.route]={pdate:r.pdate,camp:r.camp,wave:r.wave};});}catch(e){__PB_TARGETS=[];__PB_TMAP={};}
     let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
     h+='<div class="admstat pb-stat"><div class="s"><div class="l">대상</div><div class="v">'+(d.target_cnt||0)+'</div></div><div class="s"><div class="l">제출완료</div><div class="v">'+(d.submitted_cnt||0)+'</div></div><div class="s"><div class="l">소명불가</div><div class="v">'+(d.impossible_cnt||0)+'</div></div><div class="s main"><div class="l">미제출</div><div class="v">'+notsub.length+'</div></div></div>';
     h+='<div class="card"><label class="fl">📋 소명 제출 폼 URL</label><div class="adr-ct"><input id="pb-formurl" value="'+(cfg.form_url||"")+'" placeholder="https://docs.google.com/forms/..."><button onclick="pbSaveUrl()">저장</button></div><div class="msg" id="pb-adm-msg"></div><div class="note">대상 명단은 소원 스케줄 프로그램에서 업로드하면 자동 반영됩니다.</div></div>';
@@ -851,8 +874,11 @@ async function renderPbackAdmin(){
     if(!done.length)h+='<div class="center" style="color:#9aa;font-size:12px">없음</div>';
     done.forEach(s=>{h+='<div class="somyeong"><div class="top"><span class="rt">'+s.name+' · '+(s.route||"")+'</span><span class="pill p-done">'+s.status+'</span></div><div style="color:#666;font-size:12px">'+(s.reason||"")+'</div></div>';});
     h+='</div>';
-    h+='<div class="card"><div class="ct">⏳ 미제출 ('+notsub.length+')</div>';
-    if(!notsub.length)h+='<div class="center" style="color:#9aa;font-size:12px">대상 명단 없음 (스케줄 프로그램 연동 대기)</div>';
+    var miss=(__PB_TARGETS||[]).filter(function(t){return !t.submitted;});
+    var missN=miss.length||notsub.length;
+    h+='<div class="card"><div class="ct">⏳ 미제출 ('+missN+') <span style="font-size:10.5px;color:#98a3b3;font-weight:600">· 항목을 누르면 원본 사진·상세</span></div>';
+    if(!missN)h+='<div class="center" style="color:#9aa;font-size:12px">대상 명단 없음 (스케줄 프로그램 연동 대기)</div>';
+    else if(miss.length)h+='<div class="pb-miss">'+miss.map(function(t){var dd=t.pdate?String(t.pdate).slice(5).replace('-','/'):'';return '<span class="miss-chip clk" onclick="pbTargetDetail('+t.id+')">'+(t.has_photo?'📷 ':'')+escN(t.driver_name||'')+' '+escN(t.route||'')+(dd?' <i>'+dd+'</i>':'')+'</span>';}).join('')+'</div>';
     else h+='<div class="pb-miss">'+notsub.map(t=>'<span class="miss-chip">'+t.name+(t.route?" "+t.route:"")+'</span>').join('')+'</div>';
     h+='</div>';
     box.innerHTML=h;
