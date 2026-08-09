@@ -421,6 +421,77 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pbrsn-ro{background:#f7f9fc;border:1px solid #e3e9f3;border-radius:10px;padding:11px;font-size:12.5px;color:#3a4256;line-height:1.55;white-space:pre-wrap;margin-bottom:11px;min-height:44px}
 .somyeong.clk{cursor:pointer;transition:background .12s}.somyeong.clk:active{background:#eef4ff}
 .losscfg-btn{background:#eef2fb;color:#3a5aa8;border:1px solid #cdd6ea;border-radius:8px;padding:6px 11px;font-size:11.5px;font-weight:700;cursor:pointer}
+/* 놀이터 */
+.pl-hero{position:relative;overflow:hidden;border-radius:20px;padding:20px 18px 18px;margin-bottom:14px;background:linear-gradient(135deg,#5b3bff 0%,#8b3bff 45%,#ff4d9d 100%);color:#fff;box-shadow:0 10px 26px rgba(110,70,255,.32)}
+.pl-hero::after{content:"";position:absolute;top:-40px;right:-30px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.30),transparent 68%)}
+.pl-hero::before{content:"";position:absolute;bottom:-50px;left:-20px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 68%)}
+.pl-hero>*{position:relative;z-index:1}
+.pl-htit{font-size:20px;font-weight:900;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.pl-hsub{font-size:12px;opacity:.9;margin-top:5px;line-height:1.5}
+.pl-hbadge{display:inline-block;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;margin-top:11px;backdrop-filter:blur(4px)}
+.pl-sec{font-size:14.5px;font-weight:900;color:#1f2740;margin:18px 2px 10px;display:flex;align-items:center;gap:7px}
+.pl-sec .pl-more{margin-left:auto;font-size:11.5px;font-weight:700;color:#7a6bff;cursor:pointer}
+/* 랭킹 */
+.pl-rank{background:#fff;border-radius:18px;padding:6px 4px 8px;box-shadow:0 3px 14px rgba(90,80,180,.10);margin-bottom:6px}
+.pl-podium{display:flex;justify-content:center;align-items:flex-end;gap:10px;padding:14px 6px 10px}
+.pl-pod{display:flex;flex-direction:column;align-items:center;flex:1;max-width:104px}
+.pl-pmed{font-size:26px;line-height:1}
+.pl-pav{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;color:#fff;margin:5px 0 4px;box-shadow:0 3px 8px rgba(0,0,0,.14)}
+.pl-pod.g1 .pl-pav{width:56px;height:56px;font-size:20px;background:linear-gradient(135deg,#ffb300,#ff8f00)}
+.pl-pod.g2 .pl-pav{background:linear-gradient(135deg,#9fb3c8,#6b7f96)}
+.pl-pod.g3 .pl-pav{background:linear-gradient(135deg,#e08a4e,#c96b2e)}
+.pl-pnm{font-size:12.5px;font-weight:800;color:#28324d;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-psc{font-size:11px;font-weight:800;color:#7a6bff;margin-top:1px}
+.pl-pbar{width:100%;border-radius:11px 11px 0 0;margin-top:6px}
+.pl-pod.g1 .pl-pbar{height:44px;background:linear-gradient(180deg,#ffd54f,#ffb300)}
+.pl-pod.g2 .pl-pbar{height:32px;background:linear-gradient(180deg,#cfd8e3,#9fb3c8)}
+.pl-pod.g3 .pl-pbar{height:24px;background:linear-gradient(180deg,#f0b184,#e08a4e)}
+.pl-rrow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #f2f4f9}
+.pl-rrk{width:22px;text-align:center;font-size:12.5px;font-weight:800;color:#98a3bd}
+.pl-rnm{font-size:13px;font-weight:700;color:#2a3350;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-rsc{font-size:12.5px;font-weight:800;color:#5b6bff}
+.pl-rrow.me{background:#f3f0ff}.pl-rrow.me .pl-rnm{color:#5b3bff}
+.pl-tag{display:inline-block;font-size:9.5px;font-weight:800;color:#7a6bff;background:#efeaff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.pl-empty{text-align:center;color:#98a3bd;font-size:12.5px;padding:22px 10px}
+/* 게임 그리드 */
+.pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.pl-gcard{position:relative;background:#fff;border-radius:16px;padding:15px 13px 13px;box-shadow:0 3px 12px rgba(90,80,180,.10);cursor:pointer;overflow:hidden;transition:transform .13s,box-shadow .2s;border:1px solid #f0f0f8}
+.pl-gcard:active{transform:scale(.96)}
+.pl-gcard.feat{border:1.5px solid #ffb300;box-shadow:0 4px 16px rgba(255,170,0,.22)}
+.pl-gfe{position:absolute;top:0;right:0;background:linear-gradient(135deg,#ffb300,#ff8f00);color:#fff;font-size:9px;font-weight:900;padding:3px 9px;border-radius:0 16px 0 12px}
+.pl-gemo{font-size:34px;line-height:1;margin-bottom:8px}
+.pl-gnm{font-size:13.5px;font-weight:800;color:#28324d}
+.pl-gdesc{font-size:10.5px;color:#98a3bd;margin-top:2px;line-height:1.4;min-height:29px}
+.pl-gbest{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:10.5px;font-weight:800;color:#7a6bff}
+.pl-gbest .soon{color:#c0c6d6;font-weight:700}
+.pl-gtop{margin-top:6px;font-size:10px;color:#8a93ab;border-top:1px dashed #eef0f6;padding-top:6px;line-height:1.5}
+.pl-gtop b{color:#ff8f00}
+/* 관리자 이달의 게임 설정 */
+.pl-adm{background:linear-gradient(135deg,#eef2ff,#f6eeff);border:1px solid #dfe3f5;border-radius:16px;padding:13px 14px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
+.pl-adm .t{flex:1}.pl-adm .t b{font-size:13px;color:#3a3a6a}.pl-adm .t i{font-size:11px;color:#8a86b8;display:block;margin-top:2px}
+.pl-admbtn{background:linear-gradient(135deg,#6b4bff,#9b4bff);color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+.pl-luck{background:#fff;border-radius:16px;padding:14px;box-shadow:0 3px 12px rgba(90,80,180,.10);margin-bottom:14px;text-align:center}
+.pl-luckbtn{background:linear-gradient(135deg,#ff6b9d,#ff4d6d);color:#fff;border:none;border-radius:12px;padding:11px 20px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(255,90,130,.28)}
+.pl-luckres{margin-top:11px;font-size:15px;font-weight:900;color:#e0356a;min-height:22px}
+/* 모달 (재사용) */
+.plmodal{background:#fff;border-radius:18px;max-width:430px;width:100%;margin:auto;max-height:92vh;overflow:auto}
+.plmh{padding:15px 16px 12px;border-bottom:1px solid #f0f2f7;display:flex;justify-content:space-between;align-items:flex-start}
+.plmh b{font-size:15px;color:#2a2a5a}.plmh i{font-size:11.5px;color:#9aa0b8;display:block;margin-top:3px}
+.plmb{padding:14px 16px 18px}
+.plmb .fl{font-size:12px;font-weight:800;color:#4a5578;margin:12px 2px 6px;display:block}
+.plmb input,.plmb select{padding:11px;font-size:14px}
+.pl-prz{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.pl-prz .rk{width:34px;font-weight:900;color:#7a6bff;font-size:13px;flex-shrink:0}
+.pl-prz input{flex:1}
+.pl-addrow{background:#eef2fb;color:#3a5aa8;border:1px dashed #b9c4de;border-radius:9px;padding:8px;width:100%;font-size:12px;font-weight:700;cursor:pointer;margin-top:2px}
+.pl-ckrow{display:flex;align-items:center;gap:8px;font-size:13px;color:#3a4256;padding:10px 2px;cursor:pointer}
+.plsave{width:100%;background:linear-gradient(135deg,#6b4bff,#9b4bff);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;margin-top:16px}
+.pl-gplay{text-align:center;padding:30px 16px}
+.pl-gplay .em{font-size:52px}
+.pl-gplay .ti{font-size:17px;font-weight:900;color:#28324d;margin:10px 0 4px}
+.pl-gplay .ds{font-size:12.5px;color:#8a93ab;line-height:1.6}
+.pl-soon{display:inline-block;margin-top:16px;background:#f0f0f8;color:#8a86b8;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:800}
+.pl-foot{text-align:center;font-size:11px;color:#a8afc2;margin:16px 0 4px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -474,6 +545,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <div class="scr" id="s-sla"><div id="sla-body"></div></div>
       <div class="scr" id="s-volume"><div id="vol-body"></div></div>
       <div class="scr" id="s-notice"><div id="nt-body"><div class="center">불러오는 중…</div></div></div>
+      <div class="scr" id="s-play"><div id="play-body"><div class="center">불러오는 중…</div></div></div>
       <div class="scr" id="s-set">
         <div class="ct" style="text-align:center;font-size:16px;margin-bottom:14px">⚙️ 관리 메뉴</div>
         <div id="set-menu">
@@ -501,6 +573,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <button data-v="sched"><span class="ic">🗓️</span>스케줄</button>
       <button data-v="settle"><span class="ic">💰</span>정산</button>
       <button data-v="list"><span class="ic">📋</span>리스트확인</button>
+      <button data-v="play"><span class="ic">🎮</span>놀이터</button>
       <button data-v="set"><span class="ic">⚙️</span>설정</button>
     </div>
   </div>
@@ -561,7 +634,7 @@ function enterApp(){
 /* 네비 */
 document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 function switchView(v){
-  var navv=(["list","loss","weight","sla","volume","pback"].indexOf(v)>=0)?"list":v;
+  var navv=(["list","loss","weight","sla","volume","pback"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":v);
   document.querySelectorAll(".bn button").forEach(b=>b.classList.toggle("on",b.dataset.v===navv));
   document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));
   $("#s-"+v).classList.add("on");window.scrollTo(0,0);
@@ -576,6 +649,7 @@ function switchView(v){
   if(v==="volume")loadVolume();
   if(v==="set")setMenu();
   if(v==="notice")loadNotice();
+  if(v==="play")loadPlay();
 }
 /* 리스트확인 허브 */
 function lcCard(icon,bg,title,sub,target){return '<div class="lcm" onclick="switchView(\''+target+'\')"><div class="lcm-i" style="background:'+bg+'">'+icon+'</div><div class="lcm-t"><b>'+title+'</b><span>'+sub+'</span></div><div class="lcm-a">›</div></div>';}
@@ -1007,6 +1081,119 @@ $("#pw-btn").onclick=async()=>{
   try{const ok=await rpc("change_password",{p_token:S.token,p_old:o,p_new:n});
     if(ok){msg("#pw-msg","ok","변경되었습니다.");$("#pw-old").value="";$("#pw-new").value="";}else msg("#pw-msg","err","현재 비밀번호가 틀렸습니다.");
   }catch(e){msg("#pw-msg","err",e.message);}
+};
+/* ===== 놀이터 ===== */
+var PL_GAMES=[
+ {k:"marble", n:"구슬 모으기", e:"🔮", d:"같은 색 구슬을 모아 터뜨려요"},
+ {k:"knife",  n:"나이프 히트", e:"🔪", d:"돌아가는 통나무에 칼을 꽂아요"},
+ {k:"memory", n:"그림 맞추기", e:"🃏", d:"뒤집어 같은 그림을 찾아요"},
+ {k:"timber", n:"팀버맨",     e:"🪓", d:"가지를 피하며 나무를 베요"},
+ {k:"shisen", n:"사천성",     e:"🀄", d:"같은 패를 이어 없애요"},
+ {k:"tetris", n:"테트리스",   e:"🧱", d:"블록을 쌓아 줄을 지워요"},
+ {k:"jump",   n:"소원 점프",  e:"🦘", d:"발판을 밟고 높이 올라가요"},
+ {k:"runner", n:"러너",       e:"🏃", d:"장애물을 피해 달려요"},
+ {k:"infjump",n:"무한 점프",  e:"⬆️", d:"끝없이 위로 점프해요"}
+];
+function plGame(k){return PL_GAMES.find(function(g){return g.k===k;});}
+window.__PLAY=null;
+async function loadPlay(){
+  var box=$("#play-body");box.innerHTML='<div class="center">불러오는 중…</div>';
+  var d;try{d=await rpc("game_hub",{p_token:S.token});}catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';return;}
+  window.__PLAY=d;var cfg=d.config||{};var scores=d.scores||[];var me=d.me;var isAdm=!!d.is_admin;
+  var exAdm=cfg.exclude_admin!==false;
+  var vsc=scores.filter(function(s){return !(exAdm&&s.is_admin);});
+  /* 배너 */
+  var period=(cfg.start_date&&cfg.end_date)?(cfg.start_date.replace(/-/g,'.')+' ~ '+cfg.end_date.replace(/-/g,'.')):'상시 진행';
+  var h='<div class="pl-hero"><div class="pl-htit">🎮 소원 놀이터</div><div class="pl-hsub">동료들과 겨루는 미니게임! 이달의 게임왕에 도전하세요.</div><div class="pl-hbadge">🏆 '+escN(cfg.method||'종합 점수 랭킹')+' · '+period+'</div></div>';
+  /* 관리자 설정 */
+  if(isAdm){
+    var fg=cfg.featured_game?(plGame(cfg.featured_game)?plGame(cfg.featured_game).n:cfg.featured_game):'미선정';
+    h+='<div class="pl-adm"><span style="font-size:24px">🛠️</span><div class="t"><b>이달의 게임 선정 · 상품 설정</b><i>현재 이달의 게임: '+escN(fg)+'</i></div><button class="pl-admbtn" onclick="gameCfgOpen()">⚙ 설정</button></div>';
+  }
+  if(cfg.public_on===false&&!isAdm){box.innerHTML=h+'<div class="pl-empty">🚧 놀이터가 잠시 준비 중이에요.<br>곧 다시 열립니다!</div>';return;}
+  /* 행운 뽑기 */
+  h+='<div class="pl-luck"><div style="font-size:13px;font-weight:800;color:#28324d">🍀 오늘의 행운 뽑기</div><div style="font-size:11px;color:#98a3bd;margin:3px 0 10px">하루 한 번, 행운의 점수를 받아보세요</div><button class="pl-luckbtn" onclick="plLuck()">🎲 뽑기</button><div class="pl-luckres" id="pl-luckres"></div></div>';
+  /* 이달의 게임왕 랭킹 */
+  h+='<div class="pl-sec">👑 이달의 게임왕</div>';
+  h+=plRankHtml(vsc,me);
+  /* 인기 게임 */
+  h+='<div class="pl-sec">🕹️ 인기 게임<span class="pl-more">'+PL_GAMES.length+'종</span></div>';
+  h+='<div class="pl-grid">';
+  PL_GAMES.forEach(function(g){
+    var gs=vsc.filter(function(s){return s.game===g.k;});
+    var myBest=scores.filter(function(s){return s.game===g.k&&s.name===me;}).reduce(function(a,s){return Math.max(a,+s.score||0);},0);
+    var top=null;gs.forEach(function(s){if(!top||(+s.score>+top.score))top=s;});
+    var feat=cfg.featured_game===g.k;
+    h+='<div class="pl-gcard'+(feat?' feat':'')+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">⭐ 이달의게임</div>':'')+'<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
+    h+='<div class="pl-gbest">'+(myBest>0?('🏅 내 최고 '+myBest.toLocaleString()):'<span class="soon">기록 없음</span>')+'</div>';
+    h+='<div class="pl-gtop">'+(top?('🥇 <b>'+escN(top.name)+'</b> '+(+top.score).toLocaleString()):'첫 도전자를 기다려요')+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div class="pl-foot">'+escN(cfg.footer||'상품, 상금은 교환 불가 !')+'</div>';
+  box.innerHTML=h;
+}
+function plRankHtml(vsc,me){
+  /* 게임별 최고점 합산 = 게임왕 점수 */
+  var best={};/* name -> {game->max} */
+  vsc.forEach(function(s){var n=s.name;if(!best[n])best[n]={};var g=s.game;if(!best[n][g]||+s.score>best[n][g])best[n][g]=+s.score||0;});
+  var arr=Object.keys(best).map(function(n){var tot=0,cnt=0;for(var g in best[n]){tot+=best[n][g];cnt++;}return {name:n,total:tot,games:cnt};});
+  arr.sort(function(a,b){return b.total-a.total;});
+  if(!arr.length)return '<div class="pl-rank"><div class="pl-empty">아직 기록이 없어요.<br>가장 먼저 이달의 게임왕에 도전해보세요! 🏆</div></div>';
+  var top3=arr.slice(0,3);var rest=arr.slice(3,10);
+  var pods=[top3[1],top3[0],top3[2]];var gcl=['g2','g1','g3'];var med=['🥈','🥇','🥉'];
+  var h='<div class="pl-rank"><div class="pl-podium">';
+  pods.forEach(function(p,i){if(!p){h+='<div class="pl-pod"></div>';return;}h+='<div class="pl-pod '+gcl[i]+'"><div class="pl-pmed">'+med[i]+'</div><div class="pl-pav">'+escN(p.name.slice(0,1))+'</div><div class="pl-pnm">'+escN(p.name)+'</div><div class="pl-psc">'+p.total.toLocaleString()+'점</div><div class="pl-pbar"></div></div>';});
+  h+='</div>';
+  rest.forEach(function(p,i){h+='<div class="pl-rrow'+(p.name===me?' me':'')+'"><span class="pl-rrk">'+(i+4)+'</span><span class="pl-rnm">'+escN(p.name)+(p.name===me?' <span class="pl-tag">나</span>':'')+'</span><span class="pl-rsc">'+p.total.toLocaleString()+'점</span></div>';});
+  /* 내 순위가 밖이면 표시 */
+  var myIdx=arr.findIndex(function(p){return p.name===me;});
+  if(myIdx>=10){var mp=arr[myIdx];h+='<div class="pl-rrow me"><span class="pl-rrk">'+(myIdx+1)+'</span><span class="pl-rnm">'+escN(mp.name)+' <span class="pl-tag">나</span></span><span class="pl-rsc">'+mp.total.toLocaleString()+'점</span></div>';}
+  h+='</div>';return h;
+}
+window.plLuck=function(){
+  var el=$("#pl-luckres");if(!el)return;var key="sowon_luck_"+(new Date().toISOString().slice(0,10));
+  if(localStorage.getItem(key)){el.innerHTML='오늘은 이미 뽑았어요! 🌙 <span style="font-size:12px;color:#98a3bd">('+localStorage.getItem(key)+'점)</span>';return;}
+  var n=0,ticks=0;el.style.color="#ff8f00";var t=setInterval(function(){el.textContent=(Math.floor(Math.random()*900)+100)+'점';if(++ticks>14){clearInterval(t);var f=Math.floor(Math.random()*900)+100;localStorage.setItem(key,f);el.style.color="#e0356a";el.innerHTML='🎉 오늘의 행운 점수 <b>'+f+'점</b>!';}},70);
+};
+window.openGame=function(k){
+  var g=plGame(k);if(!g)return;
+  var feat=(window.__PLAY&&window.__PLAY.config&&window.__PLAY.config.featured_game===k);
+  var h='<div id="pg-ov" class="ovbg" onclick="if(event.target.id===\'pg-ov\')this.remove()"><div class="plmodal" onclick="event.stopPropagation()"><div class="plmh"><div><b>'+g.e+' '+g.n+'</b><i>'+g.d+'</i></div><span onclick="document.getElementById(\'pg-ov\').remove()" style="cursor:pointer;font-size:20px;color:#aaa">×</span></div><div class="plmb"><div class="pl-gplay"><div class="em">'+g.e+'</div><div class="ti">'+g.n+(feat?' ⭐':'')+'</div><div class="ds">'+g.d+'<br>고퀄리티 게임으로 순차 오픈 예정이에요.</div><div class="pl-soon">🚧 준비 중 · 곧 플레이 가능</div></div></div></div></div>';
+  var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
+};
+window.gameCfgOpen=function(){
+  var cfg=(window.__PLAY&&window.__PLAY.config)||{};
+  var opts='<option value="">— 미선정 —</option>'+PL_GAMES.map(function(g){return '<option value="'+g.k+'"'+(cfg.featured_game===g.k?' selected':'')+'>'+g.e+' '+g.n+'</option>';}).join('');
+  var prizes=Array.isArray(cfg.prizes)&&cfg.prizes.length?cfg.prizes:[{rank:'1등',item:'',cash:''},{rank:'2등',item:'',cash:''},{rank:'3등',item:'',cash:''}];
+  var przHtml=prizes.map(function(p,i){return plPrzRow(p.rank||'',p.item||'',p.cash||'');}).join('');
+  var h='<div id="gc-ov" class="ovbg" onclick="if(event.target.id===\'gc-ov\')this.remove()"><div class="plmodal" onclick="event.stopPropagation()"><div class="plmh"><div><b>🛠️ 이달의 게임 · 상품 설정</b><i>선정한 게임과 순위 상품을 기사 전원에게 공개해요</i></div><span onclick="document.getElementById(\'gc-ov\').remove()" style="cursor:pointer;font-size:20px;color:#aaa">×</span></div><div class="plmb">';
+  h+='<label class="fl">⭐ 이달의 게임</label><select id="gc-feat">'+opts+'</select>';
+  h+='<label class="fl">🏆 선정 방식(표시 문구)</label><input id="gc-method" value="'+escN(cfg.method||'종합 점수 랭킹')+'" placeholder="예: 종합 점수 랭킹">';
+  h+='<div style="display:flex;gap:10px"><div style="flex:1"><label class="fl">시작일</label><input id="gc-start" type="date" value="'+(cfg.start_date||'')+'"></div><div style="flex:1"><label class="fl">종료일</label><input id="gc-end" type="date" value="'+(cfg.end_date||'')+'"></div></div>';
+  h+='<label class="fl">🎁 등수별 상품 · 상금</label><div id="gc-prizes">'+przHtml+'</div><button class="pl-addrow" onclick="plAddPrz()">+ 등수 추가</button>';
+  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-exadm" '+(cfg.exclude_admin!==false?'checked':'')+'> 관리자(대표·총괄·팀장) 랭킹 제외</label>';
+  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-public" '+(cfg.public_on!==false?'checked':'')+'> 기사에게 놀이터 공개</label>';
+  h+='<label class="fl">📝 하단 안내 문구</label><input id="gc-footer" value="'+escN(cfg.footer||'상품, 상금은 교환 불가 !')+'">';
+  h+='<button class="plsave" onclick="gameCfgSave()">💾 저장 (전 기기 적용)</button></div></div></div>';
+  var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
+};
+function plPrzRow(rk,item,cash){return '<div class="pl-prz"><input class="gc-rk" style="width:52px;flex:none" value="'+escN(rk)+'" placeholder="1등"><input class="gc-it" value="'+escN(item)+'" placeholder="상품(예: 치킨 기프티콘)"><input class="gc-ca" style="width:80px;flex:none" value="'+escN(cash)+'" placeholder="상금"></div>';}
+window.plAddPrz=function(){var box=document.getElementById("gc-prizes");if(!box)return;var d=document.createElement("div");d.innerHTML=plPrzRow((box.children.length+1)+'등','','');box.appendChild(d.firstElementChild);};
+window.gameCfgSave=async function(){
+  var prz=[].slice.call(document.querySelectorAll("#gc-prizes .pl-prz")).map(function(row){return {rank:row.querySelector(".gc-rk").value.trim(),item:row.querySelector(".gc-it").value.trim(),cash:row.querySelector(".gc-ca").value.trim()};}).filter(function(p){return p.rank||p.item||p.cash;});
+  try{
+    await rpc("admin_set_game_config",{p_token:S.token,
+      p_method:$("#gc-method").value.trim(),
+      p_start:$("#gc-start").value||null,
+      p_end:$("#gc-end").value||null,
+      p_prizes:prz,
+      p_exclude_admin:$("#gc-exadm").checked,
+      p_footer:$("#gc-footer").value.trim(),
+      p_public:$("#gc-public").checked,
+      p_featured:$("#gc-feat").value});
+    var o=document.getElementById("gc-ov");if(o)o.remove();loadPlay();
+  }catch(e){alert(e.message);}
 };
 $("#logout").onclick=()=>{localStorage.removeItem("sowon_session");location.reload();};
 /* 자동로그인 */
