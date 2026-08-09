@@ -161,6 +161,12 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .g-il{background:#eef1f5;color:#5a6472;border-color:#c2c9d4}
 .adr{border:1px solid #eee;border-radius:10px;padding:9px;margin-bottom:8px;font-size:12px}
 .adr.off{opacity:.55;background:#fafafa}
+.adr.r-dae{border-left:5px solid #e6c266;background:#fffdf6}
+.adr.r-chg{border-left:5px solid #b7a8f0;background:#faf9ff}
+.adr.r-tea{border-left:5px solid #f2b27a;background:#fffbf6}
+.adr.r-bk{border-left:5px solid #7fd3c4;background:#f5fbfa}
+.adr.r-jo{border-left:5px solid #93c0f0;background:#f6faff}
+.adr.r-il{border-left:5px solid #c2c9d4;background:#fafbfc}
 .adr-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}.adr-top b{font-size:14px}
 .abadge{background:#efe9fb;color:#7e57c2;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
 .obadge{background:#fdecea;color:#c0392b;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px}
@@ -716,29 +722,30 @@ function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classLi
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
 document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){localStorage.removeItem("sowon_session");location.reload();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
-async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{window.__adrows=await rpc("admin_list_drivers",{p_token:S.token});renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
+async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{var rows=await rpc("admin_list_drivers",{p_token:S.token});try{var cp=await rpc("admin_list_coupang",{p_token:S.token});var m={};(cp||[]).forEach(function(x){m[x.nm]=x.cid;});rows.forEach(function(r){r.coupang_id=m[r.name]||"";});}catch(e){}window.__adrows=rows;renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
   const RORD={"대표":0,"총괄":1,"팀장":2,"백업":3,"조장":4,"일반":5};const GCLS={"대표":"g-dae","총괄":"g-chg","팀장":"g-tea","백업":"g-bk","조장":"g-jo","일반":"g-il"};
   const q=($("#ad-search").value||"").trim();let rows=(window.__adrows||[]).slice().sort((a,b)=>((RORD[a.rank]??9)-(RORD[b.rank]??9))||a.name.localeCompare(b.name));if(q)rows=rows.filter(r=>r.name.includes(q));
   let h="",cur=null;
   rows.forEach(r=>{if(r.rank!==cur){cur=r.rank;h+='<div class="ad-grp '+(GCLS[r.rank]||'')+'">'+r.rank+'</div>';}
     const off=r.status!=="active";
-    h+='<div class="adr'+(off?" off":"")+'" data-name="'+r.name+'"><div class="adr-top"><b>'+r.name+'</b>'
+    h+='<div class="adr'+(off?" off":"")+' '+(GCLS[r.rank]?GCLS[r.rank].replace("g-","r-"):"")+'" data-name="'+r.name+'"><div class="adr-top"><b>'+r.name+'</b>'
       +(r.is_admin?'<span class="abadge">관리자</span>':'')+(off?'<span class="obadge">'+r.status+'</span>':'')
       +'<span class="adr-id">'+(r.driver_id||'')+'</span></div>'
       +'<div class="adr-ctrl"><select class="ad-rank">'+RANKS.map(rk=>'<option'+(rk===r.rank?" selected":"")+'>'+rk+'</option>').join('')+'</select>'
       +'<button class="ad-adm">'+(r.is_admin?"관리자해제":"관리자지정")+'</button>'
       +'<button class="ad-stat">'+(off?"복구":"정지")+'</button><button class="ad-pw">PW초기화</button></div>'
-      +'<div class="adr-ct">📞<input class="ad-ph" value="'+(r.phone||'')+'" placeholder="전화"><input class="ad-vh" value="'+(r.vehicle_no||'')+'" placeholder="차량번호"><button class="ad-save">저장</button></div></div>';});
+      +'<div class="adr-ct">📞<input class="ad-ph" value="'+(r.phone||'')+'" placeholder="전화"><input class="ad-vh" value="'+(r.vehicle_no||'')+'" placeholder="차량번호"></div>'+'<div class="adr-ct" style="margin-top:5px">🎂<input class="ad-bd" value="'+String(r.birth||'').replace(/"/g,'&quot;')+'" placeholder="생년월일 (예:1990-01-01)"><input class="ad-cp" value="'+String(r.coupang_id||'').replace(/"/g,'&quot;')+'" placeholder="쿠팡 ID"><button class="ad-save">저장</button></div></div>';});
   $("#ad-list").innerHTML=h||'<div class="center">기사가 없습니다.</div>';
   $("#ad-list").querySelectorAll(".adr").forEach(row=>{const nm=row.dataset.name;const cur=()=>window.__adrows.find(x=>x.name===nm);
     row.querySelector(".ad-rank").onchange=e=>adUpd(nm,{p_rank:e.target.value});
     row.querySelector(".ad-adm").onclick=()=>adUpd(nm,{p_is_admin:!cur().is_admin});
     row.querySelector(".ad-stat").onclick=()=>adUpd(nm,{p_status:cur().status==="active"?"정지":"active"});
     row.querySelector(".ad-pw").onclick=()=>adResetPw(nm);
-    row.querySelector(".ad-save").onclick=()=>adUpd(nm,{p_phone:row.querySelector(".ad-ph").value,p_vehicle_no:row.querySelector(".ad-vh").value});});
+    row.querySelector(".ad-save").onclick=()=>adSaveInfo(nm,row);});
 }
 async function adUpd(name,fields){try{await rpc("admin_update_driver",Object.assign({p_token:S.token,p_name:name,p_rank:null,p_status:null,p_is_admin:null,p_phone:null,p_vehicle_no:null,p_vehicle_type:null,p_birth:null,p_is_ev:null,p_is_public:null},fields));await loadAdmin();}catch(e){alert(e.message);}}
+async function adSaveInfo(name,row){try{await rpc("admin_save_driver_info",{p_token:S.token,p_name:name,p_phone:row.querySelector(".ad-ph").value,p_vehicle_no:row.querySelector(".ad-vh").value,p_birth:row.querySelector(".ad-bd").value,p_coupang_id:row.querySelector(".ad-cp").value});await loadAdmin();}catch(e){alert(e.message);}}
 async function adResetPw(name){if(!confirm(name+" 비밀번호를 1234로 초기화할까요?"))return;try{await rpc("admin_reset_pw",{p_token:S.token,p_name:name});alert("초기화됨 (비번 1234)");}catch(e){alert(e.message);}}
 document.addEventListener("input",e=>{if(e.target.id==="ad-search")renderAdmin();});
 document.addEventListener("click",e=>{if(e.target.id==="ad-add"){(async()=>{const name=prompt("기사명");if(!name)return;const rank=prompt("직급 (대표/총괄/팀장/조장/일반/백업)","일반")||"일반";const phone=prompt("전화번호(선택)","")||"";const vh=prompt("차량번호(선택)","")||"";try{await rpc("admin_add_driver",{p_token:S.token,p_name:name,p_rank:rank,p_phone:phone,p_vehicle_no:vh});await loadAdmin();alert(name+" 추가됨 (비번 1234)");}catch(err){alert(err.message);}})();}});
