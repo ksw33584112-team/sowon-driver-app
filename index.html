@@ -9,8 +9,10 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;-webkit-tap-highlight-color:transparent}
-body{background:linear-gradient(165deg,#e9f1ff 0%,#f0ecff 48%,#ffeef6 100%) fixed;color:#1a1a1a;position:relative}
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+html{overscroll-behavior:none;height:100%}
+body{background:linear-gradient(165deg,#e9f1ff 0%,#f0ecff 48%,#ffeef6 100%) fixed;color:#1a1a1a;position:relative;overscroll-behavior:none;touch-action:manipulation}
 body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle 240px at 14% 12%,rgba(120,165,255,.30),transparent 65%),radial-gradient(circle 260px at 88% 20%,rgba(190,150,255,.26),transparent 65%),radial-gradient(circle 300px at 52% 98%,rgba(255,165,205,.24),transparent 65%);animation:bgDrift 20s ease-in-out infinite alternate}
 @keyframes bgDrift{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(0,-16px,0) scale(1.07)}}
 .wrap{max-width:560px;margin:0 auto;min-height:100vh;position:relative;z-index:1}
@@ -726,7 +728,7 @@ function enterApp(){
 document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.dataset.v));
 /* 뒤로가기: 팝업 있으면 닫고, 없으면 홈으로 (앱 종료 방지) */
 (function(){
-  function _topPopup(){var gp=document.getElementById('gpop');if(gp&&getComputedStyle(gp).display!=='none')return {el:gp,game:true};var ovs=[].slice.call(document.querySelectorAll('.ovbg,[id$="-ov"]')).filter(function(e){return e.offsetParent!==null;});return ovs.length?{el:ovs[ovs.length-1]}:null;}
+  function _topPopup(){var gp=document.getElementById('gpop');if(gp&&getComputedStyle(gp).display!=='none')return {el:gp,game:true};var ovs=[].slice.call(document.querySelectorAll('.ovbg,[id$="-ov"]')).filter(function(e){var s=getComputedStyle(e);return s.display!=='none'&&s.visibility!=='hidden'&&e.getClientRects().length>0;});return ovs.length?{el:ovs[ovs.length-1]}:null;}
   window.addEventListener('popstate',function(){var p=_topPopup();if(p){if(p.game&&window.ghBack){window.ghBack();}else{p.el.remove();}}else{try{if(typeof switchView==='function')switchView('home');}catch(e){}}try{history.pushState({a:1},'');}catch(e){}});
   try{history.pushState({a:1},'');}catch(e){}
 })();
