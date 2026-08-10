@@ -659,6 +659,8 @@ let S=null, weekStart=null, editMode=false, schedCache={};
 const RANKMAP={"김소원":"대표","손영균":"총괄","김민형":"팀장","고아람":"백업","김찬미":"백업","김주형":"백업","이승하":"백업","김정수":"백업","장균상":"백업","최호선":"백업","진태훈":"백업"};
 const RMARK={"대표":"◈","총괄":"●","팀장":"★","조장":"◆","백업":"▣"};
 const RCLS={"대표":"dae","총괄":"chg","팀장":"tea","조장":"jo","백업":"bk"};
+function nameColor(n){n=String(n||'');var h=2166136261;for(var i=0;i<n.length;i++){h^=n.charCodeAt(i);h=(h*16777619)>>>0;}var hue=h%360;var L=83+(Math.floor(h/360)%3)*3;var S=60+(Math.floor(h/1080)%4)*5;return {bg:'hsl('+hue+','+S+'%,'+L+'%)',tx:'hsl('+hue+',60%,26%)'};}
+function isTopRank(r){return r==='대표'||r==='총괄'||r==='팀장';}
 const $=s=>document.querySelector(s);
 var SCHEDCFG={roles:["대표","총괄","팀장"],editDays:90,lockDays:0};
 async function loadSchedCfg(){try{var c=await rpc("get_sched_cfg",{});if(c&&typeof c==="object"){if(Array.isArray(c.roles))SCHEDCFG.roles=c.roles;if(c.editDays!==undefined&&c.editDays!==null)SCHEDCFG.editDays=c.editDays;if(c.lockDays!==undefined&&c.lockDays!==null)SCHEDCFG.lockDays=c.lockDays;}}catch(e){}}
@@ -861,13 +863,13 @@ async function loadSched(){
         h+='<tr><td class="cRoute">'+rt+'</td>';
         dates.forEach(d=>{const to=(d===today);const sp=splitMap[rt+"|"+d];
           if(sp&&Object.keys(sp).length){const subs=splitRt(rt);let inner='';
-            subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const srk=RANKMAP[snm];inner+='<div class="sch-half">'+s+' : '+(srk?RMARK[srk]+' ':'')+escN(snm)+'</div>';}});
+            subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const sr=RANKMAP[snm];const sic=isTopRank(sr)?RMARK[sr]+' ':'';inner+='<div class="sch-half">'+s+' : '+sic+escN(snm)+'</div>';}});
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':'';
             h+='<td class="scsplit'+(to?' tcol':'')+'"'+da+'>'+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
-            let cls;if(rk){cls="rk "+RCLS[rk]+(to?" tcol":"");}else{cls=to?"tcol tbg":"";}
-            h+='<td class="'+cls+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+escN(nm)+'</td>';}});
+            if(nm){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+da+'>'+ic+escN(nm)+'</td>';}
+            else{h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'></td>';}}});
         h+='</tr>';
       });
       h+='</tbody></table><div class="today-box"></div></div></div></div>';
