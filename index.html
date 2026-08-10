@@ -141,6 +141,9 @@ table.sched{width:max-content;min-width:100%;border-collapse:collapse;font-size:
 table.sched th,table.sched td{border:1px solid #e3e6ec;padding:6px 4px;text-align:center;white-space:nowrap;min-width:42px}
 td.cRoute{min-width:52px}
 th.tcol,td.tcol{font-size:13px;font-weight:800;min-width:62px}
+table.sched td.scsplit{background:#fff6da;padding:1px 2px}
+.sch-half{font-size:9.5px;font-weight:800;color:#7a4a00;padding:2px 3px;line-height:1.3;white-space:nowrap}
+.sch-half+.sch-half{border-top:1px dashed #e6cf92}
 table.sched th{background:#eef2f6;color:#3a4a5a;font-weight:700;line-height:1.25}
 table.sched th.we{background:#d9efef;color:#1c6b6b}
 th.tcol{background:#ffe4c2;color:#8a5300}
@@ -840,8 +843,12 @@ async function loadSched(){
     const _ws=iso(weekStart);let rows=schedCache[_ws];if(!rows){rows=await rpc("list_schedules",{p_token:S.token,p_week_start:_ws});schedCache[_ws]=rows;}
     if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.</div>';return;}
     const dates=[...new Set(rows.map(r=>r.work_date))].sort();
-    const map={},campR={};
-    rows.forEach(r=>{map[r.route+"|"+r.work_date]=r.driver_name;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(r.route);});
+    const allRts=[...new Set(rows.map(r=>r.route))];const parentOf={};
+    allRts.forEach(function(C){if(splitRt(C).length>=2){splitRt(C).forEach(function(sub){if(!parentOf[sub])parentOf[sub]=C;});}});
+    const map={},splitMap={},campR={};
+    rows.forEach(r=>{const disp=parentOf[r.route]||r.route;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(disp);
+      if(parentOf[r.route]){if(r.driver_name)(splitMap[disp+"|"+r.work_date]=splitMap[disp+"|"+r.work_date]||{})[r.route]=r.driver_name;}
+      else{map[disp+"|"+r.work_date]=r.driver_name;}});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
     const t=kstNow();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
     const WD=["일","월","화","수","목","금","토"];const ed=CAN_EDIT()&&editMode;
@@ -852,10 +859,15 @@ async function loadSched(){
       h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><div class="tbl-inner"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
       rts.forEach(rt=>{
         h+='<tr><td class="cRoute">'+rt+'</td>';
-        dates.forEach(d=>{const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];const to=(d===today);
-          const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+nm+'" style="cursor:pointer"':'';
-          let cls;if(rk){cls="rk "+RCLS[rk]+(to?" tcol":"");}else{cls=to?"tcol tbg":"";}
-          h+='<td class="'+cls+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+nm+'</td>';});
+        dates.forEach(d=>{const to=(d===today);const sp=splitMap[rt+"|"+d];
+          if(sp&&Object.keys(sp).length){const subs=splitRt(rt);let inner='';
+            subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const srk=RANKMAP[snm];inner+='<div class="sch-half">'+s+' : '+(srk?RMARK[srk]+' ':'')+escN(snm)+'</div>';}});
+            const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':'';
+            h+='<td class="scsplit'+(to?' tcol':'')+'"'+da+'>'+inner+'</td>';
+          } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
+            const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
+            let cls;if(rk){cls="rk "+RCLS[rk]+(to?" tcol":"");}else{cls=to?"tcol tbg":"";}
+            h+='<td class="'+cls+'"'+da+'>'+(rk?RMARK[rk]+" ":"")+escN(nm)+'</td>';}});
         h+='</tr>';
       });
       h+='</tbody></table><div class="today-box"></div></div></div></div>';
@@ -873,20 +885,22 @@ function splitRt(r){var b=String(r).replace(/\s*\(.*?\)/g,'').trim();var m=b.mat
 function sceRoster(cur){var s={};Object.keys(RANKMAP).forEach(function(n){s[n]=1;});Object.keys(schedCache).forEach(function(k){(schedCache[k]||[]).forEach(function(r){if(r.driver_name)s[r.driver_name]=1;});});if(cur)s[cur]=1;return Object.keys(s).sort();}
 window.editCell=async(wd,rt,camp,cur)=>{
   var _lr=schedLockReason(wd);if(_lr){alert(schedLockMsg(_lr));return;}
-  window._sceSplitMode=false;
   var subs=splitRt(rt);var splittable=subs.length>=2;
+  var cs={};var wsr=schedCache[iso(weekStart)]||[];
+  wsr.forEach(function(r){if(r.work_date===wd&&subs.indexOf(r.route)>=0&&r.driver_name)cs[r.route]=r.driver_name;});
+  var hasSplit=Object.keys(cs).length>0;window._sceSplitMode=hasSplit;
   var roster=sceRoster(cur);
   var dl='<datalist id="sc-roster">'+roster.map(function(n){return '<option value="'+escN(n)+'"></option>';}).join('')+'</datalist>';
-  var srows=subs.map(function(s){return '<div class="sc-srow"><span class="sc-sr">'+s+'</span><input class="sc-sin" list="sc-roster" data-rt="'+s+'" placeholder="담당 기사"></div>';}).join('');
+  var srows=subs.map(function(s){return '<div class="sc-srow"><span class="sc-sr">'+s+'</span><input class="sc-sin" list="sc-roster" data-rt="'+s+'" value="'+escN(cs[s]||'')+'" placeholder="담당 기사"></div>';}).join('');
   var h='<div id="sc-ov" class="ovbg" onclick="if(event.target.id===\'sc-ov\')this.remove()"><div class="pbmodal scedit">'
     +'<div class="sce-h">✏️ 기사 변경</div>'
     +'<div class="sce-b">'
       +'<div class="sce-meta">라우트: <b>'+escN(rt)+'</b><br>날짜: '+wd+'</div>'
-      +'<div id="sce-single"><label class="sce-lb">기사 이름</label><input id="sce-name" list="sc-roster" value="'+escN(cur||'')+'" placeholder="이름"></div>'
-      +'<div id="sce-split" style="display:none"><label class="sce-lb">✂ 분할 배정 (라우트별 기사)</label>'+srows+'</div>'
+      +'<div id="sce-single" style="display:'+(hasSplit?'none':'')+'"><label class="sce-lb">기사 이름</label><input id="sce-name" list="sc-roster" value="'+escN(cur||'')+'" placeholder="이름"></div>'
+      +'<div id="sce-split" style="display:'+(hasSplit?'':'none')+'"><label class="sce-lb">✂ 분할 배정 (라우트별 기사)</label>'+srows+'</div>'
       +dl
       +'<div class="sce-btns">'
-        +(splittable?'<button class="sce-split" onclick="sceToggleSplit()">✂ 분할 배정</button>':'')
+        +(splittable?'<button class="sce-split'+(hasSplit?' on':'')+'" onclick="sceToggleSplit()">'+(hasSplit?'🔗 병합 배정':'✂ 분할 배정')+'</button>':'')
         +'<span style="flex:1"></span>'
         +'<button class="sce-save" onclick="sceSave(\''+wd+'\',\''+rt+'\',\''+escN(camp)+'\')">변경 저장</button>'
         +'<button class="sce-cancel" onclick="document.getElementById(\'sc-ov\').remove()">취소</button>'
@@ -894,7 +908,7 @@ window.editCell=async(wd,rt,camp,cur)=>{
     +'</div></div></div>';
   document.body.insertAdjacentHTML('beforeend',h);
 };
-window.sceToggleSplit=function(){window._sceSplitMode=!window._sceSplitMode;var sm=window._sceSplitMode;document.getElementById('sce-single').style.display=sm?'none':'';document.getElementById('sce-split').style.display=sm?'':'none';var b=document.querySelector('.sce-split');if(b)b.classList.toggle('on',sm);};
+window.sceToggleSplit=function(){window._sceSplitMode=!window._sceSplitMode;var sm=window._sceSplitMode;document.getElementById('sce-single').style.display=sm?'none':'';document.getElementById('sce-split').style.display=sm?'':'none';var b=document.querySelector('.sce-split');if(b){b.textContent=sm?'🔗 병합 배정':'✂ 분할 배정';b.classList.toggle('on',sm);}};
 window.sceSave=async function(wd,rt,camp){
   var ov=document.getElementById('sc-ov');
   try{
@@ -907,6 +921,10 @@ window.sceSave=async function(wd,rt,camp){
     } else {
       var nv=document.getElementById('sce-name').value.trim();
       await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});
+      var msubs=splitRt(rt);
+      if(msubs.length>=2){var wsr2=schedCache[iso(weekStart)]||[];
+        for(var s=0;s<msubs.length;s++){var had=wsr2.some(function(r){return r.work_date===wd&&r.route===msubs[s]&&r.driver_name;});
+          if(had){await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:msubs[s],p_driver:"",p_camp:camp});}}}
     }
     if(ov)ov.remove();delete schedCache[iso(weekStart)];loadSched();
   }catch(e){alert(e.message);}
