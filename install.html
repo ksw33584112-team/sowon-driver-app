@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6feb">
+<title>소원물류 기사앱 설치</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(160deg,#0f1b3d,#1f3a6e 55%,#2a5bb0);min-height:100vh;color:#fff;padding:22px 18px 40px}
+.wrap{max-width:440px;margin:0 auto}
+.logo{width:82px;height:82px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;margin:8px auto 14px;box-shadow:0 8px 26px rgba(0,0,0,.35)}
+.logo img{width:64px;height:64px;border-radius:14px}
+h1{text-align:center;font-size:22px;font-weight:900;letter-spacing:-.5px}
+.sub{text-align:center;font-size:13px;color:#bcd0f5;margin-top:5px;line-height:1.5}
+.plat{display:flex;gap:8px;margin:20px 0 14px}
+.pt{flex:1;text-align:center;padding:11px;border-radius:12px;background:rgba(255,255,255,.1);font-size:13px;font-weight:800;cursor:pointer;border:2px solid transparent}
+.pt.on{background:#fff;color:#1f3a6e;border-color:#fff}
+.card{background:rgba(255,255,255,.97);color:#1a2540;border-radius:16px;padding:16px 16px 18px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.card h2{font-size:15px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.step{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-top:1px solid #eef1f6}
+.step:first-of-type{border-top:none}
+.num{flex:0 0 24px;height:24px;border-radius:50%;background:#1f6feb;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.stx{font-size:13.5px;line-height:1.5;color:#33405c}
+.stx b{color:#12213f}
+.btn{display:block;width:100%;border:none;border-radius:13px;padding:15px;font-size:15.5px;font-weight:900;cursor:pointer;margin-top:6px}
+.btn-p{background:linear-gradient(135deg,#1f6feb,#1550c0);color:#fff;box-shadow:0 6px 16px rgba(31,111,235,.4)}
+.btn-g{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;box-shadow:0 6px 16px rgba(34,197,94,.4)}
+.btn-o{background:#eef2fb;color:#1f3a6e}
+.hint{font-size:11.5px;color:#8a94ab;margin-top:9px;text-align:center;line-height:1.5}
+.ok{background:#e7f6ec;color:#1f7a4d;border-radius:11px;padding:11px 13px;font-size:13px;font-weight:800;text-align:center;margin-top:8px}
+.kbd{background:#eef1f6;border-radius:6px;padding:1px 6px;font-weight:800;color:#1f3a6e;font-size:12px}
+.share{display:inline-block;width:17px;height:17px;vertical-align:-3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><img src="icon-192.png" alt=""></div>
+  <h1>소원물류 기사앱</h1>
+  <div class="sub">홈 화면에 설치하고 알림을 켜면<br>공지·정산·리스트 새 소식을 바로 받아요 🔔</div>
+
+  <div class="plat">
+    <div class="pt" id="pt-and" onclick="pick('and')">🤖 안드로이드</div>
+    <div class="pt" id="pt-ios" onclick="pick('ios')">🍎 아이폰</div>
+  </div>
+
+  <div id="standalone" style="display:none">
+    <div class="card">
+      <div class="ok">✅ 앱이 이미 설치되어 실행 중입니다.</div>
+      <button class="btn btn-g" id="perm2" onclick="askPerm()">🔔 알림 허용하기</button>
+      <button class="btn btn-o" onclick="location.href='index.html'" style="margin-top:8px">앱으로 이동 →</button>
+    </div>
+  </div>
+
+  <!-- 안드로이드 -->
+  <div class="card" id="card-and" style="display:none">
+    <h2>🤖 안드로이드 설치</h2>
+    <div class="step"><div class="num">1</div><div class="stx"><b>앱 설치</b> 버튼을 누르세요. (버튼이 없으면 크롬 우측 상단 <span class="kbd">⋮</span> → <b>홈 화면에 추가 / 앱 설치</b>)</div></div>
+    <div class="step"><div class="num">2</div><div class="stx">홈 화면에 생긴 <b>소원물류 기사앱</b> 아이콘으로 실행합니다.</div></div>
+    <div class="step"><div class="num">3</div><div class="stx">아래 <b>알림 허용</b>을 누르고, 앱에서 로그인하면 끝!</div></div>
+    <button class="btn btn-p" id="installBtn" onclick="doInstall()">📲 앱 설치</button>
+    <button class="btn btn-g" onclick="askPerm()" style="margin-top:8px">🔔 알림 허용</button>
+    <div class="hint" id="hint-and">설치 버튼이 비활성화면, 크롬 메뉴에서 “홈 화면에 추가”를 눌러주세요.</div>
+  </div>
+
+  <!-- 아이폰 -->
+  <div class="card" id="card-ios" style="display:none">
+    <h2>🍎 아이폰 설치</h2>
+    <div class="step"><div class="num">1</div><div class="stx">반드시 <b>Safari(사파리)</b>로 이 페이지를 여세요.</div></div>
+    <div class="step"><div class="num">2</div><div class="stx">하단의 <b>공유</b> 버튼 <svg class="share" viewBox="0 0 24 24" fill="none" stroke="#1f6feb" stroke-width="2"><path d="M12 3v13M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg> 을 누릅니다.</div></div>
+    <div class="step"><div class="num">3</div><div class="stx"><b>홈 화면에 추가</b>를 선택 → 오른쪽 위 <b>추가</b>.</div></div>
+    <div class="step"><div class="num">4</div><div class="stx">홈 화면 아이콘으로 앱을 열고 <b>로그인</b>하면, <b>알림 허용</b> 창이 뜹니다. 허용을 눌러주세요.</div></div>
+    <div class="hint">※ 아이폰은 iOS 16.4 이상에서, 홈 화면에 추가한 앱으로 열어야만 알림을 받을 수 있어요.</div>
+    <button class="btn btn-o" onclick="location.href='index.html'" style="margin-top:12px">사파리에서 앱 열기 →</button>
+  </div>
+
+  <div class="hint">문의는 관리자에게 연락해주세요.</div>
+</div>
+<script>
+var deferred=null;
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();deferred=e;var b=document.getElementById("installBtn");if(b){b.disabled=false;b.style.opacity="1";}});
+function isStandalone(){return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;}
+function pick(p){
+  document.getElementById("pt-and").classList.toggle("on",p==="and");
+  document.getElementById("pt-ios").classList.toggle("on",p==="ios");
+  document.getElementById("card-and").style.display=p==="and"?"block":"none";
+  document.getElementById("card-ios").style.display=p==="ios"?"block":"none";
+}
+async function doInstall(){
+  if(deferred){deferred.prompt();try{await deferred.userChoice;}catch(e){}deferred=null;}
+  else{alert("크롬 우측 상단 ⋮ 메뉴에서 '홈 화면에 추가' 또는 '앱 설치'를 눌러주세요.");}
+}
+async function askPerm(){
+  if(!("Notification" in window)){alert("이 브라우저는 알림을 지원하지 않습니다.");return;}
+  if(Notification.permission==="granted"){alert("이미 알림이 허용되어 있어요. 앱에서 로그인하면 자동으로 알림이 켜집니다.");return;}
+  if(Notification.permission==="denied"){alert("알림이 차단되어 있습니다.\\n휴대폰 설정 > 이 앱 > 알림을 허용으로 바꿔주세요.");return;}
+  var p=await Notification.requestPermission();
+  if(p==="granted"){try{if("serviceWorker" in navigator)await navigator.serviceWorker.register("sw.js");}catch(e){}alert("🔔 알림이 허용되었습니다!\\n앱에서 로그인하면 새 소식 알림을 받습니다.");}
+  else alert("알림이 허용되지 않았습니다. 나중에 앱 설정에서 다시 켤 수 있어요.");
+}
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+(function(){
+  if(isStandalone()){document.getElementById("standalone").style.display="block";}
+  var ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  pick(ios?"ios":"and");
+  var b=document.getElementById("installBtn");if(b&&!deferred){b.style.opacity=".6";}
+})();
+</script>
+</body>
+</html>
