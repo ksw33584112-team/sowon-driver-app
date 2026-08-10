@@ -1076,7 +1076,8 @@ async function pbFormSubmit(o){
   if(!/\/forms\//.test(base))return false;
   var url=base+"/formResponse",E=PB_FORM.entry,fd=new URLSearchParams();
   fd.append("entry."+E.company,PB_FORM.company);fd.append("entry."+E.phone,PB_FORM.phone);
-  fd.append("entry."+E.wave,PB_FORM.waveMap[o.wave]||o.wave||"");fd.append("entry."+E.date,o.date||"");
+  fd.append("entry."+E.wave,PB_FORM.waveMap[o.wave]||o.wave||"");
+  if(o.date){var _dp=String(o.date).split("-");if(_dp.length===3){fd.append("entry."+E.date+"_year",_dp[0]);fd.append("entry."+E.date+"_month",String(+_dp[1]));fd.append("entry."+E.date+"_day",String(+_dp[2]));}else{fd.append("entry."+E.date,o.date);}}
   fd.append("entry."+E.camp,o.camp||"");fd.append("entry."+E.route,o.route||"");fd.append("entry."+E.reason,o.reason||"");
   if(E.confirm)fd.append("entry."+E.confirm,PB_FORM.confirmVal);
   try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:fd.toString()});return true;}catch(e){return false;}
