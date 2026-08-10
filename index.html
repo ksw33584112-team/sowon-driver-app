@@ -601,6 +601,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
     <div class="ah">
       <div class="av" id="av">·</div>
       <div><div class="an" id="an"></div><div class="ar" id="ar"></div></div>
+      <button class="lo" id="refresh" title="새로고침" style="margin-left:auto;margin-right:6px">🔄 새로고침</button>
       <button class="lo" id="logout">로그아웃</button>
     </div>
     <div class="mc">
@@ -637,6 +638,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
           <div class="menu-item mi-purple hide" id="mi-perm"><span class="mi-ic">🛡️</span><span class="mi-tx"><b>권한 관리</b><i>기사 직급·정지·PW·관리자</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-blue" id="mi-pw"><span class="mi-ic">🔑</span><span class="mi-tx"><b>비밀번호 변경</b><i>내 로그인 비밀번호</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-green" id="mi-me"><span class="mi-ic">ℹ️</span><span class="mi-tx"><b>내 정보</b><i>이름·직급 확인</i></span><span class="mi-ar">›</span></div>
+          <div class="menu-item mi-blue" id="mi-push"><span class="mi-ic">🔔</span><span class="mi-tx"><b>푸시 알림</b><i>공지·정산·리스트 새 글 알림 받기</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-red" id="mi-logout"><span class="mi-ic">🚪</span><span class="mi-tx"><b>로그아웃</b><i>앱에서 나가기</i></span><span class="mi-ar">›</span></div>
         </div>
         <div id="set-sub" class="hide">
@@ -707,7 +709,7 @@ $("#li-btn").onclick=async()=>{
     const rows=await rpc("driver_login",{p_name:name,p_pw:pw});
     if(!rows.length){msg("#li-msg","err","이름 또는 비밀번호가 틀렸습니다.");$("#li-btn").disabled=false;return;}
     S={token:rows[0].token,name:rows[0].name,rank:rows[0].rank,role:rows[0].role,is_admin:rows[0].is_admin,birth:rows[0].birth};
-    localStorage.setItem("sowon_session",JSON.stringify(S));enterApp();
+    localStorage.setItem("sowon_session",JSON.stringify(S));enterApp();setTimeout(function(){try{ensurePush(true);}catch(e){}},600);
   }catch(e){msg("#li-msg","err",e.message);}
   $("#li-btn").disabled=false;
 };
@@ -1160,6 +1162,17 @@ window.pbReview=async function(tid,sid){
   }catch(e){alert(e.message);}
 };
 window.pbReviewDecide=async function(sid,st){if(st==="반려"&&!confirm("이 소명을 반려할까요?"))return;var o=document.getElementById("pr-ov");if(o)o.remove();await pbDecide(sid,st);};
+window.pbView=async function(tid){try{
+  var rows=await rpc("pback_target_detail",{p_token:S.token,p_id:tid}),t=(rows&&rows[0])||{};
+  var imgs=[t.photo1,t.photo2].filter(function(x){return x;}),labels=["미회수 사진","배송완료 사진"];
+  var h='<div id="pv-ov" class="ovbg" onclick="if(event.target.id===\'pv-ov\')this.remove()"><div class="pbmodal" onclick="event.stopPropagation()"><div class="pbmh" style="background:linear-gradient(135deg,#1f7a4d,#15663f)"><div><b>'+escN(t.driver_name||"")+' · '+escN(t.route||"")+'</b><i>'+pbWD(t.pdate)+' · '+escN(t.camp||"")+(t.wave?' · '+escN(t.wave):'')+'</i></div><span onclick="document.getElementById(\'pv-ov\').remove()" style="cursor:pointer;font-size:20px;color:#fff">×</span></div><div class="pbmb">';
+  h+='<div style="background:#e7f6ec;border:1px solid #b8e0c6;border-radius:11px;padding:11px 13px;margin-bottom:12px"><b style="color:#1f7a4d;font-size:13.5px">✅ 제출 완료</b><div style="color:#2f6b4b;font-size:12px;margin-top:3px">본사 폼에 정상 제출되었습니다.</div></div>';
+  h+='<div class="ml">🖼 사진 <em>— 탭하면 확대</em></div>';
+  if(imgs.length)h+='<div class="pbimgs">'+imgs.map(function(s,i){return '<div class="pbimg" onclick="annZoom(\''+String(s).replace(/\x27/g,"\\\x27")+'\')"><img src="'+s+'"><span>'+labels[i]+'</span></div>';}).join('')+'</div>';
+  else h+='<div class="center" style="color:#9aa;font-size:11.5px;padding:14px;background:#f7f9fc;border-radius:10px">첨부 사진 없음</div>';
+  h+='<div class="ml" style="margin-top:11px">소명 내용</div><div class="pbrsn-ro">'+escN(t.reason||"(내용 없음)")+'</div></div></div></div>';
+  var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
+}catch(e){alert(e.message);}};
 async function renderPbackAdmin(){
   const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
   try{
@@ -1188,7 +1201,7 @@ async function renderPbackAdmin(){
     h+='</div>';
     h+='<div class="ntfold" onclick="pbAcc(this)"><span>✅ 제출완료 ('+(d.submitted_cnt||0)+')</span><span class="fa">▾</span></div><div class="ntfoldbody" style="display:none">';
     if(!done.length)h+='<div class="center" style="color:#9aa;font-size:12px;padding:8px">없음</div>';
-    done.forEach(function(s){h+='<div class="somyeong"><div class="top"><span class="rt">'+escN(s.name||"")+' · '+escN(s.route||"")+'</span><span class="pill p-sub">제출완료</span></div><div style="color:#666;font-size:12px">'+escN(s.reason||"")+'</div></div>';});
+    done.forEach(function(s){h+='<div class="somyeong'+(s.tid?' clk':'')+'"'+(s.tid?' onclick="pbView('+s.tid+')"':'')+'><div class="top"><span class="rt">'+escN(s.name||"")+' · '+escN(s.route||"")+'</span><span class="pill p-sub">제출완료'+(s.tid?' ›':'')+'</span></div><div style="color:#666;font-size:12px">'+escN(s.reason||"")+'</div></div>';});
     h+='</div>';
     h+='<div class="ntfold" onclick="pbAcc(this)"><span>🚫 소명불가 ('+(d.impossible_cnt||0)+')</span><span class="fa">▾</span></div><div class="ntfoldbody" style="display:none">';
     if(!imp.length)h+='<div class="center" style="color:#9aa;font-size:12px;padding:8px">없음</div>';
@@ -1201,7 +1214,7 @@ async function renderPbackAdmin(){
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
 function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'');}
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
-document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){localStorage.removeItem("sowon_session");location.reload();}else openSub(mi.id.replace("mi-",""));});
+document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
 async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{var rows=await rpc("admin_list_drivers",{p_token:S.token});try{var cp=await rpc("admin_list_coupang",{p_token:S.token});var m={};(cp||[]).forEach(function(x){m[x.nm]=x.cid;});rows.forEach(function(r){r.coupang_id=m[r.name]||"";});}catch(e){}window.__adrows=rows;renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
@@ -1902,10 +1915,43 @@ function gMatchTap(e){var g=GM;if(!g.cx)return;if(g.done){gMatchStart();return;}
 function gMatchKey(e){if(GH.view!=='match')return;if((e.code==='Space'||e.key===' ')&&GM.done){e.preventDefault();gMatchStart();}}
 
 
-$("#logout").onclick=()=>{localStorage.removeItem("sowon_session");location.reload();};
+$("#logout").onclick=()=>{doLogout();};
 /* 자동로그인 */
 (function(){const raw=localStorage.getItem("sowon_session");if(raw){try{S=JSON.parse(raw);enterApp();}catch(e){}}})();
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+/* ===== 웹푸시 알림 ===== */
+var VAPID_PUBLIC="BPj5bqis2eiVTK4GN4EhXU6D68t6oRt_zjGG8-wfz-PEFjTZylfsk9jZrpPmb7fnZfWX5NidJUea6CCm6Sckbyo";
+function _pu8(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');var p='='.repeat((4-s.length%4)%4);var r=atob(s+p);var a=new Uint8Array(r.length);for(var i=0;i<r.length;i++)a[i]=r.charCodeAt(i);return a;}
+function pushGroup(){var r=(S&&(S.rank||S.role))||'';return (r==='대표'||r==='총괄'||r==='팀장')?r:'일반';}
+window.ensurePush=async function(interactive){try{
+  if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window))return {ok:false,reason:'unsupported'};
+  if(!S||!S.token)return {ok:false,reason:'nosession'};
+  var perm=Notification.permission;
+  if(perm==='denied')return {ok:false,reason:'denied'};
+  if(perm==='default'){if(!interactive)return {ok:false,reason:'default'};perm=await Notification.requestPermission();}
+  if(perm!=='granted')return {ok:false,reason:perm};
+  var reg=await navigator.serviceWorker.ready;
+  var sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_pu8(VAPID_PUBLIC)});
+  var j=sub.toJSON();
+  await rpc("save_push_sub",{p_token:S.token,p_endpoint:sub.endpoint,p_p256dh:j.keys.p256dh,p_auth:j.keys.auth,p_group:pushGroup()});
+  try{if(reg.active)reg.active.postMessage({type:'auth',token:S.token,group:pushGroup()});}catch(e){}
+  localStorage.setItem('sowon_push','1');return {ok:true};
+}catch(e){return {ok:false,reason:String(e&&e.message||e)};}};
+window.pushToggle=async function(){
+  if(!('Notification'in window)){alert('이 기기·브라우저는 알림을 지원하지 않습니다.');return;}
+  if(Notification.permission==='denied'){alert('🔕 알림이 차단되어 있습니다.\n\n휴대폰 설정 > 이 앱(홈화면 아이콘) > 알림 을 허용으로 바꿔주세요.');return;}
+  var r=await ensurePush(true);
+  if(r.ok)alert('🔔 푸시 알림이 켜졌습니다!\n\n공지사항·정산내역·리스트확인(프백/분실/가중/물량/SLA)에 새 글이 올라오면 알림을 받습니다.');
+  else alert('알림 설정을 완료하지 못했습니다.\n('+r.reason+')\n\n※ 아이폰은 반드시 홈 화면에 추가한 앱에서 열어야 알림이 됩니다.');
+};
+window.pushLogout=async function(){try{if('serviceWorker'in navigator){var reg=await navigator.serviceWorker.ready;var sub=await reg.pushManager.getSubscription();if(sub){try{await rpc("delete_push_sub",{p_token:S&&S.token,p_endpoint:sub.endpoint});}catch(e){}try{await sub.unsubscribe();}catch(e){}}if(reg&&reg.active)reg.active.postMessage({type:'logout'});}}catch(e){}try{localStorage.removeItem('sowon_push');}catch(e){}};
+window.doLogout=async function(){try{await pushLogout();}catch(e){}localStorage.removeItem("sowon_session");location.reload();};
+(function(){
+  var _rf=document.getElementById('refresh');if(_rf)_rf.onclick=function(){location.reload();};
+  try{var m=location.search.match(/[?&]go=([a-z]+)/);if(m&&S)setTimeout(function(){try{switchView(m[1]);}catch(e){}},350);}catch(e){}
+  if(S)setTimeout(function(){try{ensurePush(false);}catch(e){}},1500);
+})();
 </script>
 </body>
 </html>
