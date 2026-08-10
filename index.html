@@ -320,8 +320,10 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .lc-me{background:#12907d;color:#fff;font-size:9px;padding:1px 6px;border-radius:8px}
 .lc-item{padding:10px 12px;border-top:1px solid #f1f4f9}
 .lc-item.ok{background:#e3f7ec;border-left:4px solid #1f9d57;padding-left:9px}.lc-item.excl{background:#f7f9fc;opacity:.72}
-.lc-ok-b{display:inline-block;background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;font-size:9.5px;font-weight:900;padding:2px 8px;border-radius:9px;margin-left:6px;letter-spacing:.3px;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:okpulse 1.5s ease-out infinite;transform-origin:center}
-@keyframes okpulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.55)}45%{transform:scale(1.14)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.lc-ok-b{position:relative;display:inline-block;vertical-align:middle;padding:3px 11px;border-radius:9px;margin-left:6px;font-size:10px;font-weight:900;letter-spacing:.5px;color:#ffe14d;text-shadow:0 1px 1.5px rgba(0,0,0,.4);background:#0f5132;overflow:hidden;z-index:0}
+.lc-ok-b::before{content:"";position:absolute;left:50%;top:50%;width:200px;height:200px;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,rgba(255,255,255,0) 0deg,rgba(255,255,255,0) 295deg,#fff6c2 325deg,#ffe14d 348deg,rgba(255,255,255,0) 360deg);animation:okspin 1.9s linear infinite;z-index:-2}
+.lc-ok-b::after{content:"";position:absolute;inset:1.6px;border-radius:7.5px;background:linear-gradient(135deg,#15663f,#0b4429);z-index:-1}
+@keyframes okspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 .lc-caret{color:#98a0b2;font-size:12px;margin-left:5px}.lc-grp.cfd .lc-gh{background:#f2fbf6}
 .li-top{display:flex;justify-content:space-between;align-items:center}
 .li-date{font-size:11px;color:#98a0b2}.li-amt{font-size:14px;font-weight:800;color:#c0392b}
@@ -1072,7 +1074,9 @@ function pbPeriod(){const d=kstNow();return d.getFullYear()+"-"+String(d.getMont
 /* 프백 소명 → 구글폼(서베이) 자동전송 (관리자 승인 시) */
 var PB_FORM={url:"",defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",company:"소원물류",phone:"01071398602",entry:{company:"482875263",phone:"779622344",wave:"1389640317",date:"954374004",camp:"358739403",route:"380559549",reason:"895085804",confirm:"1853853931"},waveMap:{"주간":"WAVE 2","야간":"WAVE 1"},confirmVal:"확인"};
 async function pbFormSubmit(o){
-  var base=(PB_FORM.url||PB_FORM.defaultUrl).split("?")[0].replace(/\/viewform.*$/,"").replace(/\/formResponse.*$/,"");
+  var raw=String(PB_FORM.url||"").trim();
+  if(!/docs\.google\.com\/forms\//.test(raw))return false;
+  var base=raw.split("?")[0].replace(/\/viewform.*$/,"").replace(/\/formResponse.*$/,"");
   if(!/\/forms\//.test(base))return false;
   var url=base+"/formResponse",E=PB_FORM.entry,fd=new URLSearchParams();
   fd.append("entry."+E.company,PB_FORM.company);fd.append("entry."+E.phone,PB_FORM.phone);
@@ -1124,12 +1128,20 @@ window.pbOpen=async function(id){
 };
 window.pbSave=async function(id){var rsn=($("#pb-rsn").value||"").trim();if(!rsn){alert("소명 내용을 입력하세요.");return;}try{await rpc("submit_pback",{p_token:S.token,p_target_id:id,p_reason:rsn});var o=document.getElementById("pd-ov");if(o)o.remove();loadPback();}catch(e){alert(e.message);}};
 window.pbImpossible=async function(id){if(!confirm("이 건을 소명 불가로 처리할까요?"))return;try{await rpc("mark_pback_impossible",{p_token:S.token,p_target_id:id});var o=document.getElementById("pd-ov");if(o)o.remove();loadPback();}catch(e){alert(e.message);}};
-window.pbSaveUrl=async()=>{const u=$("#pb-formurl").value.trim();try{await rpc("admin_set_pback_config",{p_token:S.token,p_period:pbPeriod(),p_form_url:u,p_submit_mode:__PB_MODE,p_active:true});msg("#pb-adm-msg","ok","폼 URL 저장됨");}catch(e){msg("#pb-adm-msg","err",e.message);}};
+window.pbSaveCfg=async()=>{var u=($("#pb-formurl")?$("#pb-formurl").value.trim():"");var co=($("#pb-company")?$("#pb-company").value.trim():"");var ph=($("#pb-phone")?$("#pb-phone").value.trim():"");if(u&&!/docs\.google\.com\/forms\//.test(u)){msg("#pb-adm-msg","err","⚠️ 올바른 구글폼 URL이 아닙니다");return;}try{await rpc("admin_set_pback_config",{p_token:S.token,p_period:pbPeriod(),p_form_url:u,p_submit_mode:__PB_MODE,p_active:true});await rpc("pback_set_company",{p_token:S.token,p_period:pbPeriod(),p_company:co,p_phone:ph});PB_FORM.url=u;if(co)PB_FORM.company=co;if(ph)PB_FORM.phone=ph;msg("#pb-adm-msg","ok","✅ 저장 완료 · 발송 대상 URL 반영됨");renderPbackAdmin();}catch(e){msg("#pb-adm-msg","err",e.message);}};
+window.pbSaveUrl=window.pbSaveCfg;
 window.pbSetMode=function(m){__PB_MODE=m;rpc("admin_set_pback_config",{p_token:S.token,p_period:pbPeriod(),p_form_url:(PB_FORM.url||null),p_submit_mode:m,p_active:true}).catch(function(){});renderPbackAdmin();};
 window.pbAcc=function(el){var b=el.nextElementSibling;if(!b)return;var open=b.style.display!=="none";b.style.display=open?"none":"block";var fa=el.querySelector(".fa");if(fa)fa.style.transform=open?"":"rotate(180deg)";};
 window.pbDecide=async(id,st)=>{try{
-    await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});
-    if(st==="제출완료"){var s=((__PB_DASH&&__PB_DASH.pending)||[]).find(function(x){return x.id===id;});if(s){var ok=await pbFormSubmit({date:s.pdate,wave:s.wave,camp:s.camp,route:s.route,reason:s.reason});msg("#pb-adm-msg",ok?"ok":"err",ok?("✅ "+(s.name||"")+" · "+(s.route||"")+" 승인·서베이 전송"):"승인됨(서베이 전송 실패·폼URL 확인)");}}
+    if(st==="제출완료"){
+      var s=((__PB_DASH&&__PB_DASH.pending)||[]).find(function(x){return x.id===id;});
+      var ok=await pbFormSubmit({date:s?s.pdate:"",wave:s?s.wave:"",camp:s?s.camp:"",route:s?s.route:"",reason:s?s.reason:""});
+      if(!ok){msg("#pb-adm-msg","err","⚠️ 서베이 전송 실패 — 발송 폼 URL을 확인하세요. 제출완료 처리하지 않았습니다.");alert("서베이 전송에 실패했습니다.\n\n관리자 설정에서 '소명 제출 폼 URL'이 올바르게 저장돼 있는지 확인해주세요.\n제출완료 처리하지 않았습니다.");return;}
+      await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});
+      msg("#pb-adm-msg","ok","✅ "+((s&&s.name)||"")+" · "+((s&&s.route)||"")+" 승인·서베이 전송 완료");
+    }else{
+      await rpc("admin_pback_decide",{p_token:S.token,p_id:id,p_status:st});
+    }
     renderPbackAdmin();
   }catch(e){alert(e.message);}};
 window.pbToggleNs=function(){var c=document.getElementById("pb-nscard");if(c)c.style.display=(c.style.display==="none"?"block":"none");};
@@ -1153,6 +1165,7 @@ async function renderPbackAdmin(){
   try{
     const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});
     __PB_DASH=d;const cfg=d.config||{};PB_FORM.url=cfg.form_url||"";if(cfg.submit_mode)__PB_MODE=cfg.submit_mode;
+    try{var _pc=await rpc("pback_get_cfg",{p_token:S.token,p_period:pbPeriod()});if(_pc){window.__PBCFG=_pc;if(_pc.form_url)PB_FORM.url=_pc.form_url;if(_pc.company)PB_FORM.company=_pc.company;if(_pc.phone)PB_FORM.phone=_pc.phone;cfg.form_url=PB_FORM.url;cfg.company=PB_FORM.company;cfg.phone=PB_FORM.phone;}}catch(e){}
     var ns=d.not_submitted||[],pend=d.pending||[],done=d.submitted||[],imp=d.impossible||[];
     let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
     h+=pbDeadlineBanner();
@@ -1161,7 +1174,12 @@ async function renderPbackAdmin(){
     if(!ns.length)h+='<div class="center" style="color:#1f7a4d;font-weight:700;font-size:12px;padding:8px">미제출 없음 ✅</div>';
     else{h+='<table class="pbmm"><tr><th>기사명</th><th>라우트</th><th style="text-align:center">건수</th><th style="text-align:right">상태</th></tr>';ns.forEach(function(x){h+='<tr><td>'+escN(x.name||"")+'</td><td style="color:#66748f">'+escN(x.routes||"")+'</td><td style="text-align:center"><b>'+x.cnt+'</b></td><td style="text-align:right"><span class="'+(x.state==="반려"?"s-rej":"s-todo")+'">'+x.state+'</span></td></tr>';});h+='</table>';}
     h+='</div>';
-    h+='<div class="card"><div style="font-size:11px;font-weight:800;color:#3a5aa8;margin-bottom:6px">📄 소명 제출 폼 URL</div><div class="adr-ct"><input id="pb-formurl" value="'+(cfg.form_url||"")+'" placeholder="https://docs.google.com/forms/..."><button onclick="pbSaveUrl()">저장</button></div><div class="msg" id="pb-adm-msg"></div>';
+    h+='<div class="card"><div style="font-size:11px;font-weight:800;color:#3a5aa8;margin-bottom:8px">🏢 소명 발송 설정</div>'
+      +'<div style="font-size:10px;color:#98a0b2;margin:0 2px 4px">업체명</div><div class="adr-ct" style="margin-bottom:8px"><input id="pb-company" value="'+escN(cfg.company||PB_FORM.company||"")+'" placeholder="예: 소원물류"></div>'
+      +'<div style="font-size:10px;color:#98a0b2;margin:0 2px 4px">대표님 연락처</div><div class="adr-ct" style="margin-bottom:8px"><input id="pb-phone" value="'+escN(cfg.phone||PB_FORM.phone||"")+'" placeholder="예: 01012345678"></div>'
+      +'<div style="font-size:10px;color:#98a0b2;margin:0 2px 4px">📄 소명 제출 폼 URL <span style="color:#c0392b">(매달 변경 · 실제 발송 대상)</span></div><div class="adr-ct"><input id="pb-formurl" value="'+(cfg.form_url||"")+'" placeholder="https://docs.google.com/forms/..."><button onclick="pbSaveCfg()">저장</button></div>'
+      +'<div class="msg" id="pb-adm-msg"></div>'
+      +'<div style="font-size:10.5px;color:#3a5aa8;background:#eef1fc;border-radius:8px;padding:8px 10px;margin-top:8px">현재 발송 대상: <b>'+(PB_FORM.url?escN(PB_FORM.url):"⚠️ 미설정 (승인 시 전송 안 됨)")+'</b></div>';
     h+='<div style="font-size:11px;font-weight:800;color:#3a5aa8;margin:9px 0 6px">제출 방식</div><div class="pbmode">'+["직접","승인","일괄"].map(function(m,i){return '<div class="pbmd'+(__PB_MODE===m?" on":"")+'" onclick="pbSetMode(\''+m+'\')"><b>'+["①","②","③"][i]+'</b>'+m+'</div>';}).join('')+'</div>';
     h+='<div class="note" style="margin-top:6px">대상 명단은 소원 스케줄 프로그램에서 업로드하면 자동 반영됩니다.</div></div>';
     h+='<div class="card"><div class="ct">🕓 승인 대기 ('+(d.pending_cnt||0)+')</div>';
