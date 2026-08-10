@@ -854,8 +854,29 @@ async function loadSched(){
     if(ed){$("#sc-body").querySelectorAll('td[data-rt]').forEach(td=>{td.onclick=()=>editCell(td.dataset.d,td.dataset.rt,td.dataset.cp,td.dataset.nm);});}
   }catch(e){$("#sc-body").innerHTML='<div class="center">'+e.message+'</div>';}
 }
+function splitRt(r){var b=String(r).replace(/\s*\(.*?\)/g,'').trim();var m=b.match(/^(\d+)([A-Z]{2,})$/);if(m){return m[2].split('').map(function(c){return m[1]+c;});}if(b.indexOf('/')>=0)return b.split('/').map(function(x){return x.trim();}).filter(Boolean);return [b];}
 window.editCell=async(wd,rt,camp,cur)=>{
   var _lr=schedLockReason(wd);if(_lr){alert(schedLockMsg(_lr));return;}
+  var subs=splitRt(rt);
+  if(subs.length>=2){
+    var wantSplit=confirm(rt+" · "+md(wd)+"\n\n[확인] 라우트 분할 배정 ("+subs.join(" / ")+")\n[취소] 통합 배정(한 명)");
+    if(wantSplit){
+      var asg=[];
+      for(var i=0;i<subs.length;i++){
+        var dn=prompt(subs[i]+" 담당 기사 ("+md(wd)+")","");
+        if(dn===null)return;
+        asg.push({rt:subs[i],dn:dn.trim()});
+      }
+      try{
+        for(var j=0;j<asg.length;j++){
+          await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:asg[j].rt,p_driver:asg[j].dn,p_camp:camp});
+        }
+        await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:"",p_camp:camp});
+        delete schedCache[iso(weekStart)];loadSched();
+      }catch(e){alert(e.message);}
+      return;
+    }
+  }
   const nv=prompt("기사명 ("+rt+" · "+md(wd)+")",cur||"");if(nv===null)return;
   try{await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});delete schedCache[iso(weekStart)];loadSched();}
   catch(e){alert(e.message);}
