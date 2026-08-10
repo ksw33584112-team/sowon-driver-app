@@ -492,6 +492,45 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-gplay .ds{font-size:12.5px;color:#8a93ab;line-height:1.6}
 .pl-soon{display:inline-block;margin-top:16px;background:#f0f0f8;color:#8a86b8;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:800}
 .pl-foot{text-align:center;font-size:11px;color:#a8afc2;margin:16px 0 4px;line-height:1.6}
+/* 이달의 게임왕 배너 (화려한 애니메이션) */
+.king{position:relative;overflow:hidden;border-radius:20px;padding:16px 14px 15px;margin-bottom:14px;background:radial-gradient(circle at 50% 0%,#6a3fd0 0%,#3a2380 55%,#1e1450 100%);border:2px solid #ffd54f;box-shadow:0 10px 30px rgba(90,40,180,.4);text-align:center}
+.king.clk{cursor:pointer}
+.king-rays{position:absolute;left:50%;top:26%;width:520px;height:520px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,213,79,.13) 0deg 9deg,transparent 9deg 18deg);animation:kRays 18s linear infinite;pointer-events:none}
+@keyframes kRays{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.king>*{position:relative;z-index:1}
+.king-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;color:#ffe082;font-size:12px;font-weight:800;backdrop-filter:blur(3px)}
+.king-crown{font-size:32px;line-height:1;margin-top:8px;animation:kCrown 1s cubic-bezier(.34,1.56,.64,1) both,kFloat 2.6s ease-in-out 1s infinite}
+@keyframes kCrown{0%{opacity:0;transform:translateY(-34px) scale(.3) rotate(-25deg)}60%{transform:translateY(5px) scale(1.28) rotate(10deg)}100%{opacity:1;transform:none}}
+@keyframes kFloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
+.king-name{font-size:27px;font-weight:900;margin:3px 0 8px;background:linear-gradient(90deg,#fff 0%,#ffe27a 30%,#fff 50%,#ffe27a 70%,#fff 100%);background-size:220% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:kName .7s cubic-bezier(.34,1.56,.64,1) both,kShim 3.2s linear infinite;text-shadow:0 0 18px rgba(255,213,79,.5)}
+@keyframes kName{0%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes kShim{to{background-position:220% center}}
+.king-medal{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.28);border-radius:20px;padding:6px 16px;color:#ffe082;font-size:14px;font-weight:800;animation:kPop .5s .3s both}
+@keyframes kPop{0%{opacity:0;transform:scale(.5)}100%{opacity:1;transform:none}}
+.king-pod{display:flex;gap:8px;margin:12px 4px 0}
+.king-pod .kp{flex:1;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 10px;animation:kUp .5s both}
+.king-pod .kp:nth-child(1){animation-delay:.45s}.king-pod .kp:nth-child(2){animation-delay:.6s}
+@keyframes kUp{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+.king-pod .kp-m{font-size:17px}.king-pod .kp b{flex:1;color:#eceff1;font-size:13px;font-weight:800;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.king-pod .kp i{color:#ffd54f;font-size:12.5px;font-weight:800;font-style:normal}
+.king-rest{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:9px}
+.king-rest .kr{background:rgba(255,255,255,.1);color:#c3ccdf;font-size:11px;border-radius:8px;padding:4px 9px}
+.king-rest .kr.me{background:#ffd54f;color:#3a2b00;font-weight:800}
+.king-prize{color:#ffd54f;font-size:13.5px;font-weight:800;margin-top:13px}
+.king-rule{color:#b9aef0;font-size:11px;margin-top:5px;line-height:1.5}
+.king-period{color:#9a90c8;font-size:11px;margin-top:3px}
+.king-edit{color:#ffe082;font-size:11.5px;font-weight:700;margin-top:9px;opacity:.85}
+.king-empty{color:#cfc6f0;font-size:13px;padding:18px 8px 10px;line-height:1.6}
+.king-cf{position:absolute;top:-10px;width:7px;height:11px;border-radius:2px;opacity:.9;animation:kFall 2.8s linear infinite;pointer-events:none;z-index:0}
+@keyframes kFall{0%{transform:translateY(-10px) rotate(0);opacity:0}10%{opacity:.95}100%{transform:translateY(230px) rotate(620deg);opacity:0}}
+.king-pub{display:flex;align-items:center;gap:8px;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;font-weight:700;background:#3a1f2a;border:1px solid #6b2f42;color:#ffb3c8}
+.king-pub.on{background:#12331f;border-color:#2f6b43;color:#a7e6bf}
+.king-pub span{margin-left:auto;cursor:pointer;font-weight:800;text-decoration:underline}
+/* 설정 모달: 선정방식 토글 + 상품행 */
+.gc-modetab{display:flex;gap:8px;margin-bottom:6px}
+.gc-modetab button{flex:1;border:1px solid #d7dcea;background:#f4f6fb;color:#5a6480;border-radius:10px;padding:10px;font-size:13px;font-weight:800;cursor:pointer}
+.gc-modetab button.on{background:linear-gradient(135deg,#ffcf3f,#ff9f1a);border-color:#ffb300;color:#3a2b00}
+.gc-rulebox{background:#f2eefe;border:1px solid #e0d8fb;border-radius:10px;padding:10px 12px;color:#5a4aa0;font-size:11.5px;line-height:1.55;margin-bottom:4px}
+.pl-prz .rkm{width:34px;flex:none;text-align:center;font-size:17px}
 </style>
 </head>
 <body>
@@ -1103,17 +1142,11 @@ async function loadPlay(){
   var vsc=scores.filter(function(s){return !(exAdm&&s.is_admin);});
   /* 배너 */
   var period=(cfg.start_date&&cfg.end_date)?(cfg.start_date.replace(/-/g,'.')+' ~ '+cfg.end_date.replace(/-/g,'.')):'상시 진행';
-  var h='<div class="pl-hero"><div class="pl-htit">🎮 소원 놀이터</div><div class="pl-hsub">동료들과 겨루는 미니게임! 이달의 게임왕에 도전하세요.</div><div class="pl-hbadge">🏆 '+escN(cfg.method||'종합 점수 랭킹')+' · '+period+'</div></div>';
-  /* 관리자 설정 */
-  if(isAdm){
-    var fg=cfg.featured_game?(plGame(cfg.featured_game)?plGame(cfg.featured_game).n:cfg.featured_game):'미선정';
-    h+='<div class="pl-adm"><span style="font-size:24px">🛠️</span><div class="t"><b>이달의 게임 선정 · 상품 설정</b><i>현재 이달의 게임: '+escN(fg)+'</i></div><button class="pl-admbtn" onclick="gameCfgOpen()">⚙ 설정</button></div>';
-  }
+  var kingTitle=(cfg.mode==='game'&&cfg.featured_game)?('이달의 게임: '+escN(plGame(cfg.featured_game)?plGame(cfg.featured_game).n:cfg.featured_game)):'종합 게임왕';
+  var h='<div class="pl-hero"><div class="pl-htit">🎮 소원 놀이터</div><div class="pl-hsub">동료들과 겨루는 미니게임! 이달의 게임왕에 도전하세요.</div><div class="pl-hbadge">🏆 '+kingTitle+' · '+period+'</div></div>';
   if(cfg.public_on===false&&!isAdm){box.innerHTML=h+'<div class="pl-empty">🚧 놀이터가 잠시 준비 중이에요.<br>곧 다시 열립니다!</div>';return;}
-  /* 행운 뽑기 */
-  /* 이달의 게임왕 랭킹 */
-  h+='<div class="pl-sec">👑 이달의 게임왕</div>';
-  h+=plRankHtml(vsc,me);
+  h+='<div class="pl-sec">👑 이달의 게임왕'+(isAdm?'<span class="pl-more" onclick="gameCfgOpen()">⚙ 설정</span>':'')+'</div>';
+  h+=kingBanner(d);
   /* 인기 게임 */
   h+='<div class="pl-sec">🕹️ 인기 게임<span class="pl-more">'+PL_GAMES.length+'종</span></div>';
   h+='<div class="pl-grid">';
@@ -1121,7 +1154,7 @@ async function loadPlay(){
     var gs=vsc.filter(function(s){return s.game===g.k;});
     var myBest=scores.filter(function(s){return s.game===g.k&&s.name===me;}).reduce(function(a,s){return Math.max(a,+s.score||0);},0);
     var top=null;gs.forEach(function(s){if(!top||(+s.score>+top.score))top=s;});
-    var feat=cfg.featured_game===g.k;
+    var feat=(cfg.mode==='game'&&cfg.featured_game===g.k);
     h+='<div class="pl-gcard'+(feat?' feat':'')+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">⭐ 이달의게임</div>':'')+'<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
     h+='<div class="pl-gbest">'+(myBest>0?('🏅 내 최고 '+myBest.toLocaleString()):'<span class="soon">기록 없음</span>')+'</div>';
     h+='<div class="pl-gtop">'+(top?('🥇 <b>'+escN(top.name)+'</b> '+(+top.score).toLocaleString()):'첫 도전자를 기다려요')+'</div>';
@@ -1131,54 +1164,103 @@ async function loadPlay(){
   h+='<div class="pl-foot">'+escN(cfg.footer||'상품, 상금은 교환 불가 !')+'</div>';
   box.innerHTML=h;
 }
-function plRankHtml(vsc,me){
-  /* 게임별 최고점 합산 = 게임왕 점수 */
-  var best={};/* name -> {game->max} */
-  vsc.forEach(function(s){var n=s.name;if(!best[n])best[n]={};var g=s.game;if(!best[n][g]||+s.score>best[n][g])best[n][g]=+s.score||0;});
-  var arr=Object.keys(best).map(function(n){var tot=0,cnt=0;for(var g in best[n]){tot+=best[n][g];cnt++;}return {name:n,total:tot,games:cnt};});
-  arr.sort(function(a,b){return b.total-a.total;});
-  if(!arr.length)return '<div class="pl-rank"><div class="pl-empty">아직 기록이 없어요.<br>가장 먼저 이달의 게임왕에 도전해보세요! 🏆</div></div>';
-  var top3=arr.slice(0,3);var rest=arr.slice(3,10);
-  var pods=[top3[1],top3[0],top3[2]];var gcl=['g2','g1','g3'];var med=['🥈','🥇','🥉'];
-  var h='<div class="pl-rank"><div class="pl-podium">';
-  pods.forEach(function(p,i){if(!p){h+='<div class="pl-pod"></div>';return;}h+='<div class="pl-pod '+gcl[i]+'"><div class="pl-pmed">'+med[i]+'</div><div class="pl-pav">'+escN(p.name.slice(0,1))+'</div><div class="pl-pnm">'+escN(p.name)+'</div><div class="pl-psc">'+p.total.toLocaleString()+'점</div><div class="pl-pbar"></div></div>';});
-  h+='</div>';
-  rest.forEach(function(p,i){h+='<div class="pl-rrow'+(p.name===me?' me':'')+'"><span class="pl-rrk">'+(i+4)+'</span><span class="pl-rnm">'+escN(p.name)+(p.name===me?' <span class="pl-tag">나</span>':'')+'</span><span class="pl-rsc">'+p.total.toLocaleString()+'점</span></div>';});
-  /* 내 순위가 밖이면 표시 */
-  var myIdx=arr.findIndex(function(p){return p.name===me;});
-  if(myIdx>=10){var mp=arr[myIdx];h+='<div class="pl-rrow me"><span class="pl-rrk">'+(myIdx+1)+'</span><span class="pl-rnm">'+escN(mp.name)+' <span class="pl-tag">나</span></span><span class="pl-rsc">'+mp.total.toLocaleString()+'점</span></div>';}
-  h+='</div>';return h;
+function kingStandings(d){
+  var cfg=d.config||{},scores=d.scores||[];var exAdm=cfg.exclude_admin!==false;
+  var vsc=scores.filter(function(s){return !(exAdm&&s.is_admin);});
+  if((cfg.mode||'king')==='game'&&cfg.featured_game){
+    var g=cfg.featured_game,best={};
+    vsc.forEach(function(s){if(s.game!==g)return;if(!(s.name in best)||s.score>best[s.name])best[s.name]=+s.score||0;});
+    var lst=Object.keys(best).map(function(n){return {name:n,val:best[n],gold:0};}).sort(function(a,b){return b.val-a.val;});
+    return {mode:'game',game:g,list:lst};
+  }
+  var games={};
+  vsc.forEach(function(s){if(!games[s.game])games[s.game]={};var gg=games[s.game];if(!(s.name in gg)||s.score>gg[s.name])gg[s.name]=+s.score||0;});
+  var pts={},gold={};
+  Object.keys(games).forEach(function(gk){
+    var arr=Object.keys(games[gk]).map(function(n){return {name:n,score:games[gk][n]};}).sort(function(a,b){return b.score-a.score;});
+    [3,2,1].forEach(function(p,i){if(arr[i]&&arr[i].score>0){pts[arr[i].name]=(pts[arr[i].name]||0)+p;if(i===0)gold[arr[i].name]=(gold[arr[i].name]||0)+1;}});
+  });
+  var list=Object.keys(pts).map(function(n){return {name:n,val:pts[n],gold:gold[n]||0};}).sort(function(a,b){return b.val-a.val||b.gold-a.gold;});
+  return {mode:'king',list:list};
 }
+function kingVal(st,p){return st.mode==='king'?(p.val+'점'):(+p.val).toLocaleString();}
+function kingBanner(d){
+  var cfg=d.config||{},me=d.me,isAdm=!!d.is_admin;
+  var st=kingStandings(d),list=st.list;
+  var period=(cfg.start_date&&cfg.end_date)?(cfg.start_date.replace(/-/g,'.')+' ~ '+cfg.end_date.replace(/-/g,'.')):'상시 진행';
+  var h='<div class="king'+(isAdm?' clk':'')+'"'+(isAdm?' onclick="gameCfgOpen()"':'')+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div>';
+  if(!list.length){
+    h+='<div class="king-empty">아직 기록이 없어요.<br>가장 먼저 왕좌에 도전하세요! 🏆</div>';
+  }else{
+    var cc=['#ffd54f','#ff6b9d','#6b8cff','#7bed9f','#ffb74d'];
+    for(var i=0;i<14;i++)h+='<span class="king-cf" style="left:'+((i*7+5)%92)+'%;background:'+cc[i%5]+';animation-delay:'+((i%7)*0.3)+'s"></span>';
+    var k1=list[0];
+    h+='<div class="king-crown">👑</div><div class="king-name">'+escN(k1.name)+'</div>';
+    h+='<div class="king-medal">'+(st.mode==='king'?('🏅 금메달 '+k1.gold+'개 · '+k1.val+'점'):('🏅 최고 '+(+k1.val).toLocaleString()))+'</div>';
+    var p2=list[1],p3=list[2];
+    if(p2||p3){h+='<div class="king-pod">';if(p2)h+='<div class="kp"><span class="kp-m">🥈</span><b>'+escN(p2.name)+'</b><i>'+kingVal(st,p2)+'</i></div>';if(p3)h+='<div class="kp"><span class="kp-m">🥉</span><b>'+escN(p3.name)+'</b><i>'+kingVal(st,p3)+'</i></div>';h+='</div>';}
+    var rest=list.slice(3,8);
+    if(rest.length){h+='<div class="king-rest">';rest.forEach(function(p,i){h+='<span class="kr'+(p.name===me?' me':'')+'">'+(i+4)+'위 '+escN(p.name)+' '+kingVal(st,p)+'</span>';});h+='</div>';}
+  }
+  var prizes=Array.isArray(cfg.prizes)?cfg.prizes.filter(function(p){return p.rank||p.item||p.cash;}):[];
+  if(prizes.length){var pr=prizes[0];h+='<div class="king-prize">🎁 '+escN(pr.rank||'1등')+' : '+escN(pr.item||'')+(pr.cash?(' '+(Number(pr.cash)||pr.cash).toLocaleString()+'원'):'')+'</div>';}
+  h+='<div class="king-rule">'+(st.mode==='king'?'게임별 1등 3점·2등 2점·3등 1점 합산 (동점=금메달 수)':escN((plGame(st.game)?plGame(st.game).n:st.game)+' 최고점 랭킹'))+'</div>';
+  h+='<div class="king-period">기간 : '+period+'</div>';
+  if(isAdm)h+='<div class="king-edit">✎ 탭하여 수정</div>';
+  h+='</div>';
+  if(isAdm){var pub=cfg.public_on!==false;h+='<div class="king-pub'+(pub?' on':'')+'">'+(pub?'🔓 공개중 (기사에게 보임)':'🔒 비공개 (관리자만 보임)')+'<span onclick="event.stopPropagation();cfgTogglePublic('+(pub?'false':'true')+')">'+(pub?'비공개로':'공개하기')+'</span></div>';}
+  return h;
+}
+window.cfgTogglePublic=async function(v){var cfg=(window.__PLAY&&window.__PLAY.config)||{};try{await rpc("admin_set_game_config",{p_token:S.token,p_method:null,p_start:cfg.start_date||null,p_end:cfg.end_date||null,p_prizes:null,p_exclude_admin:null,p_footer:null,p_public:v,p_featured:null,p_mode:null});loadPlay();}catch(e){alert(e.message);}};
+var PRZ_MED=['🥇','🥈','🥉','🏅','🏅','🏅','🏅','🏅'];
 window.gameCfgOpen=function(){
   var cfg=(window.__PLAY&&window.__PLAY.config)||{};
-  var opts='<option value="">— 미선정 —</option>'+PL_GAMES.map(function(g){return '<option value="'+g.k+'"'+(cfg.featured_game===g.k?' selected':'')+'>'+g.e+' '+g.n+'</option>';}).join('');
+  window.__gcMode=cfg.mode||'king';
   var prizes=Array.isArray(cfg.prizes)&&cfg.prizes.length?cfg.prizes:[{rank:'1등',item:'',cash:''},{rank:'2등',item:'',cash:''},{rank:'3등',item:'',cash:''}];
-  var przHtml=prizes.map(function(p,i){return plPrzRow(p.rank||'',p.item||'',p.cash||'');}).join('');
-  var h='<div id="gc-ov" class="ovbg" onclick="if(event.target.id===\'gc-ov\')this.remove()"><div class="plmodal" onclick="event.stopPropagation()"><div class="plmh"><div><b>🛠️ 이달의 게임 · 상품 설정</b><i>선정한 게임과 순위 상품을 기사 전원에게 공개해요</i></div><span onclick="document.getElementById(\'gc-ov\').remove()" style="cursor:pointer;font-size:20px;color:#aaa">×</span></div><div class="plmb">';
-  h+='<label class="fl">⭐ 이달의 게임</label><select id="gc-feat">'+opts+'</select>';
-  h+='<label class="fl">🏆 선정 방식(표시 문구)</label><input id="gc-method" value="'+escN(cfg.method||'종합 점수 랭킹')+'" placeholder="예: 종합 점수 랭킹">';
+  var przHtml=prizes.map(function(p,i){return plPrzRow(i,p.rank||((i+1)+'등'),p.item||'',p.cash||'');}).join('');
+  var h='<div id="gc-ov" class="ovbg" onclick="if(event.target.id===\'gc-ov\')this.remove()"><div class="plmodal" onclick="event.stopPropagation()"><div class="plmh"><div><b>🛠️ 이달의 게임 선정</b><i>선정 방식·순위 상품을 기사 전원에게 공개해요</i></div><span onclick="document.getElementById(\'gc-ov\').remove()" style="cursor:pointer;font-size:20px;color:#aaa">×</span></div><div class="plmb">';
+  h+='<label class="fl">선정 방식</label><div class="gc-modetab"><button id="gcm-game" onclick="gcSetMode(\'game\')">🎮 게임 선정</button><button id="gcm-king" onclick="gcSetMode(\'king\')">👑 종합 게임왕</button></div>';
+  h+='<div id="gc-modebox"></div>';
   h+='<div style="display:flex;gap:10px"><div style="flex:1"><label class="fl">시작일</label><input id="gc-start" type="date" value="'+(cfg.start_date||'')+'"></div><div style="flex:1"><label class="fl">종료일</label><input id="gc-end" type="date" value="'+(cfg.end_date||'')+'"></div></div>';
   h+='<label class="fl">🎁 등수별 상품 · 상금</label><div id="gc-prizes">'+przHtml+'</div><button class="pl-addrow" onclick="plAddPrz()">+ 등수 추가</button>';
-  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-exadm" '+(cfg.exclude_admin!==false?'checked':'')+'> 관리자(대표·총괄·팀장) 랭킹 제외</label>';
+  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-exadm" '+(cfg.exclude_admin!==false?'checked':'')+'> 관리자(대표·총괄·팀장) 게임왕 합산 제외 (게임별 순위엔 그대로)</label>';
   h+='<label class="pl-ckrow"><input type="checkbox" id="gc-public" '+(cfg.public_on!==false?'checked':'')+'> 기사에게 놀이터 공개</label>';
   h+='<label class="fl">📝 하단 안내 문구</label><input id="gc-footer" value="'+escN(cfg.footer||'상품, 상금은 교환 불가 !')+'">';
-  h+='<button class="plsave" onclick="gameCfgSave()">💾 저장 (전 기기 적용)</button></div></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:16px"><button class="plsave" style="flex:1;margin-top:0" onclick="gameCfgSave()">💾 저장</button><button onclick="document.getElementById(\'gc-ov\').remove()" style="background:#eef1f7;color:#5a6480;border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:800;cursor:pointer">취소</button><button onclick="gameCfgDelete()" style="background:#e24b4a;color:#fff;border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:800;cursor:pointer">삭제</button></div>';
+  h+='</div></div></div>';
   var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
+  gcSetMode(window.__gcMode);
 };
-function plPrzRow(rk,item,cash){return '<div class="pl-prz"><input class="gc-rk" style="width:52px;flex:none" value="'+escN(rk)+'" placeholder="1등"><input class="gc-it" value="'+escN(item)+'" placeholder="상품(예: 치킨 기프티콘)"><input class="gc-ca" style="width:80px;flex:none" value="'+escN(cash)+'" placeholder="상금"></div>';}
-window.plAddPrz=function(){var box=document.getElementById("gc-prizes");if(!box)return;var d=document.createElement("div");d.innerHTML=plPrzRow((box.children.length+1)+'등','','');box.appendChild(d.firstElementChild);};
+window.gcSetMode=function(m){
+  window.__gcMode=m;
+  var bg=document.getElementById("gcm-game"),bk=document.getElementById("gcm-king");
+  if(bg)bg.classList.toggle("on",m==='game');if(bk)bk.classList.toggle("on",m==='king');
+  var box=document.getElementById("gc-modebox");if(!box)return;
+  var cfg=(window.__PLAY&&window.__PLAY.config)||{};
+  if(m==='game'){
+    var opts='<option value="">— 게임 선택 —</option>'+PL_GAMES.map(function(g){return '<option value="'+g.k+'"'+(cfg.featured_game===g.k?' selected':'')+'>'+g.e+' '+g.n+'</option>';}).join('');
+    box.innerHTML='<label class="fl">🎮 이달의 게임</label><select id="gc-feat">'+opts+'</select><div class="gc-rulebox">선택한 게임의 <b>최고점 순위</b>로 1·2·3위를 시상대에 표시해요.</div>';
+  }else{
+    box.innerHTML='<div class="gc-rulebox">게임별 <b>1등 3점 · 2등 2점 · 3등 1점</b> 합산<br>운빨 제외 · 동점은 <b>금메달(1등) 많은 사람</b> · 합산 1·2·3위를 시상대로 표시</div>';
+  }
+};
+function plPrzRow(i,rk,item,cash){var med=PRZ_MED[i]||'🏅';return '<div class="pl-prz"><span class="rkm">'+med+'</span><input class="gc-rk" style="display:none" value="'+escN(rk)+'"><input class="gc-it" value="'+escN(item)+'" placeholder="상품(예: 치킨 기프티콘)"><input class="gc-ca" style="width:74px;flex:none" value="'+escN(cash)+'" placeholder="상금"></div>';}
+window.plAddPrz=function(){var box=document.getElementById("gc-prizes");if(!box)return;var i=box.children.length;var d=document.createElement("div");d.innerHTML=plPrzRow(i,(i+1)+'등','','');box.appendChild(d.firstElementChild);};
+window.gameCfgDelete=async function(){if(!confirm('이달의 게임 선정을 초기화할까요?'))return;try{await rpc("admin_set_game_config",{p_token:S.token,p_method:'종합 게임왕',p_start:null,p_end:null,p_prizes:[],p_exclude_admin:true,p_footer:'상품, 상금은 교환 불가 !',p_public:true,p_featured:'',p_mode:'king'});var o=document.getElementById("gc-ov");if(o)o.remove();loadPlay();}catch(e){alert(e.message);}};
 window.gameCfgSave=async function(){
-  var prz=[].slice.call(document.querySelectorAll("#gc-prizes .pl-prz")).map(function(row){return {rank:row.querySelector(".gc-rk").value.trim(),item:row.querySelector(".gc-it").value.trim(),cash:row.querySelector(".gc-ca").value.trim()};}).filter(function(p){return p.rank||p.item||p.cash;});
+  var prz=[].slice.call(document.querySelectorAll("#gc-prizes .pl-prz")).map(function(row){return {rank:row.querySelector(".gc-rk").value.trim(),item:row.querySelector(".gc-it").value.trim(),cash:row.querySelector(".gc-ca").value.trim()};}).filter(function(p){return p.item||p.cash;});
+  var mode=window.__gcMode||'king';var feat=(mode==='game'&&document.getElementById("gc-feat"))?document.getElementById("gc-feat").value:'';
   try{
     await rpc("admin_set_game_config",{p_token:S.token,
-      p_method:$("#gc-method").value.trim(),
+      p_method:(mode==='game'?'이달의 게임':'종합 게임왕'),
       p_start:$("#gc-start").value||null,
       p_end:$("#gc-end").value||null,
       p_prizes:prz,
       p_exclude_admin:$("#gc-exadm").checked,
       p_footer:$("#gc-footer").value.trim(),
       p_public:$("#gc-public").checked,
-      p_featured:$("#gc-feat").value});
+      p_featured:feat,
+      p_mode:mode});
     var o=document.getElementById("gc-ov");if(o)o.remove();loadPlay();
   }catch(e){alert(e.message);}
 };
