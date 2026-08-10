@@ -380,6 +380,21 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .p-sub{background:#e7f6ec;color:#1f7a4d}.p-imp{background:#f4f6fb;color:#7a86a6}.p-rej{background:#f3e9fb;color:#7e3fb0}
 .ovbg{position:fixed;inset:0;background:rgba(15,20,40,.55);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto}
 .pbmodal{background:#fff;border-radius:16px;max-width:430px;width:100%;margin:56px auto auto;overflow:hidden;box-shadow:0 20px 50px rgba(10,20,50,.35)}
+.scedit{max-width:340px;margin:auto}
+.sce-h{font-size:16px;font-weight:800;color:#e0663a;padding:16px 18px 6px}
+.sce-b{padding:0 18px 18px}
+.sce-meta{font-size:12.5px;color:#5a6478;line-height:1.75;margin-bottom:12px}
+.sce-meta b{color:#2a3350}
+.sce-lb{display:block;font-size:12px;color:#8a90a6;font-weight:700;margin:0 0 5px}
+.scedit input{width:100%;box-sizing:border-box;padding:11px 12px;font-size:15px;border:2px solid #cfd6e6;border-radius:10px;color:#222;outline:none;background:#fff}
+.scedit input:focus{border-color:#3b6ef0}
+.sc-srow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sc-sr{width:56px;font-weight:800;color:#b5651d;font-size:13px;flex-shrink:0}
+.sce-btns{display:flex;align-items:center;gap:8px;margin-top:16px}
+.sce-split{background:#f0a030;color:#3a2000;font-weight:800;border:none;border-radius:9px;padding:9px 12px;font-size:13px;cursor:pointer}
+.sce-split.on{background:#d98420;color:#fff}
+.sce-save{background:#3b6ef0;color:#fff;font-weight:800;border:none;border-radius:9px;padding:9px 16px;font-size:14px;cursor:pointer}
+.sce-cancel{background:#eef0f5;color:#555;font-weight:700;border:none;border-radius:9px;padding:9px 14px;font-size:14px;cursor:pointer}
 .pbmh{background:linear-gradient(135deg,#1f8f5f,#27a06a);color:#fff;padding:13px 15px;display:flex;align-items:center;justify-content:space-between}
 .pbmh b{font-size:15px;display:block}.pbmh i{font-style:normal;font-size:11px;color:#cdeede}
 .pbmb{padding:13px}
@@ -855,31 +870,46 @@ async function loadSched(){
   }catch(e){$("#sc-body").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 function splitRt(r){var b=String(r).replace(/\s*\(.*?\)/g,'').trim();var m=b.match(/^(\d+)([A-Z]{2,})$/);if(m){return m[2].split('').map(function(c){return m[1]+c;});}if(b.indexOf('/')>=0)return b.split('/').map(function(x){return x.trim();}).filter(Boolean);return [b];}
+function sceRoster(cur){var s={};Object.keys(RANKMAP).forEach(function(n){s[n]=1;});Object.keys(schedCache).forEach(function(k){(schedCache[k]||[]).forEach(function(r){if(r.driver_name)s[r.driver_name]=1;});});if(cur)s[cur]=1;return Object.keys(s).sort();}
 window.editCell=async(wd,rt,camp,cur)=>{
   var _lr=schedLockReason(wd);if(_lr){alert(schedLockMsg(_lr));return;}
-  var subs=splitRt(rt);
-  if(subs.length>=2){
-    var wantSplit=confirm(rt+" · "+md(wd)+"\n\n[확인] 라우트 분할 배정 ("+subs.join(" / ")+")\n[취소] 통합 배정(한 명)");
-    if(wantSplit){
-      var asg=[];
-      for(var i=0;i<subs.length;i++){
-        var dn=prompt(subs[i]+" 담당 기사 ("+md(wd)+")","");
-        if(dn===null)return;
-        asg.push({rt:subs[i],dn:dn.trim()});
-      }
-      try{
-        for(var j=0;j<asg.length;j++){
-          await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:asg[j].rt,p_driver:asg[j].dn,p_camp:camp});
-        }
-        await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:"",p_camp:camp});
-        delete schedCache[iso(weekStart)];loadSched();
-      }catch(e){alert(e.message);}
-      return;
+  window._sceSplitMode=false;
+  var subs=splitRt(rt);var splittable=subs.length>=2;
+  var roster=sceRoster(cur);
+  var dl='<datalist id="sc-roster">'+roster.map(function(n){return '<option value="'+escN(n)+'"></option>';}).join('')+'</datalist>';
+  var srows=subs.map(function(s){return '<div class="sc-srow"><span class="sc-sr">'+s+'</span><input class="sc-sin" list="sc-roster" data-rt="'+s+'" placeholder="담당 기사"></div>';}).join('');
+  var h='<div id="sc-ov" class="ovbg" onclick="if(event.target.id===\'sc-ov\')this.remove()"><div class="pbmodal scedit">'
+    +'<div class="sce-h">✏️ 기사 변경</div>'
+    +'<div class="sce-b">'
+      +'<div class="sce-meta">라우트: <b>'+escN(rt)+'</b><br>날짜: '+wd+'</div>'
+      +'<div id="sce-single"><label class="sce-lb">기사 이름</label><input id="sce-name" list="sc-roster" value="'+escN(cur||'')+'" placeholder="이름"></div>'
+      +'<div id="sce-split" style="display:none"><label class="sce-lb">✂ 분할 배정 (라우트별 기사)</label>'+srows+'</div>'
+      +dl
+      +'<div class="sce-btns">'
+        +(splittable?'<button class="sce-split" onclick="sceToggleSplit()">✂ 분할 배정</button>':'')
+        +'<span style="flex:1"></span>'
+        +'<button class="sce-save" onclick="sceSave(\''+wd+'\',\''+rt+'\',\''+escN(camp)+'\')">변경 저장</button>'
+        +'<button class="sce-cancel" onclick="document.getElementById(\'sc-ov\').remove()">취소</button>'
+      +'</div>'
+    +'</div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+};
+window.sceToggleSplit=function(){window._sceSplitMode=!window._sceSplitMode;var sm=window._sceSplitMode;document.getElementById('sce-single').style.display=sm?'none':'';document.getElementById('sce-split').style.display=sm?'':'none';var b=document.querySelector('.sce-split');if(b)b.classList.toggle('on',sm);};
+window.sceSave=async function(wd,rt,camp){
+  var ov=document.getElementById('sc-ov');
+  try{
+    if(window._sceSplitMode){
+      var ins=[].slice.call(document.querySelectorAll('#sce-split .sc-sin'));
+      var asg=ins.map(function(i){return {rt:i.dataset.rt,dn:i.value.trim()};});
+      if(!asg.some(function(a){return a.dn;})){alert('분할 기사명을 최소 1개 입력하세요.');return;}
+      for(var j=0;j<asg.length;j++){await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:asg[j].rt,p_driver:asg[j].dn,p_camp:camp});}
+      await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:"",p_camp:camp});
+    } else {
+      var nv=document.getElementById('sce-name').value.trim();
+      await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});
     }
-  }
-  const nv=prompt("기사명 ("+rt+" · "+md(wd)+")",cur||"");if(nv===null)return;
-  try{await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});delete schedCache[iso(weekStart)];loadSched();}
-  catch(e){alert(e.message);}
+    if(ov)ov.remove();delete schedCache[iso(weekStart)];loadSched();
+  }catch(e){alert(e.message);}
 };
 /* 정산 */
 let _admView=null; // 관리자 전체정산 현재 연/월
