@@ -487,7 +487,14 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-prz .rk{width:34px;font-weight:900;color:#7a6bff;font-size:13px;flex-shrink:0}
 .pl-prz input{flex:1}
 .pl-addrow{background:#eef2fb;color:#3a5aa8;border:1px dashed #b9c4de;border-radius:9px;padding:8px;width:100%;font-size:12px;font-weight:700;cursor:pointer;margin-top:2px}
-.pl-ckrow{display:flex;align-items:center;gap:8px;font-size:13px;color:#3a4256;padding:10px 2px;cursor:pointer}
+.pl-ckrow{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#3a4256;padding:11px 13px;cursor:pointer;background:#f6f7fb;border:1px solid #e7e9f2;border-radius:12px;margin-top:8px}
+.pl-ckrow .t{flex:1;font-weight:700;line-height:1.35}
+.pl-ckrow .t i{display:block;font-size:11px;color:#8a90a6;font-style:normal;font-weight:500;margin-top:2px}
+.pl-ckrow input{display:none}
+.pl-ckrow .sw{position:relative;width:44px;height:26px;background:#cfd4e2;border-radius:20px;flex-shrink:0;transition:background .2s}
+.pl-ckrow .sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.28)}
+.pl-ckrow input:checked+.sw{background:linear-gradient(135deg,#6b4bff,#9b4bff)}
+.pl-ckrow input:checked+.sw::after{transform:translateX(18px)}
 .plsave{width:100%;background:linear-gradient(135deg,#6b4bff,#9b4bff);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;margin-top:16px}
 .pl-gplay{text-align:center;padding:30px 16px}
 .pl-gplay .em{font-size:52px}
@@ -503,7 +510,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .king.clk{cursor:pointer}
 .king-rays{position:absolute;left:50%;top:30%;width:380px;height:380px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,213,79,.13) 0deg 9deg,transparent 9deg 18deg);animation:kRays 18s linear infinite;pointer-events:none}
 @keyframes kRays{to{transform:translate(-50%,-50%) rotate(360deg)}}
-.king>*{position:relative;z-index:1}
+.king>*:not(.king-rays){position:relative;z-index:1}
 .king-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;color:#ffe082;font-size:12px;font-weight:800;backdrop-filter:blur(3px)}
 .king-crown{font-size:32px;line-height:1;margin-top:8px;animation:kCrown 1s cubic-bezier(.34,1.56,.64,1) both,kFloat 2.6s ease-in-out 1s infinite}
 @keyframes kCrown{0%{opacity:0;transform:translateY(-34px) scale(.3) rotate(-25deg)}60%{transform:translateY(5px) scale(1.28) rotate(10deg)}100%{opacity:1;transform:none}}
@@ -1232,8 +1239,8 @@ window.gameCfgOpen=function(){
   h+='<div id="gc-modebox"></div>';
   h+='<div style="display:flex;gap:10px"><div style="flex:1"><label class="fl">시작일</label><input id="gc-start" type="date" value="'+(cfg.start_date||'')+'"></div><div style="flex:1"><label class="fl">종료일</label><input id="gc-end" type="date" value="'+(cfg.end_date||'')+'"></div></div>';
   h+='<label class="fl">🎁 등수별 상품 · 상금</label><div id="gc-prizes">'+przHtml+'</div><button class="pl-addrow" onclick="plAddPrz()">+ 등수 추가</button>';
-  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-exadm" '+(cfg.exclude_admin!==false?'checked':'')+'> 관리자(대표·총괄·팀장) 게임왕 합산 제외 (게임별 순위엔 그대로)</label>';
-  h+='<label class="pl-ckrow"><input type="checkbox" id="gc-public" '+(cfg.public_on!==false?'checked':'')+'> 기사에게 놀이터 공개</label>';
+  h+='<label class="pl-ckrow"><span class="t">관리자 게임왕 합산 제외<i>대표·총괄·팀장 제외 (게임별 순위엔 그대로)</i></span><input type="checkbox" id="gc-exadm" '+(cfg.exclude_admin!==false?'checked':'')+'><span class="sw"></span></label>';
+  h+='<label class="pl-ckrow"><span class="t">기사에게 놀이터 공개<i>끄면 관리자만 볼 수 있어요</i></span><input type="checkbox" id="gc-public" '+(cfg.public_on!==false?'checked':'')+'><span class="sw"></span></label>';
   h+='<label class="fl">📝 하단 안내 문구</label><input id="gc-footer" value="'+escN(cfg.footer||'상품, 상금은 교환 불가 !')+'">';
   h+='<div style="display:flex;gap:8px;margin-top:16px"><button class="plsave" style="flex:1;margin-top:0" onclick="gameCfgSave()">💾 저장</button><button onclick="document.getElementById(\'gc-ov\').remove()" style="background:#eef1f7;color:#5a6480;border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:800;cursor:pointer">취소</button><button onclick="gameCfgDelete()" style="background:#e24b4a;color:#fff;border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:800;cursor:pointer">삭제</button></div>';
   h+='</div></div></div>';
