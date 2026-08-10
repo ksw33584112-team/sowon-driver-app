@@ -1,5 +1,5 @@
 // 소원물류 기사앱 서비스워커 (오프라인 캐시 + 웹푸시 / 앱 종료 상태에서도 알림)
-const CACHE = "sowon-app-v19";
+const CACHE = "sowon-app-v20";
 const ASSETS = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
 const SB_URL = "https://xmydkovpxivdyjxagnou.supabase.co";
 const SB_ANON = "sb_publishable_Fyp35Hgs7ECBiAnAqbWirQ_25BTo9R8";
@@ -15,6 +15,16 @@ self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks=>Prom
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
   if (u.hostname.endsWith("supabase.co")) return;
+  // HTML/문서는 network-first → 항상 최신 앱을 받음 (오프라인이면 캐시)
+  const isDoc = e.request.mode === "navigate" || u.pathname === "/" || u.pathname.endsWith("/") || u.pathname.endsWith(".html");
+  if (isDoc && u.origin === location.origin) {
+    e.respondWith(fetch(e.request).then(resp => {
+      if (resp && resp.ok) { const cp = resp.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }
+      return resp;
+    }).catch(() => caches.match(e.request).then(r => r || caches.match("./index.html"))));
+    return;
+  }
+  // 정적 자산은 cache-first
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(resp=>{
     if(e.request.method==="GET" && resp.ok && u.origin===location.origin){const cp=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,cp));}
     return resp;
