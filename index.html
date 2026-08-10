@@ -455,16 +455,19 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-empty{text-align:center;color:#98a3bd;font-size:12.5px;padding:22px 10px}
 /* 게임 그리드 */
 .pl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
-.pl-gcard{position:relative;background:#fff;border-radius:16px;padding:15px 13px 13px;box-shadow:0 3px 12px rgba(90,80,180,.10);cursor:pointer;overflow:hidden;transition:transform .13s,box-shadow .2s;border:1px solid #f0f0f8}
+.pl-gcard{position:relative;background:#5b5b7a;border-radius:16px;padding:13px 12px 12px;box-shadow:0 5px 15px rgba(50,40,110,.22);cursor:pointer;overflow:hidden;transition:transform .13s;border:none;color:#fff}
 .pl-gcard:active{transform:scale(.96)}
 .pl-gcard.feat{border:1.5px solid #ffb300;box-shadow:0 4px 16px rgba(255,170,0,.22)}
-.pl-gfe{position:absolute;top:0;right:0;background:linear-gradient(135deg,#ffb300,#ff8f00);color:#fff;font-size:9px;font-weight:900;padding:3px 9px;border-radius:0 16px 0 12px}
-.pl-gemo{font-size:34px;line-height:1;margin-bottom:8px}
-.pl-gnm{font-size:13.5px;font-weight:800;color:#28324d}
-.pl-gdesc{font-size:10.5px;color:#98a3bd;margin-top:2px;line-height:1.4;min-height:29px}
-.pl-gbest{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:10.5px;font-weight:800;color:#7a6bff}
-.pl-gbest .soon{color:#c0c6d6;font-weight:700}
-.pl-gtop{margin-top:6px;font-size:10px;color:#8a93ab;border-top:1px dashed #eef0f6;padding-top:6px;line-height:1.5}
+.pl-gfe{position:absolute;top:0;right:0;background:#ff2e63;color:#fff;font-size:9px;font-weight:900;padding:3px 9px;border-radius:0 16px 0 12px;letter-spacing:.3px;animation:kPop .5s both}
+.pl-gemo{font-size:33px;line-height:1;margin-bottom:6px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.28))}
+.pl-gnm{font-size:14.5px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pl-gdesc{font-size:10.5px;color:rgba(255,255,255,.82);margin-top:2px;line-height:1.4;min-height:29px}
+.pl-gtops{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.pl-gtr{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,.22);border-radius:7px;padding:3px 7px}
+.pl-gtr span{font-size:12px;flex-shrink:0}
+.pl-gtr b{flex:1;color:#fff;font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-gtr i{color:#ffe082;font-weight:800;font-style:normal;font-size:10.5px;flex-shrink:0}
+.pl-gwait{margin-top:8px;background:rgba(0,0,0,.18);border-radius:7px;padding:7px;text-align:center;font-size:10.5px;color:rgba(255,255,255,.92);font-weight:700}
 .pl-gtop b{color:#ff8f00}
 /* 관리자 이달의 게임 설정 */
 .pl-adm{background:linear-gradient(135deg,#eef2ff,#f6eeff);border:1px solid #dfe3f5;border-radius:16px;padding:13px 14px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
@@ -493,9 +496,12 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-soon{display:inline-block;margin-top:16px;background:#f0f0f8;color:#8a86b8;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:800}
 .pl-foot{text-align:center;font-size:11px;color:#a8afc2;margin:16px 0 4px;line-height:1.6}
 /* 이달의 게임왕 배너 (화려한 애니메이션) */
-.king{position:relative;overflow:hidden;border-radius:20px;padding:16px 14px 15px;margin-bottom:14px;background:radial-gradient(circle at 50% 0%,#6a3fd0 0%,#3a2380 55%,#1e1450 100%);border:2px solid #ffd54f;box-shadow:0 10px 30px rgba(90,40,180,.4);text-align:center}
+.king{position:relative;overflow:hidden;border-radius:20px;padding:14px 13px 14px;margin-bottom:12px;background:radial-gradient(circle at 50% 0%,#6a3fd0 0%,#3a2380 55%,#1e1450 100%);border:2px solid #ffd54f;box-shadow:0 8px 26px rgba(90,40,180,.38);text-align:center}
+.king.empty{padding:16px 14px 15px}
+.king.empty .king-rays{opacity:.5}
+.king-crown.sm{font-size:26px;margin-top:6px}
 .king.clk{cursor:pointer}
-.king-rays{position:absolute;left:50%;top:26%;width:520px;height:520px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,213,79,.13) 0deg 9deg,transparent 9deg 18deg);animation:kRays 18s linear infinite;pointer-events:none}
+.king-rays{position:absolute;left:50%;top:30%;width:380px;height:380px;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,213,79,.13) 0deg 9deg,transparent 9deg 18deg);animation:kRays 18s linear infinite;pointer-events:none}
 @keyframes kRays{to{transform:translate(-50%,-50%) rotate(360deg)}}
 .king>*{position:relative;z-index:1}
 .king-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;color:#ffe082;font-size:12px;font-weight:800;backdrop-filter:blur(3px)}
@@ -519,7 +525,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .king-rule{color:#b9aef0;font-size:11px;margin-top:5px;line-height:1.5}
 .king-period{color:#9a90c8;font-size:11px;margin-top:3px}
 .king-edit{color:#ffe082;font-size:11.5px;font-weight:700;margin-top:9px;opacity:.85}
-.king-empty{color:#cfc6f0;font-size:13px;padding:18px 8px 10px;line-height:1.6}
+.king-empty{color:#cfc6f0;font-size:12.5px;padding:8px 8px 4px;line-height:1.6}
 .king-cf{position:absolute;top:-10px;width:7px;height:11px;border-radius:2px;opacity:.9;animation:kFall 2.8s linear infinite;pointer-events:none;z-index:0}
 @keyframes kFall{0%{transform:translateY(-10px) rotate(0);opacity:0}10%{opacity:.95}100%{transform:translateY(230px) rotate(620deg);opacity:0}}
 .king-pub{display:flex;align-items:center;gap:8px;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;font-weight:700;background:#3a1f2a;border:1px solid #6b2f42;color:#ffb3c8}
@@ -1123,14 +1129,14 @@ $("#pw-btn").onclick=async()=>{
 };
 /* ===== 놀이터 ===== */
 var PL_GAMES=[
- {k:"tetris", n:"테트리스",   e:"🧱", d:"블록을 쌓아 줄을 지워요"},
- {k:"flap",   n:"소원 점프",  e:"🚚", d:"탭해서 트럭을 띄워 통과해요"},
- {k:"timber", n:"팀버맨",     e:"🪓", d:"가지를 피하며 나무를 베요"},
- {k:"knife",  n:"나이프 히트", e:"🔪", d:"돌아가는 통나무에 칼을 꽂아요"},
- {k:"sichuan",n:"사천성",     e:"🀄", d:"같은 그림을 이어 없애요"},
- {k:"match",  n:"그림 맞추기", e:"🎴", d:"뒤집어 같은 그림을 찾아요"},
- {k:"runner", n:"러너",       e:"🏃", d:"장애물을 피해 달려요"},
- {k:"jump",   n:"무한 점프",  e:"⬆️", d:"발판을 밟고 끝없이 올라가요"}
+ {k:"tetris", n:"테트리스",   e:"🧱", d:"블록을 쌓아 줄을 지워요",     g:"linear-gradient(135deg,#1565c0,#42a5f5)"},
+ {k:"flap",   n:"소원 점프",  e:"🚚", d:"탭해서 트럭을 띄워 통과해요", g:"linear-gradient(135deg,#0277bd,#26c6da)"},
+ {k:"timber", n:"팀버맨",     e:"🪓", d:"가지를 피하며 나무를 베요",   g:"linear-gradient(135deg,#33691e,#7cb342)"},
+ {k:"knife",  n:"나이프 히트", e:"🔪", d:"돌아가는 통나무에 칼을 꽂아요", g:"linear-gradient(135deg,#4e342e,#a1887f)"},
+ {k:"sichuan",n:"사천성",     e:"🀄", d:"같은 그림을 이어 없애요",     g:"linear-gradient(135deg,#1a2440,#c0303f)"},
+ {k:"match",  n:"그림 맞추기", e:"🎴", d:"뒤집어 같은 그림을 찾아요",   g:"linear-gradient(135deg,#1565c0,#5b8def)"},
+ {k:"runner", n:"러너",       e:"🏃", d:"장애물을 피해 달려요",       g:"linear-gradient(135deg,#00897b,#4db6ac)"},
+ {k:"jump",   n:"무한 점프",  e:"⬆️", d:"발판을 밟고 끝없이 올라가요", g:"linear-gradient(135deg,#5e35b1,#9575cd)"}
 ];
 function plGame(k){return PL_GAMES.find(function(g){return g.k===k;});}
 window.__PLAY=null;
@@ -1150,14 +1156,16 @@ async function loadPlay(){
   /* 인기 게임 */
   h+='<div class="pl-sec">🕹️ 인기 게임<span class="pl-more">'+PL_GAMES.length+'종</span></div>';
   h+='<div class="pl-grid">';
+  var GMED=['🥇','🥈','🥉'];
   PL_GAMES.forEach(function(g){
     var gs=vsc.filter(function(s){return s.game===g.k;});
-    var myBest=scores.filter(function(s){return s.game===g.k&&s.name===me;}).reduce(function(a,s){return Math.max(a,+s.score||0);},0);
-    var top=null;gs.forEach(function(s){if(!top||(+s.score>+top.score))top=s;});
+    var best={};gs.forEach(function(s){if(!(s.name in best)||+s.score>best[s.name])best[s.name]=+s.score||0;});
+    var top=Object.keys(best).map(function(n){return {name:n,score:best[n]};}).sort(function(a,b){return b.score-a.score;}).slice(0,3);
     var feat=(cfg.mode==='game'&&cfg.featured_game===g.k);
-    h+='<div class="pl-gcard'+(feat?' feat':'')+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">⭐ 이달의게임</div>':'')+'<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
-    h+='<div class="pl-gbest">'+(myBest>0?('🏅 내 최고 '+myBest.toLocaleString()):'<span class="soon">기록 없음</span>')+'</div>';
-    h+='<div class="pl-gtop">'+(top?('🥇 <b>'+escN(top.name)+'</b> '+(+top.score).toLocaleString()):'첫 도전자를 기다려요')+'</div>';
+    h+='<div class="pl-gcard'+(feat?' feat':'')+'" style="background:'+g.g+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">🔥 HOT</div>':'');
+    h+='<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
+    if(top.length){h+='<div class="pl-gtops">';top.forEach(function(p,i){h+='<div class="pl-gtr"><span>'+GMED[i]+'</span><b>'+escN(p.name)+'</b><i>'+ghFmtScore(g.k,p.score)+'</i></div>';});h+='</div>';}
+    else{h+='<div class="pl-gwait">랭킹 대기중 · 1등 도전! 🏆</div>';}
     h+='</div>';
   });
   h+='</div>';
@@ -1184,32 +1192,33 @@ function kingStandings(d){
   return {mode:'king',list:list};
 }
 function kingVal(st,p){return st.mode==='king'?(p.val+'점'):(+p.val).toLocaleString();}
+function kingPub(cfg,isAdm){if(!isAdm)return '';var pub=cfg.public_on!==false;return '<div class="king-pub'+(pub?' on':'')+'">'+(pub?'🔓 공개중 (기사에게 보임)':'🔒 비공개 (관리자만 보임)')+'<span onclick="event.stopPropagation();cfgTogglePublic('+(pub?'false':'true')+')">'+(pub?'비공개로':'공개하기')+'</span></div>';}
 function kingBanner(d){
   var cfg=d.config||{},me=d.me,isAdm=!!d.is_admin;
   var st=kingStandings(d),list=st.list;
   var period=(cfg.start_date&&cfg.end_date)?(cfg.start_date.replace(/-/g,'.')+' ~ '+cfg.end_date.replace(/-/g,'.')):'상시 진행';
-  var h='<div class="king'+(isAdm?' clk':'')+'"'+(isAdm?' onclick="gameCfgOpen()"':'')+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div>';
+  var oc=isAdm?' onclick="gameCfgOpen()"':'';
   if(!list.length){
-    h+='<div class="king-empty">아직 기록이 없어요.<br>가장 먼저 왕좌에 도전하세요! 🏆</div>';
-  }else{
-    var cc=['#ffd54f','#ff6b9d','#6b8cff','#7bed9f','#ffb74d'];
-    for(var i=0;i<14;i++)h+='<span class="king-cf" style="left:'+((i*7+5)%92)+'%;background:'+cc[i%5]+';animation-delay:'+((i%7)*0.3)+'s"></span>';
-    var k1=list[0];
-    h+='<div class="king-crown">👑</div><div class="king-name">'+escN(k1.name)+'</div>';
-    h+='<div class="king-medal">'+(st.mode==='king'?('🏅 금메달 '+k1.gold+'개 · '+k1.val+'점'):('🏅 최고 '+(+k1.val).toLocaleString()))+'</div>';
-    var p2=list[1],p3=list[2];
-    if(p2||p3){h+='<div class="king-pod">';if(p2)h+='<div class="kp"><span class="kp-m">🥈</span><b>'+escN(p2.name)+'</b><i>'+kingVal(st,p2)+'</i></div>';if(p3)h+='<div class="kp"><span class="kp-m">🥉</span><b>'+escN(p3.name)+'</b><i>'+kingVal(st,p3)+'</i></div>';h+='</div>';}
-    var rest=list.slice(3,8);
-    if(rest.length){h+='<div class="king-rest">';rest.forEach(function(p,i){h+='<span class="kr'+(p.name===me?' me':'')+'">'+(i+4)+'위 '+escN(p.name)+' '+kingVal(st,p)+'</span>';});h+='</div>';}
+    var e='<div class="king empty'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div><div class="king-crown sm">👑</div><div class="king-empty">아직 기록이 없어요<br>가장 먼저 왕좌에 도전하세요! 🏆</div>'+(isAdm?'<div class="king-edit">✎ 탭하여 설정</div>':'')+'</div>';
+    return e+kingPub(cfg,isAdm);
   }
+  var h='<div class="king'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div>';
+  var cc=['#ffd54f','#ff6b9d','#6b8cff','#7bed9f','#ffb74d'];
+  for(var i=0;i<14;i++)h+='<span class="king-cf" style="left:'+((i*7+5)%92)+'%;background:'+cc[i%5]+';animation-delay:'+((i%7)*0.3)+'s"></span>';
+  var k1=list[0];
+  h+='<div class="king-crown">👑</div><div class="king-name">'+escN(k1.name)+'</div>';
+  h+='<div class="king-medal">'+(st.mode==='king'?('🏅 금메달 '+k1.gold+'개 · '+k1.val+'점'):('🏅 최고 '+(+k1.val).toLocaleString()))+'</div>';
+  var p2=list[1],p3=list[2];
+  if(p2||p3){h+='<div class="king-pod">';if(p2)h+='<div class="kp"><span class="kp-m">🥈</span><b>'+escN(p2.name)+'</b><i>'+kingVal(st,p2)+'</i></div>';if(p3)h+='<div class="kp"><span class="kp-m">🥉</span><b>'+escN(p3.name)+'</b><i>'+kingVal(st,p3)+'</i></div>';h+='</div>';}
+  var rest=list.slice(3,8);
+  if(rest.length){h+='<div class="king-rest">';rest.forEach(function(p,i){h+='<span class="kr'+(p.name===me?' me':'')+'">'+(i+4)+'위 '+escN(p.name)+' '+kingVal(st,p)+'</span>';});h+='</div>';}
   var prizes=Array.isArray(cfg.prizes)?cfg.prizes.filter(function(p){return p.rank||p.item||p.cash;}):[];
   if(prizes.length){var pr=prizes[0];h+='<div class="king-prize">🎁 '+escN(pr.rank||'1등')+' : '+escN(pr.item||'')+(pr.cash?(' '+(Number(pr.cash)||pr.cash).toLocaleString()+'원'):'')+'</div>';}
   h+='<div class="king-rule">'+(st.mode==='king'?'게임별 1등 3점·2등 2점·3등 1점 합산 (동점=금메달 수)':escN((plGame(st.game)?plGame(st.game).n:st.game)+' 최고점 랭킹'))+'</div>';
   h+='<div class="king-period">기간 : '+period+'</div>';
   if(isAdm)h+='<div class="king-edit">✎ 탭하여 수정</div>';
   h+='</div>';
-  if(isAdm){var pub=cfg.public_on!==false;h+='<div class="king-pub'+(pub?' on':'')+'">'+(pub?'🔓 공개중 (기사에게 보임)':'🔒 비공개 (관리자만 보임)')+'<span onclick="event.stopPropagation();cfgTogglePublic('+(pub?'false':'true')+')">'+(pub?'비공개로':'공개하기')+'</span></div>';}
-  return h;
+  return h+kingPub(cfg,isAdm);
 }
 window.cfgTogglePublic=async function(v){var cfg=(window.__PLAY&&window.__PLAY.config)||{};try{await rpc("admin_set_game_config",{p_token:S.token,p_method:null,p_start:cfg.start_date||null,p_end:cfg.end_date||null,p_prizes:null,p_exclude_admin:null,p_footer:null,p_public:v,p_featured:null,p_mode:null});loadPlay();}catch(e){alert(e.message);}};
 var PRZ_MED=['🥇','🥈','🥉','🏅','🏅','🏅','🏅','🏅'];
