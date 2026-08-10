@@ -659,7 +659,7 @@ let S=null, weekStart=null, editMode=false, schedCache={};
 const RANKMAP={"김소원":"대표","손영균":"총괄","김민형":"팀장","고아람":"백업","김찬미":"백업","김주형":"백업","이승하":"백업","김정수":"백업","장균상":"백업","최호선":"백업","진태훈":"백업"};
 const RMARK={"대표":"◈","총괄":"●","팀장":"★","조장":"◆","백업":"▣"};
 const RCLS={"대표":"dae","총괄":"chg","팀장":"tea","조장":"jo","백업":"bk"};
-function nameColor(n){n=String(n||'');var h=2166136261;for(var i=0;i<n.length;i++){h^=n.charCodeAt(i);h=(h*16777619)>>>0;}var hue=h%360;var L=83+(Math.floor(h/360)%3)*3;var S=60+(Math.floor(h/1080)%4)*5;return {bg:'hsl('+hue+','+S+'%,'+L+'%)',tx:'hsl('+hue+',60%,26%)'};}
+function nameColor(n){n=String(n||'');var h=2166136261;for(var i=0;i<n.length;i++){h^=n.charCodeAt(i);h=(h*16777619)>>>0;}var hue=h%360;var L=44+(Math.floor(h/360)%3)*4;return {bg:'hsl('+hue+',56%,'+L+'%)',tx:'#fff'};}
 function isTopRank(r){return r==='대표'||r==='총괄'||r==='팀장';}
 const $=s=>document.querySelector(s);
 var SCHEDCFG={roles:["대표","총괄","팀장"],editDays:90,lockDays:0};
@@ -868,7 +868,8 @@ async function loadSched(){
             h+='<td class="scsplit'+(to?' tcol':'')+'"'+da+'>'+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
-            if(nm){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+da+'>'+ic+escN(nm)+'</td>';}
+            if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+da+'>'+ic+escN(nm)+'</td>';}
+            else if(nm){h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'>'+escN(nm)+'</td>';}
             else{h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'></td>';}}});
         h+='</tr>';
       });
