@@ -701,7 +701,7 @@ const $=s=>document.querySelector(s);
 var SCHEDCFG={roles:["대표","총괄","팀장"],editDays:90,lockDays:0,freeRoles:[]};
 async function loadSchedCfg(){try{var c=await rpc("get_sched_cfg",{});if(c&&typeof c==="object"){if(Array.isArray(c.roles))SCHEDCFG.roles=c.roles;if(c.editDays!==undefined&&c.editDays!==null)SCHEDCFG.editDays=c.editDays;if(c.lockDays!==undefined&&c.lockDays!==null)SCHEDCFG.lockDays=c.lockDays;SCHEDCFG.freeRoles=Array.isArray(c.freeRoles)?c.freeRoles:[];}}catch(e){}}
 function editRoles(){var r=SCHEDCFG.roles;if(Array.isArray(r)&&r.length){if(r.indexOf("대표")<0)return ["대표"].concat(r);return r;}return["대표","총괄","팀장"];}
-const CAN_EDIT=()=>S&&editRoles().includes(S.rank);
+const CAN_EDIT=()=>S&&(IS_ADMIN()||editRoles().includes(S.rank));
 function _ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function schedFwdDays(){var v=SCHEDCFG.editDays;if(v==="1년"||v===365||v==="365")return 365;var n=parseInt(v);return(n&&n>0)?n:90;}
 function schedPastBoundary(){var v=SCHEDCFG.lockDays;if(v===undefined||v===null||v===""||v===0||v==="0")return null;var t=kstNow();t.setHours(0,0,0,0);if(v==="week"){var sun=new Date(t);sun.setDate(t.getDate()-t.getDay());var nm=new Date(sun);nm.setDate(sun.getDate()+8);return _ymd(nm);}var n=parseInt(v)||0;if(n<=0)return null;var b=new Date(t);b.setDate(t.getDate()-n);return _ymd(b);}
@@ -918,9 +918,93 @@ $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();
 window.wkToday=function(){weekStart=mondayOf(kstNow());loadSched();};
 window.wkEdit=function(){editMode=!editMode;loadSched();};
 window.wkSettings=function(){openEditPerm();};
-function renderWkBtns(){var bt='';if(IS_ADMIN())bt+='<button onclick="wkSettings()" style="background:#efeafc;color:#7e57c2">⚙️ 설정</button>';bt+='<button id="wk-today" onclick="wkToday()">📍 오늘</button>';if(CAN_EDIT())bt+='<button id="wk-edit" onclick="wkEdit()" class="'+(editMode?"on":"")+'">'+(editMode?"✅ 수정완료":"✏️ 수정")+'</button>';var el=document.getElementById("wk-btns");if(el)el.innerHTML=bt;}
+function renderWkBtns(){var bt='';if(IS_ADMIN())bt+='<button onclick="wkSettings()" style="background:#efeafc;color:#7e57c2">⚙️ 설정</button>';if(IS_ADMIN())bt+=wkExportBtns();bt+='<button id="wk-today" onclick="wkToday()">📍 오늘</button>';if(CAN_EDIT())bt+='<button id="wk-edit" onclick="wkEdit()" class="'+(editMode?"on":"")+'">'+(editMode?"✅ 수정완료":"✏️ 수정")+'</button>';var el=document.getElementById("wk-btns");if(el)el.innerHTML=bt;}
 window.openEditPerm=async function(){if(!IS_ADMIN())return;try{await loadSchedCfg();}catch(e){}var c=SCHEDCFG;var cur=(c.roles&&c.roles.length)?c.roles:["대표","총괄","팀장"];var curDay=(c.editDays==="1년"||c.editDays===365||c.editDays==="365")?365:(parseInt(c.editDays)||90);var curLock=(c.lockDays==="week")?"week":String(parseInt(c.lockDays)||0);function ck(v,on){return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="ep-role" value="'+v+'" '+(on?"checked":"")+'>'+v+'</label>';}var cur2=(c.freeRoles&&c.freeRoles.length)?c.freeRoles:[];function fck(v,on){return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#7e3fb0;font-weight:700"><input type="checkbox" class="ep-free" value="'+v+'" '+(on?"checked":"")+'>'+v+'</label>';}function rd(nm,v,lbl,on){return '<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:7px 9px;border:1px solid '+(on?"#1565c0":"#e3e7f0")+';border-radius:8px;background:'+(on?"#eaf1fc":"#f8fafd")+'"><input type="radio" name="'+nm+'" value="'+v+'" '+(on?"checked":"")+'>'+lbl+'</label>';}var h='<div id="ep-ov" style="position:fixed;inset:0;background:rgba(15,20,40,.55);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto" onclick="if(event.target.id===\'ep-ov\')this.remove()"><div style="background:#fff;border-radius:16px;max-width:430px;width:100%;padding:18px 16px;margin:auto" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:15px;color:#1a237e">🗓️ 스케줄 수정 권한</b><span onclick="document.getElementById(\'ep-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div><div style="font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">수정 가능한 역할 (다중 선택)</div><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;opacity:.6"><input type="checkbox" checked disabled>대표(관리자)</label>'+ck("총괄",cur.indexOf("총괄")>=0)+ck("팀장",cur.indexOf("팀장")>=0)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#7e3fb0;margin-bottom:4px">🛡️ 관리자급 무제한 수정 <span style="font-weight:600;color:#98a0b2">(스케줄 전용)</span></div><div style="font-size:11px;color:#98a0b2;margin-bottom:8px">체크한 그룹은 <b style="color:#7e3fb0">스케줄 수정</b>에서 기간·잠금 제한 없이 관리자처럼 전체 수정 가능 (다른 메뉴 권한은 변화 없음)</div><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">'+fck("총괄",cur2.indexOf("총괄")>=0)+fck("팀장",cur2.indexOf("팀장")>=0)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">⏱ 총괄·팀장 수정 가능 기간</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">'+rd("ep-day","30","30일",curDay===30)+rd("ep-day","60","60일",curDay===60)+rd("ep-day","90","90일",curDay===90)+rd("ep-day","365","1년",curDay===365)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">🔒 과거 수정 잠금 — 며칠 이전 수정 불가 (0=제한없음)</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">'+rd("ep-lock","0","제한없음",curLock==="0")+rd("ep-lock","2","2일 이전",curLock==="2")+rd("ep-lock","3","3일 이전",curLock==="3")+rd("ep-lock","4","4일 이전",curLock==="4")+rd("ep-lock","5","5일 이전",curLock==="5")+rd("ep-lock","week","🔒 해당주차 금지",curLock==="week")+'</div><button onclick="saveEditPerm()" style="width:100%;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;cursor:pointer">💾 저장 (전 기기 적용)</button></div></div>';var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);};
 window.saveEditPerm=async function(){var roles=["대표"];document.querySelectorAll("#ep-ov .ep-role:checked").forEach(function(c){roles.push(c.value);});var dEl=document.querySelector('#ep-ov input[name="ep-day"]:checked');var lEl=document.querySelector('#ep-ov input[name="ep-lock"]:checked');var editDays=dEl?parseInt(dEl.value):90;var lv=lEl?lEl.value:"0";var lockDays=(lv==="week")?"week":(parseInt(lv)||0);var freeRoles=[];document.querySelectorAll("#ep-ov .ep-free:checked").forEach(function(c){freeRoles.push(c.value);});var cfg={roles:roles,editDays:editDays,lockDays:lockDays,freeRoles:freeRoles};try{await rpc("admin_set_sched_cfg",{p_token:S.token,p_cfg:cfg});SCHEDCFG=cfg;var o=document.getElementById("ep-ov");if(o)o.remove();editMode=false;loadSched();alert("저장됐어요 · 전 기기에 적용됩니다");}catch(e){alert("저장 실패: "+e.message);}};
+/* ===== 스케줄 표다운·표업로드·리스트·변경분 (PC 스케줄프로그램 이식) ===== */
+var _MCDEF={bizno:'',day_wave:'WAVE2',night_wave:'WAVE1',day_rot:'1회전,2회전',night_rot:'D1,D2,F3',status:'출근',night_routes:[]};
+var _MCFG=null;
+async function _mcLoad(){try{var c=await rpc('admin_get_export_cfg',{p_token:S.token});_MCFG=Object.assign({},_MCDEF,c||{});if(!Array.isArray(_MCFG.night_routes))_MCFG.night_routes=[];}catch(e){_MCFG=Object.assign({},_MCDEF);}return _MCFG;}
+function _sxEnsure(cb){if(window.XLSX){cb();return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=cb;s.onerror=function(){alert('엑셀 라이브러리 로드 실패 (인터넷 확인)');};document.head.appendChild(s);}
+function _sxDate(iso){return new Date(iso+'T00:00:00');}
+function _campOf(rt){var b=String(rt).replace(/\s*\(.*?\)/g,'').trim();return b.charAt(0)==='8'?'일산8':'일산3';}
+function _isNight(rt,list){var s=String(rt).trim();for(var i=0;i<(list||[]).length;i++){var n=String(list[i]).trim();if(!n)continue;if(s===n||s.indexOf(n)>=0||n.indexOf(s)>=0)return true;var a=(s.match(/^\d+/)||[])[0],b=(n.match(/^\d+/)||[])[0];if(a&&a===b)return true;}return false;}
+function _weekDates(){var mon=new Date(weekStart);var sun=new Date(mon);sun.setDate(mon.getDate()-1);var arr=[];for(var i=0;i<7;i++){var d=new Date(sun);d.setDate(sun.getDate()+i);arr.push(iso(d));}return arr;}
+function wkExportBtns(){return '<button onclick="wkTableDown()" style="background:#2b6fe0;color:#fff">📊 표다운</button><button onclick="wkTableUp()" style="background:#7b46d6;color:#fff">📥 표업로드</button><button onclick="wkMetaList()" style="background:#12a58a;color:#fff">📋 리스트</button><button onclick="wkChangeList()" style="background:#e0555a;color:#fff">📝 변경분</button><button onclick="wkMetaCfg()" style="background:#eef1f7;color:#5a6a8a">⚙️메타</button>';}
+async function _weekSched(){var ws=iso(weekStart);var rows=schedCache[ws];if(!rows){rows=await rpc('list_schedules',{p_token:S.token,p_week_start:ws});schedCache[ws]=rows;}return rows||[];}
+window.wkTableDown=function(){_sxEnsure(async function(){try{
+  var rows=await _weekSched();var dates=_weekDates();
+  var campR={};rows.forEach(function(r){var cp=r.camp||'기타';(campR[cp]=campR[cp]||{})[r.route]=1;});
+  var camps=Object.keys(campR).sort(function(a,b){return (parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0);});
+  var map={};rows.forEach(function(r){map[r.route+'|'+r.work_date]=r.driver_name;});
+  var aoa=[['캠프','라우트'].concat(dates.map(function(d){return _sxDate(d);}))];
+  camps.forEach(function(cp){var rts=Object.keys(campR[cp]).sort();rts.forEach(function(rt){var row=[cp,rt];dates.forEach(function(d){row.push(map[rt+'|'+d]||'');});aoa.push(row);});});
+  var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
+  for(var c=2;c<2+dates.length;c++){var ad=XLSX.utils.encode_cell({r:0,c:c});if(wsx[ad])wsx[ad].z='m/d"("aaa")"';}
+  wsx['!cols']=[{wch:8},{wch:11}].concat(dates.map(function(){return {wch:10};}));
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'스케줄표');
+  XLSX.writeFile(wb,'스케줄표_'+dates[0]+'_'+dates[6]+'.xlsx');
+}catch(e){alert('표 다운로드 오류: '+e.message);}});};
+window.wkTableUp=function(){var inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls';inp.style.display='none';document.body.appendChild(inp);inp.onchange=function(){var f=inp.files&&inp.files[0];inp.remove();if(!f)return;_sxEnsure(function(){_wkTableUpDo(f);});};inp.click();};
+function _wkTableUpDo(f){var rd=new FileReader();rd.onload=async function(e){try{
+  var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});var wsx=wb.Sheets[wb.SheetNames[0]];var aoa=XLSX.utils.sheet_to_json(wsx,{header:1,defval:'',raw:true});
+  var hr=-1,dateCols=[];
+  for(var i=0;i<Math.min(6,aoa.length);i++){var dc=[];for(var c=2;c<aoa[i].length;c++){var v=aoa[i][c];if(v instanceof Date)dc.push([c,iso(v)]);}if(dc.length>=3){hr=i;dateCols=dc;break;}}
+  if(hr<0){alert('날짜 헤더를 찾지 못했습니다.\n표다운으로 받은 파일을 사용하세요.');return;}
+  var out=[];for(var k=hr+1;k<aoa.length;k++){var r=aoa[k]||[];var camp=String(r[0]||'').trim();var rt=String(r[1]||'').trim();if(!rt)continue;dateCols.forEach(function(d){var nm=String(r[d[0]]||'').trim();if(nm)out.push({work_date:d[1],route:rt,driver_name:nm,camp:camp});});}
+  if(!out.length){alert('인식된 스케줄이 없습니다.');return;}
+  var wsIso=iso(mondayOf(_sxDate(dateCols[0][1])));
+  if(!confirm(wsIso+' 주차 스케줄을 '+out.length+'건으로 교체합니다.\n(해당 주차 기존 스케줄은 삭제 후 교체) 진행할까요?'))return;
+  var n=await rpc('admin_replace_week_schedule',{p_token:S.token,p_week_start:wsIso,p_rows:out});delete schedCache[wsIso];
+  alert('✅ 스케줄 업로드 완료 · '+n+'건 적용');if(iso(weekStart)===wsIso)loadSched();
+}catch(err){alert('표 업로드 오류: '+err.message);}};rd.readAsArrayBuffer(f);}
+async function _drvMap(){var dm={};try{var dl=await rpc('admin_driver_map',{p_token:S.token});(dl||[]).forEach(function(x){dm[x.name]=x.cid;});}catch(e){}return dm;}
+window.wkMetaList=function(){_sxEnsure(async function(){try{
+  var rows=await _weekSched();await _mcLoad();var cfg=_MCFG;var dm=await _drvMap();
+  var g={};rows.forEach(function(r){if(!r.driver_name)return;var key=r.work_date+'|'+r.driver_name;if(!g[key])g[key]={d:r.work_date,nm:r.driver_name,routes:{}};splitRt(r.route).forEach(function(rt){g[key].routes[rt]=1;});});
+  var keys=Object.keys(g).sort();
+  var aoa=[['업무일','사업자등록번호','캠프명','웨이브','아이디','업무상태','회전','업무라우트']];
+  keys.forEach(function(k){var it=g[k];var routes=Object.keys(it.routes).sort();if(!routes.length)return;var first=routes[0];var night=_isNight(first,cfg.night_routes);var did=dm[it.nm]||it.nm;aoa.push([_sxDate(it.d),cfg.bizno||'',_campOf(first),night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,routes.join(',')]);});
+  if(aoa.length<2){alert('리스트로 만들 스케줄이 없습니다.');return;}
+  var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
+  for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
+  wsx['!cols']=[{wch:16},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'스케줄리스트');var dts=_weekDates();XLSX.writeFile(wb,'스케줄리스트_'+dts[0]+'.xlsx');
+}catch(e){alert('리스트 오류: '+e.message);}});};
+window.wkChangeList=function(){_sxEnsure(async function(){try{
+  var ws=iso(weekStart);var chg=await rpc('admin_week_changes',{p_token:S.token,p_week_start:ws});
+  if(!chg||!chg.length){alert('해당 주차에 변경된 내역이 없습니다.');return;}
+  var rows=await _weekSched();await _mcLoad();var cfg=_MCFG;var dm=await _drvMap();
+  var dates=[];chg.forEach(function(c){if(dates.indexOf(c.work_date)<0)dates.push(c.work_date);});dates.sort();
+  var aoa=[['업무일','사업자등록번호','캠프명','웨이브','아이디','업무상태','회전','업무라우트']];
+  function inv(m){var o={};for(var rt in m){var d=m[rt];if(!d)continue;o[d]=o[d]||{};splitRt(rt).forEach(function(s){o[d][s]=1;});}return o;}
+  dates.forEach(function(dt){
+    var fmap={};rows.forEach(function(r){if(r.work_date===dt&&r.driver_name)fmap[r.route]=r.driver_name;});
+    var byRoute={};chg.forEach(function(c){if(c.work_date!==dt)return;(byRoute[c.route]=byRoute[c.route]||[]).push(c);});
+    var orig={};for(var rt in fmap)orig[rt]=fmap[rt];
+    Object.keys(byRoute).forEach(function(rt){var od=byRoute[rt][0].old_driver||'';if(od)orig[rt]=od;else delete orig[rt];});
+    var oR=inv(orig),fR=inv(fmap);var drivers={};for(var d in oR)drivers[d]=1;for(var d2 in fR)drivers[d2]=1;
+    Object.keys(drivers).sort().forEach(function(nm){
+      var os=oR[nm]?Object.keys(oR[nm]).sort():[];var fs=fR[nm]?Object.keys(fR[nm]).sort():[];
+      if(os.join(',')===fs.join(','))return;var did=dm[nm]||nm;
+      if(!fs.length){aoa.push([_sxDate(dt),cfg.bizno||'',_campOf(os[0]||''),'',did,'휴무','','']);}
+      else{var night=_isNight(fs[0],cfg.night_routes);aoa.push([_sxDate(dt),cfg.bizno||'',_campOf(fs[0]),night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,fs.join(',')]);}
+    });
+  });
+  if(aoa.length<2){alert('실제 변경(휴무·라우트변경)이 없습니다.');return;}
+  var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
+  for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
+  wsx['!cols']=[{wch:16},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'변경리스트');
+  var mm={};dates.forEach(function(d){var p=d.split('-');(mm[+p[1]]=mm[+p[1]]||[]).push(+p[2]);});
+  var parts=Object.keys(mm).sort(function(a,b){return a-b;}).map(function(m){return m+'월'+mm[m].sort(function(a,b){return a-b;}).join(',')+'일';});
+  XLSX.writeFile(wb,parts.join(',')+'_변경스케줄.xlsx');
+}catch(e){alert('변경분 오류: '+e.message);}});};
+window.wkMetaCfg=async function(){await _mcLoad();var c=_MCFG;
+  function f(id,lbl,val,ph){return '<div style="margin-bottom:8px"><div style="font-size:11px;color:#7a8398;margin-bottom:3px">'+lbl+'</div><input id="'+id+'" value="'+escN(val||'')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:9px;border:1px solid #dbe2ee;border-radius:8px;font-size:13px"></div>';}
+  var h='<div id="mc-ov" class="ovbg" onclick="if(event.target.id===\'mc-ov\')this.remove()"><div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:18px 16px;margin:auto" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px;color:#1a237e">⚙️ 리스트·변경분 메타 설정</b><span onclick="document.getElementById(\'mc-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div><div style="font-size:11px;color:#98a0b2;margin-bottom:10px">메타어드민 업로드용 리스트·변경분 엑셀에 들어가는 값입니다.</div>'+f('mc-bizno','사업자등록번호',c.bizno,'예: 123-45-67890')+f('mc-dwave','주간 웨이브',c.day_wave,'WAVE2')+f('mc-nwave','야간 웨이브',c.night_wave,'WAVE1')+f('mc-drot','주간 회전',c.day_rot,'1회전,2회전')+f('mc-nrot','야간 회전',c.night_rot,'D1,D2,F3')+f('mc-status','업무상태',c.status,'출근')+f('mc-nr','야간 라우트 (쉼표구분)',(c.night_routes||[]).join(','),'예: 808C,809D')+'<button onclick="wkMetaSave()" style="width:100%;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;margin-top:6px">💾 저장</button></div></div>';
+  var w=document.createElement('div');w.innerHTML=h;document.body.appendChild(w.firstElementChild);};
+window.wkMetaSave=async function(){function v(id){var e=document.getElementById(id);return e?e.value.trim():'';}var cfg={bizno:v('mc-bizno'),day_wave:v('mc-dwave'),night_wave:v('mc-nwave'),day_rot:v('mc-drot'),night_rot:v('mc-nrot'),status:v('mc-status')||'출근',night_routes:v('mc-nr').split(',').map(function(x){return x.trim();}).filter(Boolean)};try{await rpc('admin_set_export_cfg',{p_token:S.token,p_cfg:cfg});_MCFG=Object.assign({},_MCDEF,cfg);var o=document.getElementById('mc-ov');if(o)o.remove();alert('저장됐어요');}catch(e){alert('저장 실패: '+e.message);}};
 async function loadSched(){
   renderWkBtns();
   $("#wk-lbl").textContent=(function(){var s=new Date(weekStart);s.setDate(s.getDate()-1);var e=new Date(s);e.setDate(e.getDate()+6);var W=["일","월","화","수","목","금","토"];var f=function(d){return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";};return f(s)+" ~ "+f(e);})();
