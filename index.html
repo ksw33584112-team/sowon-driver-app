@@ -1378,9 +1378,9 @@ const RANKS=["대표","총괄","팀장","조장","일반","백업"];
 async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{var rows=await rpc("admin_list_drivers",{p_token:S.token});try{var cp=await rpc("admin_list_coupang",{p_token:S.token});var m={};(cp||[]).forEach(function(x){m[x.nm]=x.cid;});rows.forEach(function(r){r.coupang_id=m[r.name]||"";});}catch(e){}window.__adrows=rows;renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
   const RORD={"대표":0,"총괄":1,"팀장":2,"백업":3,"조장":4,"일반":5};const GCLS={"대표":"g-dae","총괄":"g-chg","팀장":"g-tea","백업":"g-bk","조장":"g-jo","일반":"g-il"};
-  const q=($("#ad-search").value||"").trim();let rows=(window.__adrows||[]).slice().sort((a,b)=>((RORD[a.rank]??9)-(RORD[b.rank]??9))||a.name.localeCompare(b.name));if(q)rows=rows.filter(r=>r.name.includes(q));
+  const q=($("#ad-search").value||"").trim();function _gk(r){return (r.rank==="대표")?0:(r.is_admin?1:((RORD[r.rank]??9)+2));}let rows=(window.__adrows||[]).slice().sort((a,b)=>(_gk(a)-_gk(b))||((RORD[a.rank]??9)-(RORD[b.rank]??9))||a.name.localeCompare(b.name));if(q)rows=rows.filter(r=>r.name.includes(q));
   let h="",cur=null;
-  rows.forEach(r=>{if(r.rank!==cur){cur=r.rank;h+='<div class="ad-grp '+(GCLS[r.rank]||'')+'">'+r.rank+'</div>';}
+  rows.forEach(r=>{var gk=(r.rank==="대표")?"대표":(r.is_admin?"관리자":r.rank);if(gk!==cur){cur=gk;h+=(gk==="관리자")?'<div class="ad-grp" style="background:#efeafc;color:#7e57c2">관리자</div>':('<div class="ad-grp '+(GCLS[r.rank]||'')+'">'+r.rank+'</div>');}
     const off=r.status!=="active";
     h+='<div class="adr'+(off?" off":"")+' '+(GCLS[r.rank]?GCLS[r.rank].replace("g-","r-"):"")+'" data-name="'+r.name+'"><div class="adr-top"><b>'+r.name+'</b>'
       +(r.is_admin?'<span class="abadge">관리자</span>':'')+(off?'<span class="obadge">'+r.status+'</span>':'')
