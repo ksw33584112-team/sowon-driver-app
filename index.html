@@ -899,7 +899,7 @@ async function loadSched(){
       // ===== 같은 라우트그룹(예:851A/851B, 853A/853B)에서 위·아래 기사가 같으면 세로 병합 =====
       const _span={},_hide={};
       if(!ed){
-        const _baseOf=function(rt){return parseRt(rt).base;};
+        const _baseOf=function(rt){var m=String(rt).match(/^(\d+)/);return m?m[1]:String(rt);};
         const _cv=function(rt,d){var sp=splitMap[rt+"|"+d];if(sp&&Object.keys(sp).length)return{split:true};return{split:false,nm:map[rt+"|"+d]||""};};
         var _i=0;
         while(_i<rts.length){
