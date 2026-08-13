@@ -150,6 +150,7 @@ table.sched th,table.sched td{border:1px solid #e3e6ec;padding:8px 4px;text-alig
 table.sched th:first-child,table.sched td.cRoute{min-width:58px;width:58px}
 table.sched th:not(:first-child),table.sched td:not(.cRoute){width:82px;min-width:82px;max-width:82px}
 table.sched td.scsplit{background:#fff6da;padding:2px 3px}
+table.sched td.schmrg{vertical-align:middle}
 .sch-half{font-size:11px;font-weight:800;color:#7a4a00;padding:2px 3px;line-height:1.35;white-space:nowrap}
 .sch-half+.sch-half{border-top:1px dashed #e6cf92}
 table.sched th{background:#eef2f6;color:#3a4a5a;font-weight:700;line-height:1.25}
@@ -895,18 +896,40 @@ async function loadSched(){
     let h="";
     camps.forEach(cp=>{
       const rts=[...campR[cp]].sort();
+      // ===== 같은 라우트그룹(예:851A/851B, 853A/853B)에서 위·아래 기사가 같으면 세로 병합 =====
+      const _span={},_hide={};
+      if(!ed){
+        const _baseOf=function(rt){return parseRt(rt).base;};
+        const _cv=function(rt,d){var sp=splitMap[rt+"|"+d];if(sp&&Object.keys(sp).length)return{split:true};return{split:false,nm:map[rt+"|"+d]||""};};
+        var _i=0;
+        while(_i<rts.length){
+          var _j=_i;while(_j+1<rts.length&&_baseOf(rts[_j+1])===_baseOf(rts[_i]))_j++;
+          if(_j>_i){dates.forEach(function(d){
+            var k=_i;
+            while(k<=_j){
+              var cv=_cv(rts[k],d);
+              if(cv.split||!cv.nm){k++;continue;}
+              var m=k;
+              while(m+1<=_j){var nv=_cv(rts[m+1],d);if(nv.split||nv.nm!==cv.nm)break;m++;}
+              if(m>k){_span[rts[k]+"|"+d]=m-k+1;for(var x=k+1;x<=m;x++)_hide[rts[x]+"|"+d]=true;}
+              k=m+1;
+            }
+          });}
+          _i=_j+1;
+        }
+      }
       h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><div class="tbl-inner"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
       rts.forEach(rt=>{
         h+='<tr><td class="cRoute">'+rt+'</td>';
-        dates.forEach(d=>{const to=(d===today);const sp=splitMap[rt+"|"+d];
+        dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];
           if(sp&&Object.keys(sp).length){const subs=splitRt(rt);let inner='';
             subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const sr=RANKMAP[snm];const sic=isTopRank(sr)?RMARK[sr]+' ':'';inner+='<div class="sch-half">'+s+' : '+sic+escN(snm)+'</div>';}});
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':'';
-            h+='<td class="scsplit'+(to?' tcol':'')+'"'+da+'>'+inner+'</td>';
+            h+='<td class="scsplit'+(to?' tcol':'')+'"'+rs+da+'>'+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
-            if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+da+'>'+ic+escN(nm)+'</td>';}
-            else if(nm){h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'>'+escN(nm)+'</td>';}
+            if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+mg+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+rs+da+'>'+ic+escN(nm)+'</td>';}
+            else if(nm){h+='<td class="'+(to?'tcol tbg':'')+mg+'"'+rs+da+'>'+escN(nm)+'</td>';}
             else{h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'></td>';}}});
         h+='</tr>';
       });
