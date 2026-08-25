@@ -148,7 +148,8 @@ label.fl{display:block;font-size:11px;color:#888;font-weight:700;margin:10px 0 5
 .tbl-inner{position:relative;width:max-content;min-width:100%}
 table.sched{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
 table.sched th,table.sched td{border:1px solid #e3e6ec;padding:8px 4px;text-align:center;white-space:nowrap}
-table.sched th:first-child,table.sched td.cRoute{min-width:58px;width:58px}
+table.sched th:first-child,table.sched td.cRoute{min-width:58px;width:58px;position:sticky;left:0;z-index:2;background:#fff}
+table.sched thead th:first-child{background:#eef2f6;z-index:3}
 table.sched th:not(:first-child),table.sched td:not(.cRoute){width:82px;min-width:82px;max-width:82px}
 table.sched td.scsplit{background:#fff6da;padding:2px 3px}
 table.sched td.schmrg{vertical-align:middle}
