@@ -50,6 +50,53 @@ input:focus,textarea:focus{border-color:#1565c0;background:#fff}
 .wkbtns{display:flex;flex-direction:column;gap:8px;margin:-4px 0 12px}
 .wkrow{display:flex;gap:8px}
 .wkbtns button{flex:1;padding:9px;border:none;border-radius:9px;font-size:12px;font-weight:800;cursor:pointer}
+.chgb{position:absolute;top:-6px;right:-2px;background:#ff3b30;color:#fff;font-size:9px;font-weight:900;border-radius:9px;min-width:15px;line-height:15px;text-align:center;padding:0 3px}
+.chg-ovbg{position:fixed;inset:0;background:rgba(8,18,38,.55);z-index:9998;display:flex;align-items:flex-end;justify-content:center}
+.chg-sheet{width:100%;max-width:560px;background:#f4f7fc;border-radius:18px 18px 0 0;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 -6px 24px rgba(0,0,0,.3);animation:chgup .28s ease}
+@keyframes chgup{from{transform:translateY(60px);opacity:.4}to{transform:translateY(0);opacity:1}}
+.chg-h{padding:14px 16px 11px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e9f3}
+.chg-h b{font-size:15px;color:#12328a}.chg-x{font-size:20px;color:#8a99ab;cursor:pointer}
+.chg-tg{padding:10px 13px;background:#fff;border-bottom:1px solid #e2e9f3;display:flex;flex-direction:column;gap:9px}
+.chg-tgr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.chg-tgl{display:flex;align-items:center;gap:8px}.chg-tgl>span{font-size:15px}
+.chg-tgl b{font-size:12.5px;color:#1a2b45;display:block}.chg-tgl i{font-size:10px;color:#8a99ab;font-style:normal}
+.chg-adm{font-size:9px;font-weight:900;color:#7a5600;background:#fff3d6;border-radius:6px;padding:1px 6px;margin-left:5px}
+.chg-sw{width:44px;height:25px;border-radius:14px;background:#cdd6e2;position:relative;transition:background .2s;flex-shrink:0;cursor:pointer}
+.chg-sw::after{content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s}
+.chg-sw.on{background:#1e6fd8}.chg-sw.on::after{left:22px}
+.chg-list{overflow:auto;padding:11px 13px 22px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
+.chg-day{font-size:10.5px;font-weight:900;color:#7a8aa0;margin:3px 2px 0}
+.chg-card{background:#fff;border-radius:12px;box-shadow:0 2px 7px rgba(0,40,90,.08);overflow:hidden;border-left:5px solid #1e6fd8}
+.chg-head{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.chg-rt{font-size:15px;font-weight:900;color:#1a237e}.chg-rt small{font-size:11px;color:#8a99ab;font-weight:800;margin-left:6px}
+.chg-cv{display:flex;align-items:center;gap:7px}
+.chg-chev{font-size:13px;color:#9aa8bb;font-weight:900;transition:transform .2s}
+.chg-card.open .chg-chev{transform:rotate(90deg)}
+.chg-tag{font-size:9.5px;font-weight:900;border-radius:7px;padding:2px 7px}
+.chg-tag.kc{background:#eef4ff;color:#1e6fd8}.chg-tag.kn{background:#e8f5e9;color:#2e7d32}.chg-tag.ko{background:#fdecea;color:#c62828}
+.chg-body{max-height:0;overflow:hidden;transition:max-height .28s ease;background:#fbfdff}
+.chg-card.open .chg-body{max-height:280px}
+.chg-in{padding:2px 14px 14px}
+.chg-flow{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 0 10px}
+.chg-who{text-align:center}.chg-who .n{font-size:16px;font-weight:900}.chg-who .r{font-size:9.5px;font-weight:800;color:#8a99ab;margin-top:2px}
+.chg-who.old .n{color:#b0392e}.chg-who.new .n{color:#1b7a3d}
+.chg-arr{font-size:20px;color:#1e6fd8;font-weight:900}
+.chg-meta{border-top:1px dashed #e2e9f3;padding-top:9px;display:flex;flex-direction:column;gap:5px}
+.chg-ml{display:flex;justify-content:space-between;font-size:12px;color:#5a6b7c}.chg-ml b{color:#1a2b45;font-weight:800}
+.chg-by{background:#fff8e1;border:1px solid #ffe2a8;border-radius:9px;padding:7px 10px;display:flex;align-items:center;gap:7px;font-size:12px;margin-top:3px}
+.chg-by .k{color:#a9791a;font-weight:900;font-size:10.5px}.chg-by b{color:#7a5600}
+.chg-by .lk{font-size:9px;color:#b3903f;background:#fff3d6;border-radius:6px;padding:1px 6px;font-weight:900;margin-left:auto}
+.chg-empty{text-align:center;color:#8a99ab;font-size:13px;padding:40px 0;font-weight:700}.chg-empty div{margin-top:6px}
+.chg-popbg{position:fixed;inset:0;background:rgba(8,18,38,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.chg-pop{width:100%;max-width:380px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.4);animation:chgpop .3s cubic-bezier(.2,1.2,.4,1)}
+@keyframes chgpop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+.chg-pop-t{background:linear-gradient(135deg,#1e6fd8,#0d1b6b);color:#fff;padding:16px;text-align:center}
+.chg-pop-t .ic{font-size:30px}.chg-pop-t .t{font-size:16px;font-weight:900;margin-top:5px}.chg-pop-t .s{font-size:11px;opacity:.85;margin-top:3px}
+.chg-pop-b{padding:15px 15px 6px}.chg-pop-card{background:#f4f7fc;border-radius:12px;border-left:5px solid #1e6fd8;padding:10px 13px}
+.chg-more{text-align:center;font-size:11px;color:#8a99ab;font-weight:800;margin-top:8px}
+.chg-pop-btns{padding:12px 15px 16px;display:flex;gap:8px}
+.chg-pb{flex:1;padding:12px;border:none;border-radius:12px;font-size:13.5px;font-weight:900;color:#fff;background:linear-gradient(135deg,#1e6fd8,#1257c0);cursor:pointer}
+.chg-pb.g{background:#eef2f6;color:#5a6b7c}
 #wk-today{background:#e7f0ff;color:#1565c0}
 #wk-edit{background:#fff2e0;color:#e8862e}
 #wk-edit.on{background:#e8862e;color:#fff}
@@ -920,9 +967,80 @@ async function homeAdminStat(){
 $("#wk-prev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);loadSched();};
 $("#wk-next").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);loadSched();};
 window.wkToday=function(){weekStart=mondayOf(kstNow());loadSched();};
+/* ===== 스케줄 변경이력 ===== */
+window.__CHG=null;window.__chgUnseenCount=0;
+function chgBadgeSet(n){window.__chgUnseenCount=n;var b=document.getElementById('chg-badge');if(!b)return;if(n>0){b.textContent=n>9?'9+':String(n);b.style.display='';}else{b.style.display='none';}}
+function chgKindLabel(k){return k==='new'?['신규','kn']:(k==='off'?['휴무','ko']:['교체','kc']);}
+function chgFmtDT(s){var d=new Date(s);var da=d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';var hh=d.getHours();var ap=hh<12?'오전':'오후';var h12=hh%12;if(h12===0)h12=12;return da+' '+ap+' '+h12+'시 '+String(d.getMinutes()).padStart(2,'0')+'분';}
+function chgDayKey(s){var d=new Date(s);return (d.getMonth()+1)+'월 '+d.getDate()+'일';}
+function chgListHtml(items,isAdmin){
+  if(!items||!items.length)return '<div class="chg-empty">🕘<div>변경 이력이 없습니다.</div></div>';
+  var out='',lastDay=null,todayKey=chgDayKey(new Date());
+  items.forEach(function(it){
+    var dk=chgDayKey(it.changed_at);
+    if(dk!==lastDay){out+='<div class="chg-day">'+(dk===todayKey?'오늘 · ':'')+dk+'</div>';lastDay=dk;}
+    var kl=chgKindLabel(it.kind);
+    var oldn=(it.old_driver&&it.old_driver!=='')?escN(it.old_driver):'공석';
+    var newn=(it.new_driver&&it.new_driver!=='')?escN(it.new_driver):'휴무';
+    var open=!isAdmin;
+    var hl=(it.kind==='new')?'신규':'변경';
+    out+='<div class="chg-card'+(open?' open':'')+'">'
+      +'<div class="chg-head" onclick="this.parentNode.classList.toggle(\'open\')">'
+        +'<div class="chg-rt">'+escN(it.route||'')+' <small>'+hl+'</small></div>'
+        +'<div class="chg-cv"><span class="chg-tag '+kl[1]+'">'+kl[0]+'</span><span class="chg-chev">›</span></div>'
+      +'</div>'
+      +'<div class="chg-body"><div class="chg-in">'
+        +'<div class="chg-flow"><div class="chg-who old"><div class="n">'+oldn+'</div><div class="r">기존</div></div><div class="chg-arr">→</div><div class="chg-who new"><div class="n">'+newn+'</div><div class="r">변경</div></div></div>'
+        +'<div class="chg-meta"><div class="chg-ml"><span>라우트</span><b>'+escN(it.route||'')+'</b></div><div class="chg-ml"><span>변경 일시</span><b>'+chgFmtDT(it.changed_at)+'</b></div>'
+        +(isAdmin?('<div class="chg-by"><span class="k">변경자</span><b>'+escN(it.by||'-')+'</b><span class="lk">관리자만</span></div>'):'')
+        +'</div>'
+      +'</div></div>'
+    +'</div>';
+  });
+  return out;
+}
+window.chgOpen=async function(){
+  var host=document.getElementById('chg-ov');if(host)host.remove();
+  var f;try{f=await rpc("change_log_feed",{p_token:S.token});}catch(e){alert(e.message);return;}
+  window.__CHG=f;var isAdmin=!!f.is_admin;var items=f.items||[];
+  var toggles=isAdmin?(
+    '<div class="chg-tg">'
+     +'<div class="chg-tgr"><div class="chg-tgl"><span>🕘</span><div><b>변경이력 활성화<span class="chg-adm">관리자</span></b><i>끄면 기사에게 변경이력이 안 보입니다</i></div></div><div class="chg-sw'+(f.enabled?' on':'')+'" onclick="chgCfg(\'enabled\',this)"></div></div>'
+     +'<div class="chg-tgr"><div class="chg-tgl"><span>🔔</span><div><b>변경 알림(푸시·팝업)</b><i>변경 시 대상 기사에게 발송</i></div></div><div class="chg-sw'+(f.notify?' on':'')+'" onclick="chgCfg(\'notify\',this)"></div></div>'
+    +'</div>'):'';
+  var h='<div id="chg-ov" class="chg-ovbg" onclick="if(event.target.id===\'chg-ov\')chgClose()"><div class="chg-sheet"><div class="chg-h"><b>🕘 '+(isAdmin?'스케줄 변경이력':'내 스케줄 변경이력')+'</b><span onclick="chgClose()" class="chg-x">✕</span></div>'+toggles+'<div class="chg-list">'+chgListHtml(items,isAdmin)+'</div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+  try{await rpc("change_log_seen_set",{p_token:S.token,p_id:f.max_id});}catch(e){}
+  chgBadgeSet(0);
+};
+window.chgClose=function(){var o=document.getElementById('chg-ov');if(o)o.remove();};
+window.chgCfg=async function(field,el){
+  var f=window.__CHG||{};var enabled=f.enabled,notify=f.notify;
+  if(field==='enabled')enabled=!enabled;else notify=!notify;
+  try{var v=await rpc("change_cfg_set",{p_token:S.token,p_enabled:enabled,p_notify:notify});f.enabled=(v&&v.enabled!==false);f.notify=(v&&v.notify!==false);window.__CHG=f;el.classList.toggle('on');}
+  catch(e){alert(e.message);}
+};
+window.chgPopup=function(f){
+  if(document.getElementById('chg-pop'))return;
+  var un=(f&&f.unseen)||[];if(!un.length)return;
+  var it=un[0];var more=un.length-1;
+  var oldn=(it.old_driver&&it.old_driver!=='')?escN(it.old_driver):'공석';
+  var newn=(it.new_driver&&it.new_driver!=='')?escN(it.new_driver):'휴무';
+  var h='<div id="chg-pop" class="chg-popbg"><div class="chg-pop"><div class="chg-pop-t"><div class="ic">🔔</div><div class="t">스케줄이 변경되었어요</div><div class="s">회원님과 관련된 변경 '+un.length+'건</div></div>'
+    +'<div class="chg-pop-b"><div class="chg-pop-card">'
+      +'<div class="chg-flow"><div class="chg-who old"><div class="n">'+oldn+'</div><div class="r">기존</div></div><div class="chg-arr">→</div><div class="chg-who new"><div class="n">'+newn+'</div><div class="r">변경</div></div></div>'
+      +'<div class="chg-meta"><div class="chg-ml"><span>라우트</span><b>'+escN(it.route||'')+'</b></div><div class="chg-ml"><span>변경 일시</span><b>'+chgFmtDT(it.changed_at)+'</b></div></div>'
+      +(more>0?'<div class="chg-more">외 '+more+'건 더 있어요</div>':'')
+    +'</div></div>'
+    +'<div class="chg-pop-btns"><button class="chg-pb g" onclick="chgPopClose()">닫기</button><button class="chg-pb" onclick="chgPopClose();chgOpen()">변경이력 보기</button></div>'
+  +'</div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+};
+window.chgPopClose=async function(){var o=document.getElementById('chg-pop');if(o)o.remove();try{var f=window.__CHG;var mid=f?f.max_id:null;if(mid==null){var g=await rpc("change_log_feed",{p_token:S.token});mid=g.max_id;}await rpc("change_log_seen_set",{p_token:S.token,p_id:mid});}catch(e){}chgBadgeSet(0);};
+window.chgBoot=async function(){try{var f=await rpc("change_log_feed",{p_token:S.token});window.__CHG=f;var un=f.unseen||[];chgBadgeSet(un.length);if(un.length)chgPopup(f);}catch(e){}};
 window.wkEdit=function(){editMode=!editMode;loadSched();};
 window.wkSettings=function(){openEditPerm();};
-function renderWkBtns(){var r1='';if(IS_ADMIN())r1=wkExportBtns();var r2='';if(IS_ADMIN())r2+='<button onclick="wkSettings()" style="background:#efeafc;color:#7e57c2">⚙️ 설정</button>';r2+='<button id="wk-today" onclick="wkToday()">📍 오늘</button>';if(CAN_EDIT())r2+='<button id="wk-edit" onclick="wkEdit()" class="'+(editMode?"on":"")+'">'+(editMode?"✅ 수정완료":"✏️ 수정")+'</button>';var html='';if(r1)html+='<div class="wkrow">'+r1+'</div>';html+='<div class="wkrow">'+r2+'</div>';var el=document.getElementById("wk-btns");if(el)el.innerHTML=html;}
+function renderWkBtns(){var r1='';if(IS_ADMIN())r1=wkExportBtns();var r2='';if(IS_ADMIN())r2+='<button onclick="wkSettings()" style="background:#efeafc;color:#7e57c2">⚙️ 설정</button>';r2+='<button id="wk-today" onclick="wkToday()">📍 오늘</button>';if(CAN_EDIT())r2+='<button id="wk-edit" onclick="wkEdit()" class="'+(editMode?"on":"")+'">'+(editMode?"✅ 수정완료":"✏️ 수정")+'</button>';r2+='<button id="wk-chglog" onclick="chgOpen()" style="background:#efe7fb;color:#7b1fa2;position:relative">🕘 변경이력<span id="chg-badge" class="chgb" style="display:none">0</span></button>';var html='';if(r1)html+='<div class="wkrow">'+r1+'</div>';html+='<div class="wkrow">'+r2+'</div>';var el=document.getElementById("wk-btns");if(el)el.innerHTML=html;chgBadgeSet(window.__chgUnseenCount||0);}
 window.openEditPerm=async function(){if(!IS_ADMIN())return;try{await loadSchedCfg();}catch(e){}var c=SCHEDCFG;var cur=(c.roles&&c.roles.length)?c.roles:["대표","총괄","팀장"];var curDay=(c.editDays==="1년"||c.editDays===365||c.editDays==="365")?365:(parseInt(c.editDays)||90);var curLock=(c.lockDays==="week")?"week":String(parseInt(c.lockDays)||0);function ck(v,on){return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="ep-role" value="'+v+'" '+(on?"checked":"")+'>'+v+'</label>';}var cur2=(c.freeRoles&&c.freeRoles.length)?c.freeRoles:[];function fck(v,on){return '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:#7e3fb0;font-weight:700"><input type="checkbox" class="ep-free" value="'+v+'" '+(on?"checked":"")+'>'+v+'</label>';}function rd(nm,v,lbl,on){return '<label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;padding:7px 9px;border:1px solid '+(on?"#1565c0":"#e3e7f0")+';border-radius:8px;background:'+(on?"#eaf1fc":"#f8fafd")+'"><input type="radio" name="'+nm+'" value="'+v+'" '+(on?"checked":"")+'>'+lbl+'</label>';}var h='<div id="ep-ov" style="position:fixed;inset:0;background:rgba(15,20,40,.55);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding:14px;overflow:auto" onclick="if(event.target.id===\'ep-ov\')this.remove()"><div style="background:#fff;border-radius:16px;max-width:430px;width:100%;padding:18px 16px;margin:auto" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><b style="font-size:15px;color:#1a237e">🗓️ 스케줄 수정 권한</b><span onclick="document.getElementById(\'ep-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div><div style="font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">수정 가능한 역할 (다중 선택)</div><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px"><label style="display:flex;align-items:center;gap:6px;font-size:13px;opacity:.6"><input type="checkbox" checked disabled>대표(관리자)</label>'+ck("총괄",cur.indexOf("총괄")>=0)+ck("팀장",cur.indexOf("팀장")>=0)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#7e3fb0;margin-bottom:4px">🛡️ 관리자급 무제한 수정 <span style="font-weight:600;color:#98a0b2">(스케줄 전용)</span></div><div style="font-size:11px;color:#98a0b2;margin-bottom:8px">체크한 그룹은 <b style="color:#7e3fb0">스케줄 수정</b>에서 기간·잠금 제한 없이 관리자처럼 전체 수정 가능 (다른 메뉴 권한은 변화 없음)</div><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">'+fck("총괄",cur2.indexOf("총괄")>=0)+fck("팀장",cur2.indexOf("팀장")>=0)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">⏱ 총괄·팀장 수정 가능 기간</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">'+rd("ep-day","30","30일",curDay===30)+rd("ep-day","60","60일",curDay===60)+rd("ep-day","90","90일",curDay===90)+rd("ep-day","365","1년",curDay===365)+'</div><div style="border-top:1px solid #eef1f6;padding-top:12px;font-size:12.5px;font-weight:800;color:#3a5aa8;margin-bottom:8px">🔒 과거 수정 잠금 — 며칠 이전 수정 불가 (0=제한없음)</div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px">'+rd("ep-lock","0","제한없음",curLock==="0")+rd("ep-lock","2","2일 이전",curLock==="2")+rd("ep-lock","3","3일 이전",curLock==="3")+rd("ep-lock","4","4일 이전",curLock==="4")+rd("ep-lock","5","5일 이전",curLock==="5")+rd("ep-lock","week","🔒 해당주차 금지",curLock==="week")+'</div><button onclick="saveEditPerm()" style="width:100%;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;cursor:pointer">💾 저장 (전 기기 적용)</button></div></div>';var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);};
 window.saveEditPerm=async function(){var roles=["대표"];document.querySelectorAll("#ep-ov .ep-role:checked").forEach(function(c){roles.push(c.value);});var dEl=document.querySelector('#ep-ov input[name="ep-day"]:checked');var lEl=document.querySelector('#ep-ov input[name="ep-lock"]:checked');var editDays=dEl?parseInt(dEl.value):90;var lv=lEl?lEl.value:"0";var lockDays=(lv==="week")?"week":(parseInt(lv)||0);var freeRoles=[];document.querySelectorAll("#ep-ov .ep-free:checked").forEach(function(c){freeRoles.push(c.value);});var cfg={roles:roles,editDays:editDays,lockDays:lockDays,freeRoles:freeRoles};try{await rpc("admin_set_sched_cfg",{p_token:S.token,p_cfg:cfg});SCHEDCFG=cfg;var o=document.getElementById("ep-ov");if(o)o.remove();editMode=false;loadSched();alert("저장됐어요 · 전 기기에 적용됩니다");}catch(e){alert("저장 실패: "+e.message);}};
 /* ===== 스케줄 표다운·표업로드·리스트·변경분 (PC 스케줄프로그램 이식) ===== */
@@ -2112,6 +2230,7 @@ window.doLogout=async function(){try{await pushLogout();}catch(e){}localStorage.
   var _rf=document.getElementById('refresh');if(_rf)_rf.onclick=function(){location.reload();};
   try{var m=location.search.match(/[?&]go=([a-z]+)/);if(m&&S)setTimeout(function(){try{switchView(m[1]);}catch(e){}},350);}catch(e){}
   if(S)setTimeout(function(){try{ensurePush(false);}catch(e){}},1500);
+  if(S)setTimeout(function(){try{chgBoot();}catch(e){}},1900);
 })();
 </script>
 </body>
