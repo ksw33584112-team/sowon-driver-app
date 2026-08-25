@@ -222,6 +222,9 @@ table.sched th{background:#eef2f6;color:#3a4a5a;font-weight:700;line-height:1.25
 table.sched thead th{position:sticky;top:0;z-index:4}
 table.sched th.we{background:#d9efef;color:#1c6b6b}
 th.tcol{background:#ffe4c2;color:#8a5300}
+table.sched td.tcol,table.sched th.tcol{box-shadow:inset 2px 0 0 #ff8f00,inset -2px 0 0 #ff8f00}
+table.sched thead th.tcol{box-shadow:inset 2px 0 0 #ff8f00,inset -2px 0 0 #ff8f00,inset 0 3px 0 #ff8f00}
+table.sched tbody tr:last-child td.tcol{box-shadow:inset 2px 0 0 #ff8f00,inset -2px 0 0 #ff8f00,inset 0 -3px 0 #ff8f00}
 td.cRoute{background:#f2f5fb;color:#26324a;font-weight:800}
 td.tbg{background:#fff6e8}
 td.rk{color:#fff;font-weight:700}
@@ -229,7 +232,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .tlbl{display:block;font-size:9px;color:#e8862e;font-weight:800;animation:blink .9s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @property --sa{syntax:"<angle>";initial-value:0deg;inherits:false}
-.today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:1;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
+.today-box{position:absolute;pointer-events:none;border-radius:8px;z-index:0;background:transparent;box-shadow:0 0 9px 0 rgba(255,143,0,.5);animation:glow 1s ease-in-out infinite}
 @keyframes spin{to{--sa:360deg}}
 @keyframes glow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,140,0,.5))}50%{filter:drop-shadow(0 0 9px rgba(255,140,0,1))}}
 .ad-grp{font-weight:800;font-size:12px;padding:6px 11px;border-radius:8px;margin:12px 0 7px;border-left:5px solid #ccc;background:#eef2f6;color:#3a4a5a}
