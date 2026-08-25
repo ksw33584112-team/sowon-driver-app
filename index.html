@@ -138,7 +138,7 @@ label.fl{display:block;font-size:11px;color:#888;font-weight:700;margin:10px 0 5
 .camp-card{background:#fff;border:1px solid #dfe3ea;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .camp-head{background:linear-gradient(135deg,#2f5b3f,#3f7a52);color:#fff;font-weight:800;font-size:13px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
 .camp-head .rc{font-size:11px;font-weight:600;opacity:.92}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 200px);-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tbl-wrap::-webkit-scrollbar{height:0;display:none}
 #sc-hbar{position:sticky;bottom:62px;z-index:25;overflow-x:auto;overflow-y:hidden;height:15px;margin-top:8px;background:rgba(238,241,248,.97);border:1px solid #d3d9e6;border-radius:8px;box-shadow:0 -1px 5px rgba(20,30,60,.08)}
 #sc-hbar .sc-hbar-in{height:1px}
@@ -149,7 +149,7 @@ label.fl{display:block;font-size:11px;color:#888;font-weight:700;margin:10px 0 5
 table.sched{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
 table.sched th,table.sched td{border:1px solid #e3e6ec;padding:8px 4px;text-align:center;white-space:nowrap}
 table.sched th:first-child,table.sched td.cRoute{min-width:58px;width:58px;position:sticky;left:0;z-index:2;background:#fff}
-table.sched thead th:first-child{background:#eef2f6;z-index:3}
+table.sched thead th:first-child{background:#eef2f6;z-index:5}
 table.sched th:not(:first-child),table.sched td:not(.cRoute){width:82px;min-width:82px;max-width:82px}
 table.sched td.scsplit{background:#fff6da;padding:2px 3px}
 table.sched td.schmrg{vertical-align:middle}
@@ -172,6 +172,7 @@ table.sched td.schmrg{vertical-align:middle}
 .sch-half{font-size:11px;font-weight:800;color:#7a4a00;padding:2px 3px;line-height:1.35;white-space:nowrap}
 .sch-half+.sch-half{border-top:1px dashed #e6cf92}
 table.sched th{background:#eef2f6;color:#3a4a5a;font-weight:700;line-height:1.25}
+table.sched thead th{position:sticky;top:0;z-index:4}
 table.sched th.we{background:#d9efef;color:#1c6b6b}
 th.tcol{background:#ffe4c2;color:#8a5300}
 td.cRoute{background:#f2f5fb;color:#26324a;font-weight:800}
@@ -181,7 +182,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .tlbl{display:block;font-size:9px;color:#e8862e;font-weight:800;animation:blink .9s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @property --sa{syntax:"<angle>";initial-value:0deg;inherits:false}
-.today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:6;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
+.today-box{position:absolute;pointer-events:none;border-radius:9px;z-index:1;padding:3px;background:conic-gradient(from var(--sa),#ff8f00,#ffd591,#ff5d00,#ffd591,#ff8f00);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spin 1.4s linear infinite,glow 1s ease-in-out infinite}
 @keyframes spin{to{--sa:360deg}}
 @keyframes glow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,140,0,.5))}50%{filter:drop-shadow(0 0 9px rgba(255,140,0,1))}}
 .ad-grp{font-weight:800;font-size:12px;padding:6px 11px;border-radius:8px;margin:12px 0 7px;border-left:5px solid #ccc;background:#eef2f6;color:#3a4a5a}
@@ -971,7 +972,7 @@ window.wkMetaList=function(){_sxEnsure(async function(){try{
   if(aoa.length<2){alert('리스트로 만들 스케줄이 없습니다.');return;}
   var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
   for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
-  wsx['!cols']=[{wch:16},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
+  wsx['!cols']=[{wch:21},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'스케줄리스트');var dts=_weekDates();XLSX.writeFile(wb,'스케줄리스트_'+dts[0]+'.xlsx');
 }catch(e){alert('리스트 오류: '+e.message);}});};
 window.wkChangeList=function(){_sxEnsure(async function(){try{
@@ -997,7 +998,7 @@ window.wkChangeList=function(){_sxEnsure(async function(){try{
   if(aoa.length<2){alert('실제 변경(휴무·라우트변경)이 없습니다.');return;}
   var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
   for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
-  wsx['!cols']=[{wch:16},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
+  wsx['!cols']=[{wch:21},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'변경리스트');
   var mm={};dates.forEach(function(d){var p=d.split('-');(mm[+p[1]]=mm[+p[1]]||[]).push(+p[2]);});
   var parts=Object.keys(mm).sort(function(a,b){return a-b;}).map(function(m){return m+'월'+mm[m].sort(function(a,b){return a-b;}).join(',')+'일';});
