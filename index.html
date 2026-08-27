@@ -1357,17 +1357,15 @@ function pbPeriod(){const d=kstNow();return d.getFullYear()+"-"+String(d.getMont
 /* 프백 소명 → 구글폼(서베이) 자동전송 (관리자 승인 시) */
 var PB_FORM={url:"",defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",company:"소원물류",phone:"01071398602",entry:{company:"482875263",phone:"779622344",wave:"1389640317",date:"954374004",camp:"358739403",route:"380559549",reason:"895085804",confirm:"1853853931"},waveMap:{"주간":"WAVE 2","야간":"WAVE 1"},confirmVal:"확인"};
 async function pbFormSubmit(o){
-  var raw=String(PB_FORM.url||"").trim();
-  if(!/docs\.google\.com\/forms\//.test(raw))return false;
-  var base=raw.split("?")[0].replace(/\/viewform.*$/,"").replace(/\/formResponse.*$/,"");
-  if(!/\/forms\//.test(base))return false;
-  var url=base+"/formResponse",E=PB_FORM.entry,fd=new URLSearchParams();
-  fd.append("entry."+E.company,PB_FORM.company);fd.append("entry."+E.phone,PB_FORM.phone);
-  fd.append("entry."+E.wave,PB_FORM.waveMap[o.wave]||o.wave||"");
-  if(o.date){var _dp=String(o.date).split("-");if(_dp.length===3){fd.append("entry."+E.date+"_year",_dp[0]);fd.append("entry."+E.date+"_month",String(+_dp[1]));fd.append("entry."+E.date+"_day",String(+_dp[2]));}else{fd.append("entry."+E.date,o.date);}}
-  fd.append("entry."+E.camp,o.camp||"");fd.append("entry."+E.route,o.route||"");fd.append("entry."+E.reason,o.reason||"");
-  if(E.confirm)fd.append("entry."+E.confirm,PB_FORM.confirmVal);
-  try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},body:fd.toString()});return true;}catch(e){return false;}
+  // 서버(엣지 함수)에서 구글폼의 실제 필드 ID를 자동 인식해 전송하고, 접수 완료까지 확인
+  try{
+    var r=await fetch(SUPABASE_URL+"/functions/v1/pback-survey",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      token:S.token, period:pbPeriod(),
+      payload:{company:PB_FORM.company,phone:PB_FORM.phone,wave:o.wave,date:o.date,camp:o.camp,route:o.route,reason:o.reason}
+    })});
+    var j={};try{j=await r.json();}catch(e){j={};}
+    return !!(j&&j.ok);
+  }catch(e){return false;}
 }
 function pbWD(pd){if(!pd)return"-";var d=new Date(pd+"T00:00");var W=["일","월","화","수","목","금","토"];return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";}
 function pbDeadlineBanner(){var d=kstNow();var last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();var dl=last-1;var today=d.getDate();var open=(today>=1&&today<=dl);var dd=(d.getMonth()+1)+"/"+dl;return '<div class="pb-dl '+(open?"open":"closed")+'">'+(open?("⏰ 소명 마감 "+dd+" (D-"+(dl-today)+") · 마감 후 제출 불가"):("🔒 소명 기간이 마감되었습니다 (마감 "+dd+")"))+'</div>';}
