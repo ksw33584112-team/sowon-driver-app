@@ -1370,7 +1370,7 @@ async function pbFormSubmit(o){
 function pbWD(pd){if(!pd)return"-";var d=new Date(pd+"T00:00");var W=["일","월","화","수","목","금","토"];return (d.getMonth()+1)+"/"+d.getDate()+"("+W[d.getDay()]+")";}
 function pbDeadlineBanner(){var d=kstNow();var last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();var dl=last-1;var today=d.getDate();var open=(today>=1&&today<=dl);var dd=(d.getMonth()+1)+"/"+dl;return '<div class="pb-dl '+(open?"open":"closed")+'">'+(open?("⏰ 소명 마감 "+dd+" (D-"+(dl-today)+") · 마감 후 제출 불가"):("🔒 소명 기간이 마감되었습니다 (마감 "+dd+")"))+'</div>';}
 var PB_WARN='<div class="pbwarn"><h4>⚠️ 소명 인정 불가 사항</h4><ul><li><b>✕</b>호수 확인 불가 (주위 사물로 판단 가능 시 제외)</li><li><b>✕</b>복도 / 프백 / 검은 / 꺾여서 가린 현관 사진</li><li><b>✕</b>어딘지 알 수 없는 사진</li><li><b>✕</b>정확한 소명이 불가한 사진</li></ul><div class="note">설명이 부족한 사진은 본사를 납득시킬 수 없어 소명 불가 처리됩니다.</div></div>';
-function pbStatusPill(st){var m={"미작성":["p-todo","미작성"],"작성완료":["p-done","작성완료"],"제출완료":["p-sub","제출완료"],"소명불가":["p-imp","소명불가"],"반려":["p-rej","반려"]};var e=m[st]||m["미작성"];return '<span class="pill '+e[0]+'">'+e[1]+'</span>';}
+function pbStatusPill(st){var m={"미작성":["p-todo","미작성"],"작성완료":["p-done","작성완료"],"제출완료":["p-sub","제출완료"],"제출실패":["p-rej","❌ 제출실패"],"소명불가":["p-imp","소명불가"],"반려":["p-rej","반려"]};var e=m[st]||m["미작성"];return '<span class="pill '+e[0]+'">'+e[1]+'</span>';}
 var __PB_TAB="미작성",__PB_MY=[],__PB_DASH=null,__PB_MODE="승인";
 async function loadPback(){
   if(IS_ADMIN()){$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";return renderPbackAdmin();}
@@ -1445,7 +1445,7 @@ window.pbReviewDecide=async function(sid,st){
   var box=document.getElementById("pr-actions");
   var s=((__PB_DASH&&__PB_DASH.pending)||[]).find(function(x){return x.id===sid;});
   if(box)box.innerHTML='<div style="text-align:center;padding:13px;background:#eef4ff;border-radius:12px;color:#1565c0;font-weight:800">⏳ 쿠팡 폼에 제출중…<div style="font-size:11px;font-weight:600;color:#5a7bb0;margin-top:3px">접수 완료 확인까지 잠시만요</div></div>';
-  var ok=false;try{ok=await pbFormSubmit({date:s?s.pdate:"",wave:s?s.wave:"",camp:s?s.camp:"",route:s?s.route:"",reason:s?s.reason:""});}catch(e){ok=false;}
+  var ok=false;try{var _r=await fetch(SUPABASE_URL+"/functions/v1/pback-survey",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:S.token,sid:sid})});var _j=await _r.json();ok=!!(_j&&_j.ok);}catch(e){ok=false;}
   box=document.getElementById("pr-actions");
   if(!ok){
     if(box)box.innerHTML='<div style="text-align:center;padding:11px;background:#fdecea;border-radius:12px;color:#c62828;font-weight:800;margin-bottom:8px">❌ 제출 실패<div style="font-size:11px;font-weight:600;color:#a5453c;margin-top:3px">쿠팡 폼 접수가 확인되지 않았습니다. 다시 시도해주세요.</div></div><button class="pbsave" onclick="pbReviewDecide('+sid+',\'제출완료\')">🔄 다시 제출</button><button class="pbno" style="background:#f3e9fb;color:#7e3fb0" onclick="pbReviewDecide('+sid+',\'반려\')">✗ 반려</button>';
@@ -1466,6 +1466,28 @@ window.pbView=async function(tid){try{
   h+='<div class="ml" style="margin-top:11px">소명 내용</div><div class="pbrsn-ro">'+escN(t.reason||"(내용 없음)")+'</div></div></div></div>';
   var w=document.createElement("div");w.innerHTML=h;document.body.appendChild(w.firstElementChild);
 }catch(e){alert(e.message);}};
+window.pbExcelDown=async function(){
+  try{
+    var rows=await rpc("pback_export_rows",{p_token:S.token,p_period:pbPeriod()});
+    if(!rows||!rows.length){alert("내려받을 소명 내용이 없습니다.");return;}
+    if(!window.ExcelJS){await new Promise(function(res,rej){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=res;s.onerror=function(){rej(new Error('엑셀 라이브러리 로드 실패 (인터넷 확인)'));};document.head.appendChild(s);});}
+    var wb=new ExcelJS.Workbook();var ws=wb.addWorksheet('프백소명');
+    ws.columns=[{width:14.85},{width:14.85},{width:14.85},{width:14.85},{width:14.85},{width:32.7},{width:32.7},{width:55.5}];
+    var hr=ws.addRow(['PDD','기사명','타입','캠프','라우트','미회수 사진','배송완료 사진','소명 내용']);hr.height=20;
+    hr.eachCell(function(c){c.font={bold:true,color:{argb:'FFFFFFFF'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1F7A4D'}};c.alignment={vertical:'middle',horizontal:'center'};c.border={top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}};});
+    for(var i=0;i<rows.length;i++){var r=rows[i];
+      var row=ws.addRow([r.pdate||'',r.driver||'',r.wave||'',r.camp||'',r.route||'','','',r.reason||'']);
+      row.height=99;
+      row.eachCell({includeEmpty:true},function(c){c.alignment={vertical:'middle',horizontal:'center',wrapText:true};c.border={top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}};});
+      row.getCell(8).alignment={vertical:'middle',horizontal:'left',wrapText:true};
+      var rn=row.number;
+      [[r.photo1,5],[r.photo2,6]].forEach(function(pc){var url=pc[0];if(url&&/^data:image/.test(url)){try{var b64=String(url).split(',')[1]||url;var id=wb.addImage({base64:b64,extension:'jpeg'});ws.addImage(id,{tl:{col:pc[1]+0.1,row:(rn-1)+0.08},ext:{width:200,height:122}});}catch(e){}}});
+    }
+    var buf=await wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='프레시백_소명_'+pbPeriod()+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},3000);
+  }catch(e){alert('엑셀 생성 오류: '+e.message);}
+};
 async function renderPbackAdmin(){
   const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
   try{
@@ -1476,6 +1498,7 @@ async function renderPbackAdmin(){
     let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
     h+=lcUpBar('pback');
     h+=pbDeadlineBanner();
+    h+='<div style="margin:8px 0"><button onclick="pbExcelDown()" style="width:100%;background:linear-gradient(135deg,#1f7a4d,#15663f);color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:800;cursor:pointer">📥 소명 엑셀 다운로드 <span style="font-weight:600;opacity:.85">(스케줄 프로그램 양식)</span></button></div>';
     h+='<div class="admstat pb-stat"><div class="s"><div class="l">대상</div><div class="v">'+(d.target_cnt||0)+'</div></div><div class="s"><div class="l">제출완료</div><div class="v">'+(d.submitted_cnt||0)+'</div></div><div class="s"><div class="l">소명불가</div><div class="v">'+(d.impossible_cnt||0)+'</div></div><div class="s main" onclick="pbToggleNs()" style="cursor:pointer"><div class="l">미제출 ▾</div><div class="v">'+(d.not_submitted_cnt||0)+'</div></div></div>';
     h+='<div class="card" id="pb-nscard" style="display:none"><div class="ct" style="font-size:13px">📋 미제출 명단 · '+ns.length+'명 / '+(d.not_submitted_cnt||0)+'건 <span style="margin-left:auto;font-size:10px;color:#98a3bd;font-weight:600">기사별</span></div>';
     if(!ns.length)h+='<div class="center" style="color:#1f7a4d;font-weight:700;font-size:12px;padding:8px">미제출 없음 ✅</div>';
