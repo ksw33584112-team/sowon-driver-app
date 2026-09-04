@@ -1374,17 +1374,24 @@ var PB_WARN='<div class="pbwarn"><h4>⚠️ 소명 인정 불가 사항</h4><ul>
 function pbStatusPill(st){var m={"미작성":["p-todo","미작성"],"작성완료":["p-done","작성완료"],"제출완료":["p-sub","제출완료"],"제출실패":["p-rej","❌ 제출실패"],"소명불가":["p-imp","소명불가"],"반려":["p-rej","반려"]};var e=m[st]||m["미작성"];return '<span class="pill '+e[0]+'">'+e[1]+'</span>';}
 var __PB_TAB="미작성",__PB_MY=[],__PB_DASH=null,__PB_MODE="승인";
 async function loadPback(){
-  if(IS_ADMIN()){$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";return renderPbackAdmin();}
+  if(IS_ADMIN()){
+    try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbPeriod()})||[];}catch(e){__PB_MY=[];}
+    if(__PB_MY.length&&window.__PB_SELF){$("#pb-admin").style.display="none";$("#pb-driver").style.display="block";renderMyList();}
+    else{$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";renderPbackAdmin();}
+    return;
+  }
   $("#pb-driver").style.display="block";$("#pb-admin").style.display="none";
   $("#pb-driver").innerHTML='<div class="center">불러오는 중…</div>';
   try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbPeriod()})||[];renderMyList();}
   catch(e){$("#pb-driver").innerHTML='<div class="center">'+e.message+'</div>';}
 }
+window.pbSelfToggle=function(self){window.__PB_SELF=self;loadPback();};
+function pbSelfBar(){if(!IS_ADMIN()||!(__PB_MY&&__PB_MY.length))return '';var self=!!window.__PB_SELF;return '<div class="pbmode" style="margin-bottom:10px"><div class="pbmd'+(!self?' on':'')+'" onclick="pbSelfToggle(false)">🧾 관리자</div><div class="pbmd'+(self?' on':'')+'" onclick="pbSelfToggle(true)">🚚 내 소명 ('+__PB_MY.length+')</div></div>';}
 function renderMyList(){
   var box=$("#pb-driver"),rows=__PB_MY||[],c={};
   rows.forEach(function(r){c[r.status]=(c[r.status]||0)+1;});
   var nT=(c["미작성"]||0)+(c["반려"]||0),nS=(c["작성완료"]||0),nD=(c["제출완료"]||0)+(c["소명불가"]||0);
-  var h=pbDeadlineBanner()+PB_WARN;
+  var h=pbSelfBar()+pbDeadlineBanner()+PB_WARN;
   h+='<div class="pb-tabs"><div class="pbt'+(__PB_TAB==="미작성"?" on":"")+'" onclick="__PB_TAB=\'미작성\';renderMyList()"><b>'+nT+'</b>미작성</div><div class="pbt'+(__PB_TAB==="작성완료"?" on":"")+'" onclick="__PB_TAB=\'작성완료\';renderMyList()"><b>'+nS+'</b>작성완료</div><div class="pbt'+(__PB_TAB==="제출완료"?" on":"")+'" onclick="__PB_TAB=\'제출완료\';renderMyList()"><b>'+nD+'</b>제출완료</div></div>';
   var filt=rows.filter(function(r){if(__PB_TAB==="미작성")return r.status==="미작성"||r.status==="반려";if(__PB_TAB==="작성완료")return r.status==="작성완료";return r.status==="제출완료"||r.status==="소명불가";});
   if(!rows.length)h+='<div class="card"><div class="center">배정된 프백 소명 대상이 없습니다.</div></div>';
@@ -1496,7 +1503,7 @@ async function renderPbackAdmin(){
     __PB_DASH=d;const cfg=d.config||{};PB_FORM.url=cfg.form_url||"";if(cfg.submit_mode)__PB_MODE=cfg.submit_mode;
     try{var _pc=await rpc("pback_get_cfg",{p_token:S.token,p_period:pbPeriod()});if(_pc){window.__PBCFG=_pc;if(_pc.form_url)PB_FORM.url=_pc.form_url;if(_pc.company)PB_FORM.company=_pc.company;if(_pc.phone)PB_FORM.phone=_pc.phone;cfg.form_url=PB_FORM.url;cfg.company=PB_FORM.company;cfg.phone=PB_FORM.phone;}}catch(e){}
     var ns=d.not_submitted||[],pend=d.pending||[],done=d.submitted||[],imp=d.impossible||[];
-    let h='<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
+    let h=pbSelfBar()+'<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
     h+=lcUpBar('pback');
     h+=pbDeadlineBanner();
     h+='<div style="margin:8px 0"><button onclick="pbExcelDown()" style="width:100%;background:linear-gradient(135deg,#1f7a4d,#15663f);color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:800;cursor:pointer">📥 소명 엑셀 다운로드 <span style="font-weight:600;opacity:.85">(스케줄 프로그램 양식)</span></button></div>';
