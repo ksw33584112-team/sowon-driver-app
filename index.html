@@ -2626,6 +2626,8 @@ async function ctGetApi(name,kind){return await rpc('contract_get',{p_token:S.to
 async function ctSaveApi(name,kind,data,sigs,chks){return await rpc('contract_save',{p_token:S.token,p_name:name,p_kind:kind,p_data:data,p_sigs:sigs,p_chks:chks});}
 async function ctApproveApi(name,kind){return await rpc('contract_approve',{p_token:S.token,p_name:name,p_kind:kind});}
 async function ctDeleteApi(name,kind){return await rpc('contract_delete',{p_token:S.token,p_name:name,p_kind:kind});}
+async function ctGateSetApi(on){return await rpc('contract_gate_set',{p_token:S.token,p_on:!!on});}
+function ctGateOn(){return !!(ISS().gate_on);}
 
 var KLBL={wc:'위·수탁 계약서',badge_new:'배넘버 신규 서류',badge_renew:'배넘버 재허가 서류'};
 function kindKind(kind){return kind==='wc'?'wc':'badge';}
@@ -2803,6 +2805,7 @@ window.CT_finish=async function(){
     await ctSaveApi(CTS.name,CTS.slotk,data,CTS.sig,CTS.chk);
   }catch(e){ if(btn){btn.disabled=false;btn.textContent='제출 (저장)';} alert('저장 실패: '+e.message); return; }
   var isAdmin=(CTS.mode==='admin');
+  if(!isAdmin){ try{ await ctGateEnforce(); }catch(e){} }
   var sub=isAdmin?'승인 요청 목록에 등록되었습니다.':'서명이 저장되었습니다.<br>관리자 확인 후 처리됩니다.';
   var btn2=isAdmin?'<button class="ctc-btn" style="margin-top:18px" onclick="openContractAdmin()">계약서 관리로</button>':'<button class="ctc-btn" style="margin-top:18px" onclick="CT_close()">확인</button>';
   ctPaint('<div class="ctc-paper" style="text-align:center;padding:34px 18px"><div style="font-size:48px">✅</div><div style="font-size:17px;font-weight:900;color:#1b8a3f;margin:10px 0 6px">'+KLBL[CTS.slotk]+' 작성 완료</div><div style="font-size:12.5px;color:#555;line-height:1.6">'+sub+'</div>'+btn2+'</div>','',KLBL[CTS.slotk]);
@@ -2936,6 +2939,8 @@ function ctAdminRender(){
     var h='<div class="ctc-paper" style="padding:12px 10px"><div style="text-align:center;font-size:16px;font-weight:900;color:#123a6b;margin-bottom:12px">📄 계약서 관리</div>';
     h+='<div style="background:#fff;border:1px solid #e6ecf3;border-radius:10px;padding:10px;margin-bottom:10px;font-size:11.5px;color:#889">발행처(위탁자): <b style="color:#123a6b">'+esc(iss.biz||'')+' / '+esc(iss.ceo_title||'대표')+' '+esc(iss.ceo||'')+'</b>'+(iss.stamp?' 🔖도장등록됨':'')+'</div>';
     h+='<button class="ctc-btn" style="background:#37474f;margin-bottom:10px" onclick="openIssuerSetup()">🏢 위탁자(회사) 정보·도장 설정</button>';
+    var gate=ctGateOn();
+    h+='<div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px"><div style="flex:1"><div style="font-weight:800;color:#123a6b">🔒 미작성자 권한 제한</div><div style="font-size:11px;color:#888;margin-top:3px;line-height:1.5">켜면 위·수탁 미작성 기사·팀장·조장은 계약서 화면만 볼 수 있습니다.</div></div><button onclick="CT_gateToggle()" style="flex-shrink:0;padding:9px 16px;border-radius:16px;border:none;background:'+(gate?'#c62828':'#bdbdbd')+';color:#fff;font-size:12px;font-weight:800;cursor:pointer">'+(gate?'제한 ON':'제한 OFF')+'</button></div>';
     h+='<div style="font-weight:800;color:#33475b;margin:4px 2px 6px">종류 선택</div><div style="display:flex;gap:10px">'+
       '<div onclick="CT_adminGo(\'wc\')" style="flex:1;border:2px solid #dbe7f5;border-radius:14px;padding:20px 10px;text-align:center;cursor:pointer;background:#f8fbff"><div style="font-size:30px">📑</div><div style="font-size:13.5px;font-weight:800;color:#123a6b;margin-top:7px">표준계약서</div><div style="font-size:11px;color:#7a8794;margin-top:2px">위·수탁 1년</div></div>'+
       '<div onclick="CT_adminGo(\'badge\')" style="flex:1;border:2px solid #dbe7f5;border-radius:14px;padding:20px 10px;text-align:center;cursor:pointer;background:#f8fbff"><div style="font-size:30px">🚚</div><div style="font-size:13.5px;font-weight:800;color:#123a6b;margin-top:7px">배넘버 계약서</div><div style="font-size:11px;color:#7a8794;margin-top:2px">신규 · 재허가</div></div>'+
@@ -2967,6 +2972,43 @@ window.CT_approve=async function(name,kind){ if(!confirm(name+' 님의 계약서
 window.CT_reject=async function(name,kind){ if(!confirm(name+' 님 계약을 반려하고 재작성을 요청할까요?'))return; try{await ctShareApi([name],kind,'reject');await openContractAdmin();}catch(e){alert(e.message);} };
 window.CT_delete=async function(name,kind){ if(!confirm(name+' 님의 계약서를 삭제할까요?\n작성내용·서명이 지워지고 미작성 상태로 돌아갑니다.'))return; try{await ctDeleteApi(name,kind);await openContractAdmin();}catch(e){alert(e.message);} };
 window.CT_shareOne=async function(name,kind){ try{await ctShareApi([name],kind,'share');await openContractAdmin();}catch(e){alert(e.message);} };
+window.CT_gateToggle=async function(){
+  var next=!ctGateOn();
+  if(next&&!confirm('미작성자 권한 제한을 켤까요?\n위·수탁 계약서를 작성하지 않은 기사·팀장·조장은 계약서 작성 화면만 볼 수 있습니다.\n(대표·관리자는 제외)'))return;
+  try{ var r=await ctGateSetApi(next); if(window._ctIssuer)window._ctIssuer.gate_on=(r&&r.gate_on)||next; await openContractAdmin(); }
+  catch(e){ alert(e.message); }
+};
+
+/* ============================================================
+   게이트: 미작성자 앱 사용 제한 (제한 ON 이면 위·수탁 미작성자는 계약서 화면만)
+   ============================================================ */
+window.ctGateEnforce=async function(){
+  try{
+    if(!(window.S&&S.token)){ ctGateRemove(); return; }
+    if(typeof IS_ADMIN==='function'&&IS_ADMIN()){ ctGateRemove(); return; }
+    if(S.rank==='대표'){ ctGateRemove(); return; }
+    await ctIssuerLoad();
+    if(!ctGateOn()){ ctGateRemove(); return; }
+    var my=await ctMyApi(); if(!Array.isArray(my))my=[];
+    var wcDone=my.some(function(x){return x.kind==='wc'&&x.status==='done';});
+    if(wcDone){ ctGateRemove(); return; }
+    ctGateShow();
+  }catch(e){ /* 오류 시 막지 않음(안전) */ ctGateRemove(); }
+};
+function ctGateRemove(){ var o=document.getElementById('ct-gate-block'); if(o)o.remove(); }
+function ctGateShow(){
+  if(document.getElementById('ct-gate-block'))return;
+  var nm=(window.S&&S.name)||'';
+  var o=document.createElement('div'); o.id='ct-gate-block';
+  o.style.cssText='position:fixed;inset:0;z-index:13000;background:linear-gradient(160deg,#123a6b,#0d2c52);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center';
+  o.innerHTML='<div style="font-size:54px;margin-bottom:6px">🔒</div>'+
+    '<div style="font-size:19px;font-weight:900;margin-bottom:10px">위·수탁 계약서 작성이 필요합니다</div>'+
+    '<div style="font-size:13px;line-height:1.7;opacity:.92;max-width:340px;margin-bottom:22px">'+esc(nm)+' 님, 계약서를 먼저 작성해야 앱을 이용할 수 있습니다.<br>아래 버튼을 눌러 계약서를 작성해 주세요.</div>'+
+    '<button onclick="ctGateWrite()" style="background:#12b5a3;color:#fff;border:none;border-radius:14px;padding:15px 26px;font-size:15px;font-weight:800;cursor:pointer">📄 계약서 작성하기</button>'+
+    '<div style="font-size:11px;opacity:.7;margin-top:16px">문의: 관리자에게 연락해 주세요.</div>';
+  document.body.appendChild(o);
+}
+window.ctGateWrite=function(){ var nm=(window.S&&S.name)||''; if(!nm){alert('로그인 정보를 찾을 수 없습니다.');return;} openContractSign(nm,'wc','sign'); };
 
 /* 공유 대상 선택 */
 var _ctSel={};
@@ -3054,6 +3096,14 @@ function ctWire(){
     window.loadHome=function(){var r=_lh.apply(this,arguments); setTimeout(function(){try{ctHomeBanner();}catch(e){}},350); return r;};
     window.loadHome.__ctwrap=1;
   }
+  // 게이트: 로그인/앱 진입 후 미작성자 제한 적용
+  var _ea=window.enterApp;
+  if(typeof _ea==='function' && !_ea.__ctwrap){
+    window.enterApp=function(){var r=_ea.apply(this,arguments); setTimeout(function(){try{ctGateEnforce();}catch(e){}},700); return r;};
+    window.enterApp.__ctwrap=1;
+  }
+  // 이미 로그인된 상태로 로드된 경우
+  setTimeout(function(){try{ if(window.S&&S.token) ctGateEnforce(); }catch(e){}},1200);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ctWire); else ctWire();
 })();
