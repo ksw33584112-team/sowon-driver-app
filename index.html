@@ -1170,7 +1170,7 @@ async function loadSched(){
   try{
     const _ws=iso(weekStart);let rows=schedCache[_ws];if(!rows){rows=await rpc("list_schedules",{p_token:S.token,p_week_start:_ws});schedCache[_ws]=rows;}
     if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.</div>';return;}
-    const dates=[...new Set(rows.map(r=>r.work_date))].sort();
+    const dates=[...new Set(rows.map(r=>r.work_date))].sort();try{if(window.scLoadNew)await scLoadNew();}catch(e){}
     const allRts=[...new Set(rows.map(r=>r.route))];const parentOf={};
     allRts.forEach(function(C){if(splitRt(C).length>=2){splitRt(C).forEach(function(sub){if(!parentOf[sub])parentOf[sub]=C;});}});
     const map={},splitMap={},campR={};
@@ -1209,15 +1209,15 @@ async function loadSched(){
       h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><div class="tbl-inner"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
       rts.forEach(rt=>{
         h+='<tr><td class="cRoute">'+rt+'</td>';
-        dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];
+        dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];const _nw=(window.scIsNew?scIsNew(rt,d):false);const _nc=_nw?' sched-new':'';const _nb=_nw?'<span class="sched-new-badge">New</span>':'';
           if(sp&&Object.keys(sp).length){const subs=splitRt(rt);let inner='';
             subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const sr=RANKMAP[snm];const sic=isTopRank(sr)?RMARK[sr]+' ':'';inner+='<div class="sch-half">'+s+' : '+sic+escN(snm)+'</div>';}});
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':'';
-            h+='<td class="scsplit'+(to?' tcol':'')+'"'+rs+da+'>'+inner+'</td>';
+            h+='<td class="scsplit'+(to?' tcol':'')+_nc+'"'+rs+da+'>'+_nb+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
-            if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+mg+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+rs+da+'>'+ic+escN(nm)+'</td>';}
-            else if(nm){h+='<td class="'+(to?'tcol tbg':'')+mg+'"'+rs+da+'>'+escN(nm)+'</td>';}
+            if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+mg+_nc+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+rs+da+'>'+_nb+ic+escN(nm)+'</td>';}
+            else if(nm){h+='<td class="'+(to?'tcol tbg':'')+mg+_nc+'"'+rs+da+'>'+_nb+escN(nm)+'</td>';}
             else{h+='<td class="'+(to?'tcol tbg':'')+'"'+da+'></td>';}}});
         h+='</tr>';
       });
@@ -3108,6 +3108,17 @@ function ctWire(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ctWire); else ctWire();
 })();
 
+</script>
+
+<script>
+(function(){
+if(window.__SCNEW_LOADED)return;window.__SCNEW_LOADED=1;
+var st=document.createElement("style");st.textContent=".sched-new{position:relative;z-index:1}"+".sched-new::after{content:\"\";position:absolute;inset:0;border-radius:6px;padding:2px;background:linear-gradient(135deg,#ff0040,#ff8a00,#ffe600,#00e676,#00b0ff,#7c4dff,#ff0040);background-size:300% 300%;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:schedRainbow 3s linear infinite;pointer-events:none;z-index:2}"+"@keyframes schedRainbow{0%{background-position:0% 50%}100%{background-position:300% 50%}}"+".sched-new-badge{position:absolute;top:1px;left:1px;z-index:5;font-size:7px;font-weight:900;color:#fff;background:linear-gradient(135deg,#ff2d55,#ff8a00);padding:0 4px;border-radius:0 7px 7px 0;line-height:1.5;letter-spacing:.2px;box-shadow:0 1px 2px rgba(0,0,0,.35);font-style:italic;pointer-events:none}";
+document.head.appendChild(st);
+window.__SCNEW={set:null};
+window.scLoadNew=async function(){try{var arr=await rpc("sched_new_keys",{p_token:S.token});var s={};(arr||[]).forEach(function(k){s[k]=1;});window.__SCNEW={set:s};}catch(e){if(!window.__SCNEW||!window.__SCNEW.set)window.__SCNEW={set:{}};}return window.__SCNEW.set;};
+window.scIsNew=function(rt,d){var s=window.__SCNEW&&window.__SCNEW.set;if(!s)return false;if(s[d+"|"+rt])return true;try{var subs=(typeof splitRt==="function")?splitRt(rt):[rt];for(var i=0;i<subs.length;i++)if(s[d+"|"+subs[i]])return true;}catch(e){}return false;};
+})();
 </script>
 </body>
 </html>
