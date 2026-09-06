@@ -663,7 +663,8 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <div class="fg"><label>기사명</label><input id="li-name" autocomplete="username" placeholder="이름"></div>
       <div class="fg"><label>비밀번호</label><input id="li-pw" type="password" autocomplete="current-password" placeholder="비밀번호"></div>
       <button class="btn-p" id="li-btn">로그인</button>
-      <div class="lhint">처음 로그인 시 비밀번호는 <b>1234</b> 입니다. 로그인 후 설정에서 변경하세요.</div>
+      <button class="btn-p" onclick="openSignup()" style="background:#0a7a6a;margin-top:8px">📝 회원가입 (기사)</button>
+      <div class="lhint">처음 로그인 시 비밀번호는 <b>1234</b> 입니다. 로그인 후 설정에서 변경하세요.<br>신규 기사는 <b>회원가입</b> 후 관리자 승인을 받으면 로그인할 수 있습니다.</div>
       <div class="msg" id="li-msg"></div>
     </div>
   </div>
@@ -786,6 +787,37 @@ $("#li-btn").onclick=async()=>{
   }catch(e){msg("#li-msg","err",e.message);}
   $("#li-btn").disabled=false;
 };
+/* ===== 회원가입 / 기사 상세정보 ===== */
+var DRV_FIELDS=[["resident_no","주민번호",false,"810101-1234567 (- 없이)"],["address","주소",false,"전체 주소 작성"],["phone","핸드폰번호",false,"010-1234-5678 (- 없이)"],["phone_sub","서브폰",true,"010-0000-0000"],["coupang_id","쿠팡플렉스 ID",false,"쿠팡 기사 아이디"],["license_no","운전면허번호",false,"11-11-111111-11 (- 없이)"],["license_type","운전면허종류",false,"1종 보통"],["cargo_cert_no","화물운송자격번호",false,"1-23-123456 (- 없이)"],["cert_date","자격증 취득일",false,"2026.01.01"],["vehicle_name","차량명",true,"포터 2.2"],["vehicle_fuel","차량연료",true,"EV / LPG / 디젤"],["vehicle_reg_date","차량등록년월일",true,"2026.01.01"],["vehicle_no","차량번호",true,"서울00배1234"],["permit_sido","허가관할시도",true,"서울"],["permit_sigungu","허가관할시군구",true,"은평"],["baenumber_date","배넘버허가일자",true,"2026.01.01"],["bank_name","정산은행",false,"농협"],["account_no","계좌번호",false,"123-456-7890"],["join_date","입사일",true,"2026.01.01"]];
+function suRow(id,label,opt,ph,type){return '<div class="fg" style="margin-bottom:9px"><label style="font-size:12px;color:#33475b">'+label+(opt?' <span style="color:#9aa">(선택)</span>':'')+'</label><input id="su_'+id+'" '+(type?'type="'+type+'"':'')+' placeholder="'+ph+'" style="width:100%;padding:10px;border:1px solid #d0d5df;border-radius:8px;font-size:13px"></div>';}
+window.openSignup=function(){
+  if(document.getElementById('su-ov'))return;
+  var rows=suRow('pw','비밀번호',false,'로그인 비밀번호','password')+suRow('name','성명',false,'홍길동');
+  DRV_FIELDS.forEach(function(f){rows+=suRow(f[0],f[1],f[2],f[3]);});
+  var h='<div id="su-ov" class="ovbg" style="align-items:flex-start;overflow:auto" onclick="if(event.target.id===\'su-ov\')this.remove()"><div class="pbmodal" style="max-width:440px;margin:14px auto" onclick="event.stopPropagation()"><div class="pbmh" style="background:linear-gradient(135deg,#0a7a6a,#0b6b4a)"><div><b>📝 회원가입 (기사)</b><i>가입 후 관리자 승인 → 계약서 → 앱 사용</i></div><span onclick="document.getElementById(\'su-ov\').remove()" style="cursor:pointer;font-size:20px;color:#fff">×</span></div><div class="pbmb"><div style="font-size:11.5px;color:#5a6b7c;margin-bottom:8px">🔒 아이디는 성명으로 자동 설정됩니다. (선택) 항목은 나중에 입력 가능.</div>'+rows+'<button class="btn-p" style="background:#0a7a6a" onclick="submitSignup()">📨 가입 신청 (관리자 승인 요청)</button><div class="msg" id="su-msg"></div></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+};
+window.submitSignup=async function(){
+  var name=(document.getElementById('su_name').value||'').trim(),pw=(document.getElementById('su_pw').value||'').trim();
+  if(!name||!pw){msg('#su-msg','err','성명과 비밀번호는 필수입니다.');return;}
+  var data={},missing=[];
+  DRV_FIELDS.forEach(function(f){var v=(document.getElementById('su_'+f[0]).value||'').trim();if(v)data[f[0]]=v;if(!f[2]&&!v)missing.push(f[1]);});
+  if(missing.length){msg('#su-msg','err','필수 항목: '+missing.slice(0,4).join(', ')+(missing.length>4?' 외':'')+' 을(를) 입력하세요.');return;}
+  try{await rpc("driver_signup",{p_name:name,p_pw:pw,p_data:data});var o=document.getElementById('su-ov');if(o)o.remove();alert('✅ 가입 신청이 완료되었습니다!\n관리자 승인 후 로그인할 수 있습니다.');}
+  catch(e){var m=e.message;if(/name_exists/.test(m))m='이미 등록된 성명입니다. 관리자에게 문의하세요.';msg('#su-msg','err',m);}
+};
+window.openDriverDetail=async function(name,canEdit){
+  var d;try{d=await rpc("driver_detail",{p_token:S.token,p_name:name});}catch(e){alert(e.message);return;}
+  if(!d){alert('정보를 찾을 수 없습니다.');return;}
+  var rows='';DRV_FIELDS.forEach(function(f){var v=String(d[f[0]]==null?'':d[f[0]]).replace(/"/g,'&quot;');rows+='<div class="fg" style="margin-bottom:9px"><label style="font-size:12px;color:#33475b">'+f[1]+(f[2]?' <span style="color:#9aa">(선택)</span>':'')+'</label><input id="dd_'+f[0]+'" '+(canEdit?'':'readonly')+' value="'+v+'" placeholder="'+f[3]+'" style="width:100%;padding:10px;border:1px solid #d0d5df;border-radius:8px;font-size:13px'+(canEdit?'':';background:#f5f7fb;color:#555')+'"></div>';});
+  var isAdmin=IS_ADMIN(),pend=(d.status!=='active');
+  var approve=(isAdmin&&pend)?'<button class="btn-p" style="background:#1f9d57" onclick="ddApprove(\''+name.replace(/'/g,"\\'")+'\')">✅ 가입 승인 (활성화)</button>':'';
+  var save=canEdit?'<button class="btn-p" onclick="ddSave(\''+name.replace(/'/g,"\\'")+'\','+(isAdmin?'true':'false')+')">💾 저장</button>':'';
+  var h='<div id="dd-ov" class="ovbg" style="align-items:flex-start;overflow:auto" onclick="if(event.target.id===\'dd-ov\')this.remove()"><div class="pbmodal" style="max-width:440px;margin:14px auto" onclick="event.stopPropagation()"><div class="pbmh"><div><b>🧾 '+escN(name)+'</b><i>'+escN(d.rank||'')+(pend?' · ⏳가입대기':' · 활성')+'</i></div><span onclick="document.getElementById(\'dd-ov\').remove()" style="cursor:pointer;font-size:20px;color:#fff">×</span></div><div class="pbmb">'+rows+approve+save+'<div class="msg" id="dd-msg"></div></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+};
+window.ddSave=async function(name,asAdmin){var data={};DRV_FIELDS.forEach(function(f){data[f[0]]=(document.getElementById('dd_'+f[0]).value||'').trim();});try{if(asAdmin)await rpc("admin_save_driver_ext",{p_token:S.token,p_name:name,p_data:data});else await rpc("update_my_ext",{p_token:S.token,p_data:data});msg('#dd-msg','ok','✅ 저장되었습니다.');}catch(e){msg('#dd-msg','err',e.message);}};
+window.ddApprove=async function(name){if(!confirm(name+' 님을 승인(활성화)할까요?'))return;try{await rpc("admin_approve_driver",{p_token:S.token,p_name:name,p_rank:'일반'});var o=document.getElementById('dd-ov');if(o)o.remove();if(window.loadAdmin)loadAdmin();alert('✅ 승인되었습니다.');}catch(e){alert(e.message);}};
 function enterApp(){
   $("#login").style.display="none";$("#app").style.display="flex";
   loadSchedCfg();
@@ -1537,7 +1569,7 @@ async function renderPbackAdmin(){
 }
 /* 설정 */
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
-function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'');}
+function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
 document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else if(mi.id==="mi-meta"){wkMetaCfg();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
@@ -1553,7 +1585,7 @@ function renderAdmin(){
       +'<span class="adr-id">'+(r.driver_id||'')+'</span></div>'
       +'<div class="adr-ctrl"><select class="ad-rank">'+RANKS.map(rk=>'<option'+(rk===r.rank?" selected":"")+'>'+rk+'</option>').join('')+'</select>'
       +'<button class="ad-adm">'+(r.is_admin?"관리자해제":"관리자지정")+'</button>'
-      +'<button class="ad-stat">'+(off?"복구":"정지")+'</button><button class="ad-pw">PW초기화</button></div>'
+      +'<button class="ad-stat">'+(off?"복구":"정지")+'</button><button class="ad-pw">PW초기화</button><button class="ad-detail">📋상세</button></div>'
       +'<div class="adr-ct">📞<input class="ad-ph" value="'+(r.phone||'')+'" placeholder="전화"><input class="ad-vh" value="'+(r.vehicle_no||'')+'" placeholder="차량번호"></div>'+'<div class="adr-ct" style="margin-top:5px">🎂<input class="ad-bd" value="'+String(r.birth||'').replace(/"/g,'&quot;')+'" placeholder="생년월일 (예:1990-01-01)"><input class="ad-cp" value="'+String(r.coupang_id||'').replace(/"/g,'&quot;')+'" placeholder="쿠팡 ID"><button class="ad-save">저장</button></div></div>';});
   $("#ad-list").innerHTML=h||'<div class="center">기사가 없습니다.</div>';
   $("#ad-list").querySelectorAll(".adr").forEach(row=>{const nm=row.dataset.name;const cur=()=>window.__adrows.find(x=>x.name===nm);
@@ -1561,6 +1593,7 @@ function renderAdmin(){
     row.querySelector(".ad-adm").onclick=()=>adUpd(nm,{p_is_admin:!cur().is_admin});
     row.querySelector(".ad-stat").onclick=()=>adUpd(nm,{p_status:cur().status==="active"?"정지":"active"});
     row.querySelector(".ad-pw").onclick=()=>adResetPw(nm);
+    row.querySelector(".ad-detail").onclick=()=>openDriverDetail(nm,true);
     row.querySelector(".ad-save").onclick=()=>adSaveInfo(nm,row);});
 }
 async function adUpd(name,fields){try{await rpc("admin_update_driver",Object.assign({p_token:S.token,p_name:name,p_rank:null,p_status:null,p_is_admin:null,p_phone:null,p_vehicle_no:null,p_vehicle_type:null,p_birth:null,p_is_ev:null,p_is_public:null},fields));await loadAdmin();}catch(e){alert(e.message);}}
