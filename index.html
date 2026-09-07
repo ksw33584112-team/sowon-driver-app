@@ -3377,5 +3377,52 @@ window.scIsNew=function(rt,d){var s=window.__SCNEW&&window.__SCNEW.set;if(!s)ret
 })();
 </script>
 
+
+<script>
+/* 스케줄 변경이력 전체삭제 (관리자 전용, 백업 보관) — soweon */
+(function(){
+  if(window.__CHGDEL_LOADED) return; window.__CHGDEL_LOADED=true;
+  function tok(){ try{ if(typeof S!=='undefined'&&S&&S.token) return S.token; }catch(e){} try{ return window.S&&window.S.token; }catch(e){} return null; }
+  function callRpc(fn,args){ if(typeof rpc==='function') return rpc(fn,args); if(window.rpc) return window.rpc(fn,args); return Promise.reject('no rpc'); }
+
+  window.chgClearAll=async function(btn){
+    if(!confirm('스케줄 변경이력을 전체 삭제할까요?\n\n· 기록은 백업 테이블에 보관됩니다(복구 가능)\n· 변경이력 목록 / 변경분 엑셀 / 무지개 New 표시가 초기화됩니다\n· 실제 스케줄(주간표)은 그대로 유지됩니다')) return;
+    if(!confirm('정말 전체 삭제하시겠어요?\n되돌리려면 백업 복구가 필요합니다.')) return;
+    var t=tok(); if(!t){ alert('세션 확인이 필요합니다.'); return; }
+    if(btn){ btn.disabled=true; btn.textContent='삭제 중…'; }
+    try{
+      var r=await callRpc('change_log_clear_all',{p_token:t});
+      var n=(r&&(r.archived!=null?r.archived:(r.count!=null?r.count:0)))||0;
+      alert('변경이력 '+n+'건을 전체 삭제(백업 보관)했습니다.');
+      var o=document.getElementById('chg-ov'); if(o) o.remove();
+      try{ if(typeof chgBadgeSet==='function') chgBadgeSet(0); else if(window.chgBadgeSet) window.chgBadgeSet(0); }catch(e){}
+    }catch(e){
+      alert('삭제 실패: '+String(e&&e.message||e));
+      if(btn){ btn.disabled=false; btn.textContent='🗑 변경이력 전체삭제'; }
+    }
+  };
+
+  function inject(){
+    var ov=document.getElementById('chg-ov'); if(!ov) return;
+    var tg=ov.querySelector('.chg-tg'); if(!tg) return;        // 관리자에게만 존재
+    if(tg.querySelector('.chg-delall')) return;
+    var b=document.createElement('button'); b.className='chg-delall'; b.type='button';
+    b.textContent='🗑 변경이력 전체삭제';
+    b.setAttribute('style','width:100%;margin-top:10px;border:none;border-radius:10px;padding:11px;font-size:12.5px;font-weight:800;background:#fdecec;color:#c0392b;cursor:pointer');
+    b.onclick=function(){ chgClearAll(b); };
+    tg.appendChild(b);
+  }
+
+  function wrap(){
+    var orig=window.chgOpen;
+    if(typeof orig!=='function') return false;
+    if(orig.__delWrapped) return true;
+    var w=async function(){ var r; try{ r=await orig.apply(this,arguments); }catch(e){ r=undefined; } try{ inject(); }catch(e){} return r; };
+    w.__delWrapped=true; window.chgOpen=w; return true;
+  }
+  if(!wrap()){ var n=0, iv=setInterval(function(){ n++; if(wrap()||n>40) clearInterval(iv); },250); }
+})();
+</script>
+
 </body>
 </html>
