@@ -3146,5 +3146,202 @@ window.scLoadNew=async function(){try{var arr=await rpc("sched_new_keys",{p_toke
 window.scIsNew=function(rt,d){var s=window.__SCNEW&&window.__SCNEW.set;if(!s)return false;if(s[d+"|"+rt])return true;try{var subs=(typeof splitRt==="function")?splitRt(rt):[rt];for(var i=0;i<subs.length;i++)if(s[d+"|"+subs[i]])return true;}catch(e){}return false;};
 })();
 </script>
+
+<script>
+/* 프백 소명 · 관리자 미제출 드릴다운 (사진뷰어 + 대리작성 + 재배정) — soweon 전용 */
+(function(){
+  if(window.__PBADM_LOADED) return; window.__PBADM_LOADED=true;
+
+  /* ---- 세션 토큰/기간 안전 접근 ---- */
+  function tok(){ try{ if(typeof S!=='undefined' && S && S.token) return S.token; }catch(e){} try{ if(window.S&&window.S.token) return window.S.token; }catch(e){} return null; }
+  function period(){ try{ if(typeof pbPeriod==='function') return pbPeriod(); }catch(e){} try{ return window.__PB_DASH&&window.__PB_DASH.period; }catch(e){} return ''; }
+  function callRpc(fn,args){ if(typeof rpc==='function') return rpc(fn,args); if(window.rpc) return window.rpc(fn,args); return Promise.reject('no rpc'); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+
+  /* ---- 스타일 ---- */
+  var st=document.createElement('style');
+  st.textContent=[
+    '#pb-nscard table.pbmm tr{cursor:pointer;transition:background .12s}',
+    '#pb-nscard table.pbmm tr:hover td{background:#eef3ff}',
+    '.pbadm-go{color:#c0392b;font-weight:900;margin-left:6px}',
+    '#pbadm-ov{position:fixed;inset:0;z-index:99999;background:rgba(15,20,40,.55);display:flex;align-items:flex-end;justify-content:center}',
+    '#pbadm-sheet{background:#f6f8fc;width:100%;max-width:560px;max-height:92vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.3)}',
+    '.pbadm-hd{display:flex;align-items:center;gap:8px;padding:14px 16px;background:#0d1b6b;color:#fff}',
+    '.pbadm-hd b{font-size:15px}',
+    '.pbadm-hd .sub{font-size:11px;color:#c9d2ff}',
+    '.pbadm-x{margin-left:auto;background:rgba(255,255,255,.18);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer}',
+    '.pbadm-body{overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}',
+    '.pbadm-card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(20,30,60,.08)}',
+    '.pbadm-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:#66748f;margin-bottom:8px}',
+    '.pbadm-rt{font-weight:900;color:#0d1b6b;font-size:15px}',
+    '.pbadm-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:20px}',
+    '.pbadm-badge.todo{background:#fff2f0;color:#c0392b}',
+    '.pbadm-badge.rej{background:#fde9c8;color:#a05a00}',
+    '.pbadm-photos{display:flex;gap:8px;margin-bottom:10px}',
+    '.pbadm-photos img{width:50%;height:150px;object-fit:cover;border-radius:10px;border:1px solid #e6e9f2;cursor:zoom-in;background:#eef1f7}',
+    '.pbadm-photos .nop{width:50%;height:150px;border-radius:10px;border:1px dashed #d5d9e6;display:flex;align-items:center;justify-content:center;color:#aab;font-size:11px}',
+    '.pbadm-lbl{font-size:11px;font-weight:800;color:#3a5aa8;margin:8px 2px 5px}',
+    '.pbadm-card textarea{width:100%;box-sizing:border-box;min-height:64px;border:1.5px solid #dfe3ee;border-radius:10px;padding:9px;font-size:13px;font-family:inherit;resize:vertical}',
+    '.pbadm-btn{width:100%;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;margin-top:8px}',
+    '.pbadm-btn.save{background:#0d1b6b;color:#fff}',
+    '.pbadm-btn.save:disabled{background:#9aa3c8}',
+    '.pbadm-reassign{display:flex;gap:8px;margin-top:8px}',
+    '.pbadm-reassign select{flex:1;border:1.5px solid #dfe3ee;border-radius:10px;padding:9px;font-size:13px;background:#fff}',
+    '.pbadm-reassign button{border:none;border-radius:10px;padding:9px 12px;font-size:12.5px;font-weight:800;background:#eef1fc;color:#3a5aa8;cursor:pointer;white-space:nowrap}',
+    '.pbadm-note{font-size:10.5px;color:#98a0b2;margin-top:6px}',
+    '.pbadm-empty{text-align:center;color:#1f7a4d;font-weight:700;padding:24px 8px}',
+    '#pbadm-zoom{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;cursor:zoom-out}',
+    '#pbadm-zoom img{max-width:96%;max-height:92%;border-radius:8px}',
+    '.pbadm-toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#0d1b6b;color:#fff;padding:10px 18px;border-radius:22px;font-size:13px;font-weight:700;z-index:100001;box-shadow:0 4px 18px rgba(0,0,0,.3)}'
+  ].join('\n');
+  document.head.appendChild(st);
+
+  function toast(msg){ var t=document.createElement('div'); t.className='pbadm-toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(function(){ t.style.transition='opacity .3s'; t.style.opacity='0'; setTimeout(function(){t.remove();},300); },1500); }
+
+  /* ---- 미제출 명단 행 클릭 활성화 ---- */
+  function enhance(){
+    var card=document.getElementById('pb-nscard'); if(!card) return;
+    var rows=card.querySelectorAll('table.pbmm tr');
+    rows.forEach(function(tr){
+      if(tr.querySelector('th')) return;            // 헤더
+      if(tr.__pbadm) return; tr.__pbadm=true;
+      var last=tr.cells[tr.cells.length-1];
+      if(last && last.querySelector('.pbadm-go')===null){ var g=document.createElement('span'); g.className='pbadm-go'; g.textContent='›'; last.appendChild(g); }
+    });
+  }
+  // 위임 클릭
+  document.addEventListener('click', function(ev){
+    var card=document.getElementById('pb-nscard'); if(!card) return;
+    if(!card.contains(ev.target)) return;
+    var tr=ev.target.closest('tr'); if(!tr || tr.querySelector('th')) return;
+    if(!tr.cells || tr.cells.length<2) return;
+    var name=(tr.cells[0].innerText||'').trim();
+    var routes=(tr.cells[1].innerText||'').trim();
+    if(!name) return;
+    var isUnmapped=(name==='불특정');
+    openGroup(name, isUnmapped?routes:null);
+  });
+
+  /* ---- renderPbackAdmin 래핑 ---- */
+  function wrap(){
+    var orig=window.renderPbackAdmin;
+    if(typeof orig!=='function'){ return false; }
+    if(orig.__pbadmWrapped) return true;
+    var w=async function(){ var r; try{ r=await orig.apply(this, arguments); }catch(e){ r=undefined; } try{ enhance(); }catch(e){} return r; };
+    w.__pbadmWrapped=true;
+    window.renderPbackAdmin=w;
+    return true;
+  }
+  if(!wrap()){ var tries=0, iv=setInterval(function(){ tries++; if(wrap()||tries>40) clearInterval(iv); },250); }
+
+  /* ---- 그룹 모달 ---- */
+  var CUR={name:'',route:null,drivers:[],items:[]};
+
+  async function openGroup(name, route){
+    var t=tok(); if(!t){ toast('세션 확인 필요'); return; }
+    buildSheet(name, route, true, null);
+    try{
+      var d=await callRpc('admin_pback_targets',{p_token:t,p_period:period(),p_driver:name,p_route:route});
+      CUR.name=name; CUR.route=route; CUR.drivers=(d&&d.drivers)||[]; CUR.items=(d&&d.items)||[];
+      buildSheet(name, route, false, d);
+    }catch(e){ buildSheet(name, route, false, {__err:String(e&&e.message||e)}); }
+  }
+
+  function closeSheet(){ var o=document.getElementById('pbadm-ov'); if(o) o.remove(); }
+
+  function buildSheet(name, route, loading, data){
+    closeSheet();
+    var ov=document.createElement('div'); ov.id='pbadm-ov';
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeSheet(); });
+    var sheet=document.createElement('div'); sheet.id='pbadm-sheet';
+    var hd=document.createElement('div'); hd.className='pbadm-hd';
+    var sub = route? ('라우트 '+route) : '기사별 미작성 건';
+    hd.innerHTML='<div><b>'+esc(name)+'</b> <span class="sub">'+esc(sub)+'</span></div>';
+    var x=document.createElement('button'); x.className='pbadm-x'; x.textContent='×'; x.onclick=function(){ closeSheet(); try{ if(window.renderPbackAdmin) window.renderPbackAdmin(); }catch(e){} };
+    hd.appendChild(x);
+    var body=document.createElement('div'); body.className='pbadm-body';
+    sheet.appendChild(hd); sheet.appendChild(body); ov.appendChild(sheet); document.body.appendChild(ov);
+
+    if(loading){ body.innerHTML='<div class="pbadm-empty" style="color:#66748f">불러오는 중…</div>'; return; }
+    if(data && data.__err){ body.innerHTML='<div class="pbadm-empty" style="color:#c0392b">오류: '+esc(data.__err)+'</div>'; return; }
+    var items=(data&&data.items)||[];
+    if(!items.length){ body.innerHTML='<div class="pbadm-empty">미작성 건 없음 ✅</div>'; return; }
+    items.forEach(function(it){ body.appendChild(renderItem(it)); });
+  }
+
+  function renderItem(it){
+    var card=document.createElement('div'); card.className='pbadm-card'; card.dataset.tid=it.id;
+    // meta
+    var meta=document.createElement('div'); meta.className='pbadm-meta';
+    var badgeCls = (it.status==='반려')?'rej':'todo';
+    var bits=[];
+    bits.push('<span class="pbadm-rt">'+esc(it.route||'')+'</span>');
+    if(it.pdate) bits.push('<span>'+esc(it.pdate)+'</span>');
+    if(it.camp) bits.push('<span>'+esc(it.camp)+'</span>');
+    if(it.wave) bits.push('<span>'+esc(it.wave)+'</span>');
+    bits.push('<span class="pbadm-badge '+badgeCls+'" style="margin-left:auto">'+esc(it.status||'미작성')+'</span>');
+    meta.innerHTML=bits.join('');
+    card.appendChild(meta);
+    // photos
+    var ph=document.createElement('div'); ph.className='pbadm-photos';
+    [it.photo1, it.photo2].forEach(function(p){
+      if(p){ var im=document.createElement('img'); im.src=p; im.loading='lazy'; im.onclick=function(){ zoom(p); }; ph.appendChild(im); }
+      else { var n=document.createElement('div'); n.className='nop'; n.textContent='사진 없음'; ph.appendChild(n); }
+    });
+    card.appendChild(ph);
+    // 대리작성
+    var l1=document.createElement('div'); l1.className='pbadm-lbl'; l1.textContent='✍ 관리자 대리 작성 (소명 사유)'; card.appendChild(l1);
+    var ta=document.createElement('textarea'); ta.placeholder='사진을 확인하고 소명 사유를 입력하세요…'; if(it.reason) ta.value=it.reason; card.appendChild(ta);
+    var save=document.createElement('button'); save.className='pbadm-btn save'; save.textContent='작성완료 저장';
+    save.onclick=function(){ doWrite(it.id, ta.value, save); };
+    card.appendChild(save);
+    // 재배정
+    var l2=document.createElement('div'); l2.className='pbadm-lbl'; l2.textContent='🔁 다른 기사에게 지정 (미회수 담당 변경)'; card.appendChild(l2);
+    var rr=document.createElement('div'); rr.className='pbadm-reassign';
+    var sel=document.createElement('select');
+    var o0=document.createElement('option'); o0.value=''; o0.textContent='기사 선택…'; sel.appendChild(o0);
+    CUR.drivers.forEach(function(dn){ if(dn===it.driver_name) return; var o=document.createElement('option'); o.value=dn; o.textContent=dn; sel.appendChild(o); });
+    var rb=document.createElement('button'); rb.textContent='지정';
+    rb.onclick=function(){ var nd=sel.value; if(!nd){ toast('기사를 선택하세요'); return; } if(!confirm('이 건을 '+nd+' 기사에게 지정할까요?\n(해당 기사 미제출함으로 이동, 미작성 상태)')) return; doReassign(it.id, nd, rb); };
+    rr.appendChild(sel); rr.appendChild(rb); card.appendChild(rr);
+    var note=document.createElement('div'); note.className='pbadm-note'; note.textContent='담당: '+(it.driver_name||'(미매핑)')+' · 지정 시 그 기사가 직접 소명';
+    card.appendChild(note);
+    return card;
+  }
+
+  function removeCard(tid){
+    var c=document.querySelector('#pbadm-sheet .pbadm-card[data-tid="'+tid+'"]'); if(c) c.remove();
+    var left=document.querySelectorAll('#pbadm-sheet .pbadm-card');
+    if(!left.length){ var body=document.querySelector('#pbadm-sheet .pbadm-body'); if(body) body.innerHTML='<div class="pbadm-empty">처리 완료 ✅</div>'; }
+  }
+
+  async function doWrite(tid, reason, btn){
+    reason=(reason||'').trim();
+    if(!reason){ toast('소명 사유를 입력하세요'); return; }
+    var t=tok(); if(!t) return;
+    btn.disabled=true; btn.textContent='저장 중…';
+    try{
+      await callRpc('admin_pback_write',{p_token:t,p_target_id:tid,p_reason:reason});
+      toast('대리 작성 완료 (승인 대기)');
+      removeCard(tid);
+    }catch(e){ toast('실패: '+String(e&&e.message||e)); btn.disabled=false; btn.textContent='작성완료 저장'; }
+  }
+
+  async function doReassign(tid, newDriver, btn){
+    var t=tok(); if(!t) return;
+    btn.disabled=true; btn.textContent='지정 중…';
+    try{
+      await callRpc('admin_pback_reassign',{p_token:t,p_target_id:tid,p_new_driver:newDriver});
+      toast(newDriver+' 기사에게 지정됨');
+      removeCard(tid);
+    }catch(e){ toast('실패: '+String(e&&e.message||e)); btn.disabled=false; btn.textContent='지정'; }
+  }
+
+  function zoom(src){ var z=document.createElement('div'); z.id='pbadm-zoom'; var im=document.createElement('img'); im.src=src; z.appendChild(im); z.onclick=function(){ z.remove(); }; document.body.appendChild(z); }
+
+  window.pbAdminOpenGroup=openGroup;
+})();
+</script>
+
 </body>
 </html>
