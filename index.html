@@ -2313,6 +2313,7 @@ window.doLogout=async function(){try{await pushLogout();}catch(e){}localStorage.
 })();
 </script>
 
+
 <script>
 /* ============================================================
    소원물류 계약서 관리 모듈  (팀플렉스 참고, 소원 전용)
@@ -2394,7 +2395,11 @@ function todayISO(){return new Date(Date.now()+9*3600000).toISOString().slice(0,
 
 /* 서명 자리 */
 function sigSpot(sid,role,mode,d){
-  if(mode==='sign')return '<span class="ctc-sigspot" id="'+sid+'" data-l="'+esc(role)+'" onclick="CT_slot(\''+sid+'\')"><span class="ctc-inmark">(인)</span><span class="tap">✍ 서명</span></span>';
+  if(mode==='sign'){
+    var _im=(d&&d._sigs&&d._sigs[sid]);
+    if(_im)return '<span class="ctc-sigspot done" id="'+sid+'" onclick="CT_slot(\''+sid+'\')"><span class="ctc-inmark">(인)</span><img class="simg" src="'+_im+'"></span>';
+    return '<span class="ctc-sigspot" id="'+sid+'" data-l="'+esc(role)+'" onclick="CT_slot(\''+sid+'\')"><span class="ctc-inmark">(인)</span><span class="tap">✍ 서명</span></span>';
+  }
   if(mode==='done'){var im=(d._sigs&&d._sigs[sid]);return '<span class="ctc-sigspot done"><span class="ctc-inmark">(인)</span>'+(im?'<img class="simg" src="'+im+'">':'<span class="scur">'+esc(d.name||'')+'</span>')+'</span>';}
   return '<span class="ctc-inmark">(인)</span>';
 }
@@ -2402,7 +2407,8 @@ function sigSpot(sid,role,mode,d){
 function agBlk(cid,q,mode,d){
   if(mode==='done'||(d&&d._chks&&d._chks[cid]==='y'&&mode!=='sign'))return '<div class="ctc-agree" style="border-color:#bfe6cc;background:#f4fbf6"><div class="q">'+q+'</div><div style="font-weight:800;color:#1b8a3f;font-size:12px">☑ 동의함</div></div>';
   if(mode!=='sign')return '<div class="ctc-agree"><div class="q">'+q+'</div><div style="color:#8090a0;font-size:12px">☐ 동의함</div></div>';
-  return '<div class="ctc-agree" id="'+cid+'"><div class="q">'+q+'</div><div class="ctc-opts"><div class="ctc-opt" data-v="y" onclick="CT_agree(\''+cid+'\',\'y\')"><div class="cb">✓</div>동의함</div><div class="ctc-opt" data-v="n" onclick="CT_agree(\''+cid+'\',\'n\')"><div class="cb">✓</div>동의안함</div></div></div>';
+  var _sel=(d&&d._chks&&d._chks[cid])||'';
+  return '<div class="ctc-agree'+(_sel?' active':'')+'" id="'+cid+'"><div class="q">'+q+'</div><div class="ctc-opts"><div class="ctc-opt'+(_sel==='y'?' sel':'')+'" data-v="y" onclick="CT_agree(\''+cid+'\',\'y\')"><div class="cb">'+(_sel==='y'?'✓':'')+'</div>동의함</div><div class="ctc-opt'+(_sel==='n'?' selN':'')+'" data-v="n" onclick="CT_agree(\''+cid+'\',\'n\')"><div class="cb">'+(_sel==='n'?'✓':'')+'</div>동의안함</div></div></div>';
 }
 /* 위탁자 서명 블록 */
 function issuerBlock(mode){
@@ -2727,6 +2733,21 @@ function renderStep(){
   var foot=guide+'<div class="ctc-pg">'+pg+'</div><div style="display:flex;gap:8px"><button class="ctc-btn" style="background:#8697a8;flex:1" onclick="CT_toStep2()">‹ 미리보기</button><button class="ctc-btn" id="ctc-fbtn" style="flex:2" '+(all?'':'disabled')+' onclick="CT_finish()">제출 (저장)</button></div>';
   ctPaint(html,foot,KLBL[CTS.slotk]);
   ctHighlightNext();
+  ctAutoSig();
+}
+/* 다음 차례가 '서명'이면 서명창 자동 오픈 */
+function ctAutoSig(){
+  try{
+    var sq=seq(),done=ctCountDone(); if(done>=sq.length)return;
+    var nx=sq[done];
+    if(nx&&nx.t==='sig'&&!document.getElementById('ctc-sig-modal')){
+      setTimeout(function(){
+        if(CTS.step!==3)return;
+        if(document.getElementById('ctc-sig-modal'))return;
+        if(document.getElementById(nx.id)){ CTS.curSlot=nx.id; ctSigModal(); }
+      },300);
+    }
+  }catch(e){}
 }
 function ctCountDone(){
   var sq=seq(),n=0;
@@ -2799,10 +2820,13 @@ window.CT_toStep2=function(){collectStep();CTS.step=2;renderStep();};
 window.CT_toStep3=function(){CTS.step=3;renderStep();};
 
 window.CT_finish=async function(){
+  var sname=(CTS.name||CTS.d.name||'').trim();
+  if(!sname){ alert('성명이 비어 있습니다. 기사 정보 입력에서 성명을 채워주세요.'); return; }
+  CTS.name=sname;
   var btn=document.getElementById('ctc-fbtn'); if(btn){btn.disabled=true;btn.textContent='저장 중…';}
   try{
-    var data=Object.assign({},CTS.d);
-    await ctSaveApi(CTS.name,CTS.slotk,data,CTS.sig,CTS.chk);
+    var data=Object.assign({},CTS.d,{name:sname});
+    await ctSaveApi(sname,CTS.slotk,data,CTS.sig,CTS.chk);
   }catch(e){ if(btn){btn.disabled=false;btn.textContent='제출 (저장)';} alert('저장 실패: '+e.message); return; }
   var isAdmin=(CTS.mode==='admin');
   if(!isAdmin){ try{ await ctGateEnforce(); }catch(e){} }
@@ -3020,7 +3044,7 @@ window.openCtShare=function(kind,renew){
     var selectable = renew ? isDone : !(x&&x.status==='done');
     var note = renew?(isDone?'':'(완료자 아님)'):(isDone?'완료':(isShared?'공유됨':''));
     var nm=esc(d.name);
-    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #f2f5f8;'+(selectable?'':'opacity:.4')+'"><input type="checkbox" '+(selectable?'':'disabled')+' onchange="_ctSel[this.value]=this.checked" value="'+nm+'" style="width:18px;height:18px"><span style="flex:1;font-size:13px;font-weight:700;color:#33475b">'+esc(d.name)+' <span style="font-size:9px;color:#9aa">'+esc(d.rank||'')+'</span></span><span style="font-size:10px;color:#8a97a6">'+note+'</span></label>';
+    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #f2f5f8;'+(selectable?'':'opacity:.4')+'"><input type="checkbox" '+(selectable?'':'disabled')+' onchange="CT_selSet(this.value,this.checked)" value="'+nm+'" style="width:18px;height:18px"><span style="flex:1;font-size:13px;font-weight:700;color:#33475b">'+esc(d.name)+' <span style="font-size:9px;color:#9aa">'+esc(d.rank||'')+'</span></span><span style="font-size:10px;color:#8a97a6">'+note+'</span></label>';
   }).join('');
   var m=document.createElement('div'); m.id='ctc-sig-modal'; m.className='ctc-modal on';
   m.innerHTML='<div class="ctc-sheet" style="max-height:82vh;display:flex;flex-direction:column"><div style="font-weight:900;color:#123a6b;text-align:center;margin-bottom:8px">'+(renew?'🔄 갱신 요청 대상':'📤 '+KLBL[kind]+' 공유 대상')+'</div>'+
@@ -3029,6 +3053,7 @@ window.openCtShare=function(kind,renew){
     '<div style="display:flex;gap:8px;margin-top:12px"><button class="ctc-btn" style="background:#adb7c2;flex:1" onclick="CT_sigCancel()">취소</button><button class="ctc-btn" style="flex:2;background:'+(renew?'#0b8a5f':'#5a2fb0')+'" onclick="CT_shareConfirm(\''+kind+'\',\''+(renew?'renew':'share')+'\')">'+(renew?'갱신 요청':'공유하기')+'</button></div></div>';
   document.body.appendChild(m);
 };
+window.CT_selSet=function(v,on){_ctSel[v]=on;};
 window.CT_selAll=function(on){var m=document.getElementById('ctc-sig-modal');if(!m)return;m.querySelectorAll('input[type=checkbox][value]').forEach(function(cb){if(!cb.disabled){cb.checked=on;_ctSel[cb.value]=on;}});};
 window.CT_shareConfirm=async function(kind,action){
   var names=Object.keys(_ctSel).filter(function(k){return _ctSel[k];});
@@ -3109,6 +3134,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+
 
 <script>
 (function(){
