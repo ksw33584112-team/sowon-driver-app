@@ -66,7 +66,7 @@ input:focus,textarea:focus{border-color:#1565c0;background:#fff}
 .chg-sw.on{background:#1e6fd8}.chg-sw.on::after{left:22px}
 .chg-list{overflow:auto;padding:11px 13px 22px;display:flex;flex-direction:column;gap:9px;-webkit-overflow-scrolling:touch}
 .chg-day{font-size:10.5px;font-weight:900;color:#7a8aa0;margin:3px 2px 0}
-.chg-card{background:#fff;border-radius:12px;box-shadow:0 2px 7px rgba(0,40,90,.08);overflow:hidden;border-left:5px solid #1e6fd8}
+.chg-card{background:#fff;border-radius:12px;box-shadow:0 2px 7px rgba(0,40,90,.08);overflow:hidden;flex-shrink:0;border-left:5px solid #1e6fd8}
 .chg-head{padding:11px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .chg-rt{font-size:15px;font-weight:900;color:#1a237e}.chg-rt small{font-size:11px;color:#8a99ab;font-weight:800;margin-left:6px}
 .chg-cv{display:flex;align-items:center;gap:7px}
@@ -1129,34 +1129,68 @@ window.wkMetaList=function(){_sxEnsure(async function(){try{
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'스케줄리스트');var dts=_weekDates();XLSX.writeFile(wb,'스케줄리스트_'+dts[0]+'.xlsx');
 }catch(e){alert('리스트 오류: '+e.message);}});};
 window.wkChangeList=function(){_sxEnsure(async function(){try{
-  var ws=iso(weekStart);var chg=await rpc('admin_week_changes',{p_token:S.token,p_week_start:ws});
+  var ws=iso(weekStart);
+  var chg=await rpc('admin_week_changes',{p_token:S.token,p_week_start:ws});
   if(!chg||!chg.length){alert('해당 주차에 변경된 내역이 없습니다.');return;}
   var rows=await _weekSched();await _mcLoad();var cfg=_MCFG;var dm=await _drvMap();
+  // 실제 camp 매핑 (work_date+라우트/서브라우트 -> 캠프). weekly_schedules.camp 우선, 없으면 _campOf 추정
+  var campMap={};
+  rows.forEach(function(r){var cp=r.camp||'';campMap[r.work_date+'|'+r.route]=cp;splitRt(r.route).forEach(function(sub){if(campMap[r.work_date+'|'+sub]===undefined||cp)campMap[r.work_date+'|'+sub]=cp;});});
+  function campOf(dt,sub){var c=campMap[dt+'|'+sub];return (c!==undefined&&c!=='')?c:_campOf(sub||'');}
+  // 라우트맵(route->driver_name문자열) -> 기사 -> {서브라우트:1}. 분할(콤마)은 서브라우트와 1:1 매칭
+  function inv(m){var o={};for(var rt in m){var d=m[rt];if(d===null||d===undefined||d==='')continue;
+    var subs=splitRt(rt);var names=String(d).split(',').map(function(x){return x.trim();}).filter(Boolean);
+    if(names.length===subs.length){subs.forEach(function(sub,i){var nm=names[i];(o[nm]=o[nm]||{})[sub]=1;});}
+    else if(names.length===1){subs.forEach(function(sub){(o[names[0]]=o[names[0]]||{})[sub]=1;});}
+    else{names.forEach(function(nm){o[nm]=o[nm]||{};subs.forEach(function(sub){o[nm][sub]=1;});});}
+  }return o;}
+  // 당일+다음날은 업무변경 불가 → 그 날짜 라인 제외 (D+2 이상만)
+  var _kst=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+  var _cd=new Date(_kst+'T00:00:00');_cd.setDate(_cd.getDate()+2);var cutoff=iso(_cd);
   var dates=[];chg.forEach(function(c){if(dates.indexOf(c.work_date)<0)dates.push(c.work_date);});dates.sort();
   var aoa=[['업무일','사업자등록번호','캠프명','웨이브','아이디','업무상태','회전','업무라우트']];
-  function inv(m){var o={};for(var rt in m){var d=m[rt];if(!d)continue;o[d]=o[d]||{};splitRt(rt).forEach(function(s){o[d][s]=1;});}return o;}
+  var kept=[];
   dates.forEach(function(dt){
+    if(dt<cutoff)return; kept.push(dt);
     var fmap={};rows.forEach(function(r){if(r.work_date===dt&&r.driver_name)fmap[r.route]=r.driver_name;});
     var byRoute={};chg.forEach(function(c){if(c.work_date!==dt)return;(byRoute[c.route]=byRoute[c.route]||[]).push(c);});
     var orig={};for(var rt in fmap)orig[rt]=fmap[rt];
     Object.keys(byRoute).forEach(function(rt){var od=byRoute[rt][0].old_driver||'';if(od)orig[rt]=od;else delete orig[rt];});
-    var oR=inv(orig),fR=inv(fmap);var drivers={};for(var d in oR)drivers[d]=1;for(var d2 in fR)drivers[d2]=1;
+    var oR=inv(orig),fR=inv(fmap);
+    // 변경에 관여된 최종 담당(원복=New 재삽입 대상)
+    var changedFinal={};
+    Object.keys(byRoute).forEach(function(rt){var d=fmap[rt];if(d)String(d).split(',').map(function(x){return x.trim();}).filter(Boolean).forEach(function(nm){changedFinal[nm]=1;});});
+    var drivers={};for(var d in oR)drivers[d]=1;for(var d2 in fR)drivers[d2]=1;
     Object.keys(drivers).sort().forEach(function(nm){
-      var os=oR[nm]?Object.keys(oR[nm]).sort():[];var fs=fR[nm]?Object.keys(fR[nm]).sort():[];
-      if(os.join(',')===fs.join(','))return;var did=dm[nm]||nm;
-      if(!fs.length){aoa.push([_sxDate(dt),cfg.bizno||'',_campOf(os[0]||''),'',did,'휴무','','']);}
-      else{var night=_isNight(fs[0],cfg.night_routes);aoa.push([_sxDate(dt),cfg.bizno||'',_campOf(fs[0]),night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,fs.join(',')]);}
+      var os=oR[nm]?Object.keys(oR[nm]).sort():[];
+      var fs=fR[nm]?Object.keys(fR[nm]).sort():[];
+      var unchanged=(os.join(',')===fs.join(','));
+      if(unchanged && !changedFinal[nm])return;      // 실제 변화 없음 → 스킵
+      var did=dm[nm]||nm;
+      if(!fs.length){                                 // 완전 빠짐 → 기존 캠프 휴무
+        aoa.push([_sxDate(dt),cfg.bizno||'',campOf(dt,os[0]||''),'',did,'휴무','','']);return;
+      }
+      var newCamp=campOf(dt,fs[0]);
+      if(os.length){                                  // 캠프 이동 시 기존 캠프 휴무 라인 추가
+        var oldCamp=campOf(dt,os[0]);
+        if(oldCamp&&newCamp&&oldCamp!==newCamp){
+          aoa.push([_sxDate(dt),cfg.bizno||'',oldCamp,'',did,'휴무','','']);
+        }
+      }
+      var night=_isNight(fs[0],cfg.night_routes);     // 근무 라인(원복이면 재삽입=New)
+      aoa.push([_sxDate(dt),cfg.bizno||'',newCamp,night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,fs.join(',')]);
     });
   });
-  if(aoa.length<2){alert('실제 변경(휴무·라우트변경)이 없습니다.');return;}
+  if(aoa.length<2){alert('실제 반영할 변경(휴무·라우트변경)이 없습니다.\n(당일·익일 라인은 변경 불가로 제외됩니다.)');return;}
   var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
   for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
   wsx['!cols']=[{wch:21},{wch:16},{wch:8},{wch:8},{wch:16},{wch:8},{wch:14},{wch:20}];
   var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,wsx,'변경리스트');
-  var mm={};dates.forEach(function(d){var p=d.split('-');(mm[+p[1]]=mm[+p[1]]||[]).push(+p[2]);});
+  var mm={};kept.forEach(function(d){var p=d.split('-');(mm[+p[1]]=mm[+p[1]]||[]).push(+p[2]);});
   var parts=Object.keys(mm).sort(function(a,b){return a-b;}).map(function(m){return m+'월'+mm[m].sort(function(a,b){return a-b;}).join(',')+'일';});
   XLSX.writeFile(wb,parts.join(',')+'_변경스케줄.xlsx');
-}catch(e){alert('변경분 오류: '+e.message);}});};
+}catch(e){alert('변경분 오류: '+e.message);}});}
+;
 window.wkMetaCfg=async function(){await _mcLoad();var c=_MCFG;
   function f(id,lbl,val,ph){return '<div style="margin-bottom:8px"><div style="font-size:11px;color:#7a8398;margin-bottom:3px">'+lbl+'</div><input id="'+id+'" value="'+escN(val||'')+'" placeholder="'+(ph||'')+'" style="width:100%;padding:9px;border:1px solid #dbe2ee;border-radius:8px;font-size:13px"></div>';}
   var h='<div id="mc-ov" class="ovbg" onclick="if(event.target.id===\'mc-ov\')this.remove()"><div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:18px 16px;margin:auto" onclick="event.stopPropagation()"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b style="font-size:15px;color:#1a237e">⚙️ 리스트·변경분 메타 설정</b><span onclick="document.getElementById(\'mc-ov\').remove()" style="font-size:20px;color:#999;cursor:pointer">×</span></div><div style="font-size:11px;color:#98a0b2;margin-bottom:10px">메타어드민 업로드용 리스트·변경분 엑셀에 들어가는 값입니다.</div>'+f('mc-bizno','사업자등록번호',c.bizno,'예: 123-45-67890')+f('mc-dwave','주간 웨이브',c.day_wave,'WAVE2')+f('mc-nwave','야간 웨이브',c.night_wave,'WAVE1')+f('mc-drot','주간 회전',c.day_rot,'1회전,2회전')+f('mc-nrot','야간 회전',c.night_rot,'D1,D2,F3')+f('mc-status','업무상태',c.status,'출근')+f('mc-nr','야간 라우트 (쉼표구분)',(c.night_routes||[]).join(','),'예: 808C,809D')+'<button onclick="wkMetaSave()" style="width:100%;background:#1565c0;color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:13px;margin-top:6px">💾 저장</button></div></div>';
