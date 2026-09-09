@@ -1,5 +1,5 @@
 // 소원물류 기사앱 서비스워커 (오프라인 캐시 + 웹푸시 / 앱 종료 상태에서도 알림)
-const CACHE = "sowon-app-v20";
+const CACHE = "sowon-app-v21";
 const ASSETS = ["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
 const SB_URL = "https://xmydkovpxivdyjxagnou.supabase.co";
 const SB_ANON = "sb_publishable_Fyp35Hgs7ECBiAnAqbWirQ_25BTo9R8";
