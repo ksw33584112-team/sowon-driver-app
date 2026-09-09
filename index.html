@@ -733,9 +733,9 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <button data-v="notice"><span class="ic">📢</span>공지</button>
       <button data-v="sched"><span class="ic">🗓️</span>스케줄</button>
       <button data-v="list"><span class="ic">📋</span>리스트확인</button>
-      <button data-v="backup"><span class="ic">🤝</span>백업공유</button>
       <button data-v="play"><span class="ic">🎮</span>놀이터</button>
       <button data-v="settle"><span class="ic">💰</span>정산</button>
+      <button data-v="backup"><span class="ic">🤝</span>백업공유</button>
       <button data-v="set"><span class="ic">⚙️</span>설정</button>
     </div>
   </div>
@@ -3429,6 +3429,9 @@ window.scIsNew=function(rt,d){var s=window.__SCNEW&&window.__SCNEW.set;if(!s)ret
 <script>
 window.openBackupShare=function(){try{var s={};try{s=JSON.parse(localStorage.getItem("sowon_session")||"{}");}catch(e){}var nm=s.name||"";var role=s.is_admin?"admin":(s.role||s.rank||"gisa");var url="backup_share.html?name="+encodeURIComponent(nm)+"&comp=sowon&cn="+encodeURIComponent("소원물류")+"&role="+encodeURIComponent(role)+"&v="+Date.now();var ov=document.getElementById("bp-overlay");if(!ov){ov=document.createElement("div");ov.id="bp-overlay";ov.style.cssText="position:fixed;inset:0;z-index:99999;background:#fff;display:flex;flex-direction:column";document.body.appendChild(ov);}ov.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,#123a6b,#1565c0);color:#fff;flex-shrink:0"><button onclick="window.closeBackupShare()" style="background:rgba(255,255,255,.22);border:none;color:#fff;font-size:15px;font-weight:900;border-radius:9px;padding:7px 14px;cursor:pointer">‹ 닫기</button><div style="font-size:15px;font-weight:800">🤝 백업 공유</div></div><iframe src="'+url+'" style="flex:1;border:0;width:100%"></iframe>';ov.style.display="flex";}catch(e){alert("백업공유 열기 오류: "+(e&&e.message||e));}};
 window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");if(ov){ov.style.display="none";ov.innerHTML="";}};
+</script>
+<script>
+(function(){var BP_DB="https://yfqjznfuvudliazfumvp.supabase.co",BP_KEY="sb_publishable_sbSUS59jAuWUMTQJ-S8blA_tWMi6B5u",COMP="sowon";function apply(show){var b=document.querySelector('[data-v="backup"]');if(b)b.style.display=show?"":"none";}function chk(){apply(false);fetch(BP_DB+"/rest/v1/bp_companies?id=eq."+COMP+"&select=approved,active",{headers:{apikey:BP_KEY,Authorization:"Bearer "+BP_KEY}}).then(function(r){return r.json();}).then(function(d){var c=d&&d[0];apply(!!(c&&c.approved&&c.active));}).catch(function(){apply(true);});}if(document.readyState!=="loading")chk();else document.addEventListener("DOMContentLoaded",chk);setInterval(chk,60000);})();
 </script>
 </body>
 </html>
