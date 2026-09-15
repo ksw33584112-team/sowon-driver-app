@@ -707,7 +707,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       <div class="scr" id="s-play"><div id="play-body"><div class="center">불러오는 중…</div></div></div>
       <div class="scr" id="s-set">
         <div class="ct" style="text-align:center;font-size:16px;margin-bottom:14px">⚙️ 관리 메뉴</div>
-        <div id="set-menu">
+        <div id="set-menu"><div class="menu-item mi-purple hide" id="mi-volstats" onclick="openVolStats()"><span class="mi-ic">📊</span><span class="mi-tx"><b>라우트 수량 데이터</b><i>월·요일·주차·전월대비 브리핑</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-purple hide" id="mi-perm"><span class="mi-ic">🛡️</span><span class="mi-tx"><b>권한 관리</b><i>기사 직급·정지·PW·관리자</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-green hide" id="mi-meta"><span class="mi-ic">📋</span><span class="mi-tx"><b>리스트·변경분 메타 설정</b><i>사업자번호·웨이브·회전·야간라우트</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-blue" id="mi-pw"><span class="mi-ic">🔑</span><span class="mi-tx"><b>비밀번호 변경</b><i>내 로그인 비밀번호</i></span><span class="mi-ar">›</span></div>
@@ -858,7 +858,7 @@ function switchView(v){
 /* 리스트확인 허브 */
 function lcCard(icon,bg,title,sub,target){return '<div class="lcm" onclick="switchView(\''+target+'\')"><div class="lcm-i" style="background:'+bg+'">'+icon+'</div><div class="lcm-t"><b>'+title+'</b><span>'+sub+'</span></div><div class="lcm-a">›</div></div>';}
 function lcBack(title){return '<div class="lc-back" onclick="switchView(\'list\')"><span>‹</span> '+escN(title)+'</div>';}
-function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+='<div class="lcm" onclick="openVolStats()"><div class="lcm-i" style="background:#eef4ff">📊</div><div class="lcm-t"><b>라우트 수량 데이터</b><span>월·요일·주차·전월대비 브리핑</span></div><div class="lcm-a">›</div></div>';h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
+function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
 /* ===== 리스트확인 파일 업로드 (관리자 전용 · PC 스케줄프로그램 파서 이식) ===== */
 function lcCanUpload(){return !!(S&&((typeof IS_ADMIN==='function'&&IS_ADMIN())||S.rank==='대표'));}
 function lcUpBar(kind){if(!lcCanUpload())return '';var lbl={loss:'분실차감 엑셀',weight:'가중요인 엑셀',sla:'SLA 엑셀',volume:'월초물량 엑셀',pback:'프레시백 소명 PDF'}[kind]||'파일';return '<div class="lc-upbar"><button class="lc-upbtn" onclick="lcPick(\''+kind+'\')">📥 '+lbl+' 불러오기</button><span class="lc-uphint">폰에서 파일 선택 → 미리보기 → 적용</span></div>';}
@@ -1605,7 +1605,7 @@ async function renderPbackAdmin(){
 }
 /* 설정 */
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
-function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
+function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#mi-volstats").classList.toggle("hide",!IS_ADMIN());$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
 document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else if(mi.id==="mi-meta"){wkMetaCfg();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
@@ -3727,6 +3727,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  function monthRows(m){return VS.data.filter(function(r){return r.month===m;});}
  function sumQty(rows){return rows.reduce(function(a,r){return a+(+r.qty||0);},0);}
  window.openVolStats=async function(){
+  if(!(typeof IS_ADMIN==='function'&&IS_ADMIN())){alert('관리자·대표만 이용할 수 있습니다.');return;}
   injectCSS();
   var ov=document.getElementById('vs-modal'); if(ov)ov.remove();
   ov=document.createElement('div'); ov.id='vs-modal';
