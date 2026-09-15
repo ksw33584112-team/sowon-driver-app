@@ -858,7 +858,7 @@ function switchView(v){
 /* 리스트확인 허브 */
 function lcCard(icon,bg,title,sub,target){return '<div class="lcm" onclick="switchView(\''+target+'\')"><div class="lcm-i" style="background:'+bg+'">'+icon+'</div><div class="lcm-t"><b>'+title+'</b><span>'+sub+'</span></div><div class="lcm-a">›</div></div>';}
 function lcBack(title){return '<div class="lc-back" onclick="switchView(\'list\')"><span>‹</span> '+escN(title)+'</div>';}
-function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
+function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+='<div class="lcm" onclick="openVolStats()"><div class="lcm-i" style="background:#eef4ff">📊</div><div class="lcm-t"><b>라우트 수량 데이터</b><span>월·요일·주차·전월대비 브리핑</span></div><div class="lcm-a">›</div></div>';h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
 /* ===== 리스트확인 파일 업로드 (관리자 전용 · PC 스케줄프로그램 파서 이식) ===== */
 function lcCanUpload(){return !!(S&&((typeof IS_ADMIN==='function'&&IS_ADMIN())||S.rank==='대표'));}
 function lcUpBar(kind){if(!lcCanUpload())return '';var lbl={loss:'분실차감 엑셀',weight:'가중요인 엑셀',sla:'SLA 엑셀',volume:'월초물량 엑셀',pback:'프레시백 소명 PDF'}[kind]||'파일';return '<div class="lc-upbar"><button class="lc-upbtn" onclick="lcPick(\''+kind+'\')">📥 '+lbl+' 불러오기</button><span class="lc-uphint">폰에서 파일 선택 → 미리보기 → 적용</span></div>';}
@@ -3676,5 +3676,144 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
 })();
 </script>
 
+
+<script>
+/* ===== 📊 라우트 수량 데이터 · 브리핑 (soweon 전용 · volume_all 기반 · 정산 무관) ===== */
+(function(){
+ if(window.__VOLSTATS)return; window.__VOLSTATS=1;
+ var VS={data:null, months:[], base:null, tab:'wd'};
+ var WD=['일','월','화','수','목','금','토'];
+ function fmt(n){return Math.round(n||0).toLocaleString('ko-KR');}
+ function injectCSS(){ if(document.getElementById('vs-css'))return; var s=document.createElement('style'); s.id='vs-css'; s.textContent=""
+ + "#vs-modal{position:fixed;inset:0;z-index:11000;background:rgba(12,24,45,.55);overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:-apple-system,'맑은 고딕',sans-serif}"
+ + ".vs-sheet{background:#eef2f8;min-height:100%;max-width:1100px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,.3)}"
+ + ".vs-top{position:sticky;top:0;z-index:5;background:linear-gradient(100deg,#0f2747,#1c3f6e);color:#fff;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}"
+ + ".vs-top .t{font-size:15px;font-weight:800}"
+ + ".vs-x{background:rgba(255,255,255,.18);border:none;color:#fff;width:32px;height:32px;border-radius:10px;font-size:16px;cursor:pointer}"
+ + ".vs-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e7edf5;padding:9px 14px}"
+ + ".vs-mnav{display:inline-flex;align-items:center;gap:6px;background:#eef4ff;border:1px solid #cfe0ff;border-radius:20px;padding:4px 8px}"
+ + ".vs-mnav b{color:#0f2747;font-size:14px;min-width:74px;text-align:center}"
+ + ".vs-mnav button{border:none;background:#fff;color:#2f6fed;width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer}"
+ + ".vs-mnav button:disabled{opacity:.3;cursor:default}"
+ + ".vs-body{padding:14px}"
+ + ".vs-kcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:14px}"
+ + ".vs-kc{background:#fff;border:1px solid #e7edf5;border-radius:14px;padding:13px 15px;box-shadow:0 4px 14px rgba(20,45,90,.06)}"
+ + ".vs-kc .k{font-size:12px;color:#6b7787;font-weight:700}"
+ + ".vs-kc .v{font-size:26px;font-weight:800;color:#0f2747;margin-top:4px}"
+ + ".vs-kc .v small{font-size:13px;color:#6b7787;font-weight:700}"
+ + ".vs-chip{display:inline-flex;font-size:12px;font-weight:800;border-radius:20px;padding:2px 9px;margin-top:5px}"
+ + ".vs-chip.up{background:#e5f7ee;color:#12a06a}.vs-chip.down{background:#fdeaea;color:#e5484d}.vs-chip.flat{background:#eef1f6;color:#6b7787}"
+ + ".vs-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}"
+ + ".vs-tab{padding:9px 15px;font-size:13.5px;font-weight:700;color:#6b7787;background:#fff;border:1px solid #e2e8f2;border-radius:11px;cursor:pointer}"
+ + ".vs-tab.on{background:#2f6fed;color:#fff;border-color:#2f6fed}"
+ + ".vs-panel{background:#fff;border:1px solid #e7edf5;border-radius:14px;padding:14px;margin-bottom:12px}"
+ + ".vs-panel h4{font-size:13.5px;font-weight:800;color:#0f2747;margin:0 0 12px}"
+ + ".vs-bars{display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:20px}"
+ + ".vs-bars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}"
+ + ".vs-bars .c .bb{width:70%;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#78a6f2,#2f6fed);min-height:2px}"
+ + ".vs-bars .c.hi .bb{background:linear-gradient(180deg,#ffc152,#f5951a)}"
+ + ".vs-bars .c .val{font-size:11px;font-weight:800;color:#3a4a60}"
+ + ".vs-bars .c .lb{font-size:12px;font-weight:800;color:#5a6a80;text-align:center;line-height:1.2}"
+ + ".vs-bars .c.sun .lb{color:#e5484d}"
+ + ".vs-tbl{width:100%;border-collapse:collapse;font-size:12.5px}"
+ + ".vs-tbl th,.vs-tbl td{padding:8px;border-bottom:1px solid #eef2f7;text-align:right}"
+ + ".vs-tbl th{background:#f5f8fd;color:#6b7787;font-weight:700}"
+ + ".vs-tbl th:first-child,.vs-tbl td:first-child{text-align:left}"
+ + ".vs-tbl tr.sum td{background:#eef4ff;font-weight:800;color:#0f2747}"
+ + ".vs-up{color:#12a06a;font-weight:800}.vs-down{color:#e5484d;font-weight:800}"
+ + ".vs-empty{text-align:center;color:#98a6b8;padding:50px 20px;font-weight:700}"
+ + ".vs-load{text-align:center;color:#3a4a60;padding:70px 20px;font-weight:700}";
+ document.head.appendChild(s); }
+ function monthRows(m){return VS.data.filter(function(r){return r.month===m;});}
+ function sumQty(rows){return rows.reduce(function(a,r){return a+(+r.qty||0);},0);}
+ window.openVolStats=async function(){
+  injectCSS();
+  var ov=document.getElementById('vs-modal'); if(ov)ov.remove();
+  ov=document.createElement('div'); ov.id='vs-modal';
+  ov.innerHTML='<div class="vs-sheet"><div class="vs-load">📊 수량 데이터 불러오는 중…</div></div>';
+  document.body.appendChild(ov);
+  try{ VS.data=await rpc('volume_all',{p_token:S.token})||[]; }catch(e){ VS.data=[]; }
+  VS.data=(VS.data||[]).filter(function(r){return !/^(total|합계|총계|계|소계|sum)$/i.test(String(r.route||'').replace(/\s/g,''));});
+  var ms={}; VS.data.forEach(function(r){ms[r.month]=1;}); VS.months=Object.keys(ms).sort();
+  VS.base=VS.months[VS.months.length-1]||null;
+  render();
+ };
+ window.closeVolStats=function(){var ov=document.getElementById('vs-modal');if(ov)ov.remove();};
+ window._vsShift=function(d){var i=VS.months.indexOf(VS.base);if(i<0)return;var n=i+d;if(n<0||n>=VS.months.length)return;VS.base=VS.months[n];render();};
+ window._vsTab=function(t){VS.tab=t;render();};
+ function render(){
+  var ov=document.getElementById('vs-modal'); if(!ov)return;
+  var sheet=ov.querySelector('.vs-sheet');
+  if(!VS.months.length){ sheet.innerHTML=top()+'<div class="vs-empty">📦 아직 업로드된 물량 데이터가 없습니다.<br><span style="font-size:12px;font-weight:500">관리자 리스트확인 → 월초 예상 물량에서 엑셀을 업로드하세요.</span></div>'; return; }
+  var m=VS.base, rows=monthRows(m), tot=sumQty(rows);
+  var pm=prevMonth(m), pRows=pm?monthRows(pm):[], pTot=sumQty(pRows);
+  var days={}; rows.forEach(function(r){days[r.fdate]=1;}); var dayCnt=Object.keys(days).length||1;
+  var routes={}; rows.forEach(function(r){routes[r.route]=1;}); var rtCnt=Object.keys(routes).length;
+  var mom = pTot>0 ? ((tot-pTot)/pTot*100) : null;
+  var h=top()+'<div class="vs-body">';
+  h+='<div class="vs-kcards">';
+  h+=kc('기준월 총 수량', fmt(tot)+' <small>개</small>', momChip(mom));
+  h+=kc('일 평균', fmt(tot/dayCnt)+' <small>개/일</small>','');
+  h+=kc('라우트 수', fmt(rtCnt)+' <small>개</small>','');
+  h+=kc('전월', pm?(fmt(pTot)+' <small>개</small>'):'—', '<span style="font-size:11px;color:#8a95a2">'+(pm||'데이터 없음')+'</span>');
+  h+='</div>';
+  h+='<div class="vs-tabs">'+tab('wd','요일별')+tab('wk','주차별')+tab('rt','라우트별')+tab('mo','월별 추이')+'</div>';
+  if(VS.tab==='wd')h+=paneWeekday(rows);
+  else if(VS.tab==='wk')h+=paneWeek(rows);
+  else if(VS.tab==='rt')h+=paneRoute(rows,pRows);
+  else h+=paneMonthly();
+  h+='</div>';
+  sheet.innerHTML=h;
+ }
+ function top(){
+  var m=VS.base||'—'; var i=VS.months.indexOf(VS.base);
+  var nav = VS.months.length? ('<div class="vs-mnav"><button onclick="_vsShift(-1)" '+(i<=0?'disabled':'')+'>‹</button><b>'+m+'</b><button onclick="_vsShift(1)" '+(i>=VS.months.length-1?'disabled':'')+'>›</button></div>') : '';
+  return '<div class="vs-top"><div class="t">📊 라우트 수량 데이터</div><button class="vs-x" onclick="closeVolStats()">✕</button></div>'
+    +(VS.months.length?('<div class="vs-sub"><span style="font-size:12px;color:#9aa7b8;font-weight:700">기준월</span>'+nav+'<span style="margin-left:auto;font-size:11px;color:#9aa7b8">총 '+VS.months.length+'개월 · 정산과 무관한 물량 집계</span></div>'):'');
+ }
+ function kc(k,vv,extra){return '<div class="vs-kc"><div class="k">'+k+'</div><div class="v">'+vv+'</div>'+(extra||'')+'</div>';}
+ function tab(id,label){return '<div class="vs-tab'+(VS.tab===id?' on':'')+'" onclick="_vsTab(\''+id+'\')">'+label+'</div>';}
+ function momChip(mom){ if(mom===null)return '<span class="vs-chip flat">전월 데이터 없음</span>'; var up=mom>=0; return '<span class="vs-chip '+(Math.abs(mom)<0.05?'flat':(up?'up':'down'))+'">'+(up?'▲':'▼')+' '+Math.abs(mom).toFixed(1)+'% 전월대비</span>'; }
+ function prevMonth(m){ var p=m.split('-'); var y=+p[0],mo=+p[1]-1; if(mo<1){mo=12;y--;} var cand=y+'-'+('0'+mo).slice(-2); return VS.months.indexOf(cand)>=0?cand:null; }
+ function barChart(items){
+  var max=Math.max.apply(null,items.map(function(x){return x.val;}).concat([1]));
+  var h='<div class="vs-bars">';
+  items.forEach(function(x){ var pct=Math.round(x.val/max*100); h+='<div class="c'+(x.cls||'')+'"><div class="val">'+fmt(x.val)+'</div><div class="bb" style="height:'+pct+'%"></div><div class="lb">'+x.lb+'</div></div>'; });
+  return h+'</div>';
+ }
+ function paneWeekday(rows){
+  var sum=[0,0,0,0,0,0,0], cnt=[0,0,0,0,0,0,0], perDay={};
+  rows.forEach(function(r){ var wd=new Date(r.fdate+'T00:00:00').getDay(); perDay[r.fdate]=perDay[r.fdate]||{wd:wd,q:0}; perDay[r.fdate].q+=(+r.qty||0); });
+  Object.keys(perDay).forEach(function(k){ var o=perDay[k]; sum[o.wd]+=o.q; cnt[o.wd]++; });
+  var order=[1,2,3,4,5,6,0];
+  var items=order.map(function(wd){ var avg=cnt[wd]?sum[wd]/cnt[wd]:0; return {lb:WD[wd], val:Math.round(avg), cls:(wd===0?' sun':'')}; });
+  var maxv=Math.max.apply(null,items.map(function(x){return x.val;}));
+  items.forEach(function(x){ if(x.val===maxv&&maxv>0)x.cls+=' hi'; });
+  return '<div class="vs-panel"><h4>요일별 평균 수량 (기준월)</h4>'+barChart(items)+'<div style="font-size:11px;color:#9aa7b8;margin-top:8px">※ 같은 요일들의 하루 합계 평균</div></div>';
+ }
+ function weekOfMonth(fdate){ var d=new Date(fdate+'T00:00:00'); return Math.ceil((d.getDate()+((new Date(d.getFullYear(),d.getMonth(),1).getDay()||7)-1))/7); }
+ function paneWeek(rows){
+  var wk={}; rows.forEach(function(r){ var w=weekOfMonth(r.fdate); wk[w]=(wk[w]||0)+(+r.qty||0); });
+  var ks=Object.keys(wk).map(Number).sort(function(a,b){return a-b;});
+  var items=ks.map(function(w){return {lb:w+'주차', val:wk[w]};});
+  var maxv=Math.max.apply(null,items.map(function(x){return x.val;}).concat([0]));
+  items.forEach(function(x){if(x.val===maxv&&maxv>0)x.cls=' hi';});
+  return '<div class="vs-panel"><h4>주차별 합계 수량 (기준월)</h4>'+barChart(items)+'</div>';
+ }
+ function paneRoute(rows,pRows){
+  var cur={},prev={}; rows.forEach(function(r){cur[r.route]=(cur[r.route]||0)+(+r.qty||0);}); pRows.forEach(function(r){prev[r.route]=(prev[r.route]||0)+(+r.qty||0);});
+  var names=Object.keys(cur).sort(); var tot=0,ptot=0;
+  var body=names.map(function(rt){ var c=cur[rt]||0, p=prev[rt]||0; tot+=c; ptot+=p; var diff=p>0?((c-p)/p*100):null; var dcell = diff===null?'<span style="color:#b0b8c4">—</span>':('<span class="'+(diff>=0?'vs-up':'vs-down')+'">'+(diff>=0?'▲':'▼')+Math.abs(diff).toFixed(1)+'%</span>'); return '<tr><td>'+rt+'</td><td>'+fmt(c)+'</td><td>'+(p?fmt(p):'—')+'</td><td>'+dcell+'</td></tr>'; }).join('');
+  var tdiff=ptot>0?((tot-ptot)/ptot*100):null;
+  var sumrow='<tr class="sum"><td>합계</td><td>'+fmt(tot)+'</td><td>'+(ptot?fmt(ptot):'—')+'</td><td>'+(tdiff===null?'—':((tdiff>=0?'▲':'▼')+Math.abs(tdiff).toFixed(1)+'%'))+'</td></tr>';
+  return '<div class="vs-panel"><h4>라우트별 수량 · 전월 대비</h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>기준월</th><th>전월</th><th>증감</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
+ }
+ function paneMonthly(){
+  var byM={}; VS.data.forEach(function(r){byM[r.month]=(byM[r.month]||0)+(+r.qty||0);});
+  var items=VS.months.map(function(m){return {lb:m.slice(2), val:byM[m]||0, cls:(m===VS.base?' hi':'')};});
+  return '<div class="vs-panel"><h4>월별 총 수량 추이</h4>'+barChart(items)+'</div>';
+ }
+})();
+</script>
 </body>
 </html>
