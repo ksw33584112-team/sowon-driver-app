@@ -3849,7 +3849,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   var col4=VS.avgMode?'월평균 배송+반품':'배송+반품';
   var scopeLabel=VS.avgMode?('평균 · 1~현재 '+mn+'개월'):VS.base;
   var sumrow='<tr class="sum"><td>합계</td><td>'+names.length+'개</td><td>—</td><td>'+fmt(tot+tret)+'</td><td>—</td><td>—</td><td>—</td></tr>';
-  return '<div class="vs-panel">'+routeSel()+'<h4>라우트별 상세 <span class="vs-tag real">단가=소원 기본단가</span> <span class="vs-tag">'+scopeLabel+' · 반품=테스트🧪</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">단가(정산)</th><th style="text-align:right">'+col4+'</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
+  return '<div class="vs-panel">'+routeSel()+'<h4>라우트별 상세 <span class="vs-tag real">단가=소원 기본단가</span> <span class="vs-tag">'+scopeLabel+' · 반품=테스트🧪</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">단가(기본)</th><th style="text-align:right">'+col4+'</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
  }
  function paneRevenue(){
   var wp=VS.wp||5; var patt={4:18,5:22,6:26,7:31}; var days=patt[wp];
