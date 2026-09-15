@@ -3678,10 +3678,10 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
 
 
 <script>
-/* ===== 📊 라우트 수량 데이터 · 브리핑 v3 (soweon · volume_all · 정산무관 · 없는값은 테스트) ===== */
+/* ===== 📊 라우트 수량 데이터 · 브리핑 v4 (soweon · volume_all · 정산무관 · 라우트선택+평균모드) ===== */
 (function(){
  if(window.__VOLSTATS)return; window.__VOLSTATS=1;
- var VS={data:null,months:[],base:null,tab:'brief',camp:{},realBy:{},testRet:true};
+ var VS={data:null,months:[],base:null,tab:'brief',camp:{},realBy:{},testRet:true,avgMode:false,selRoutes:null,routeOpen:false,wp:5};
  var WD=['일','월','화','수','목','금','토']; var RET=0.068;
  var MF=[0.86,0.87,0.90,0.94,0.91,0.98,0.95,1.00,1.01,0.99,0.97,0.93];
  function fmt(n){return Math.round(n||0).toLocaleString('ko-KR');}
@@ -3695,36 +3695,43 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  + ".vs-top .t{font-size:15px;font-weight:800}"
  + ".vs-badge{background:#ffd873;color:#5b3d00;font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px}"
  + ".vs-x{margin-left:auto;background:rgba(255,255,255,.18);border:none;color:#fff;width:32px;height:32px;border-radius:10px;font-size:16px;cursor:pointer}"
- + ".vs-sub{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e7edf5;padding:9px 14px}"
+ + ".vs-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e7edf5;padding:9px 14px}"
  + ".vs-mnav{display:inline-flex;align-items:center;gap:6px;background:#eef4ff;border:1px solid #cfe0ff;border-radius:20px;padding:4px 8px}"
  + ".vs-mnav b{color:#0f2747;font-size:14px;min-width:74px;text-align:center}"
  + ".vs-mnav button{border:none;background:#fff;color:#2f6fed;width:26px;height:26px;border-radius:50%;font-size:12px;cursor:pointer}"
  + ".vs-mnav button:disabled{opacity:.3;cursor:default}"
+ + ".vs-mode{display:inline-flex;gap:4px;background:#eef4ff;border:1px solid #cfe0ff;border-radius:20px;padding:3px}"
+ + ".vs-mode button{border:none;background:transparent;color:#5b83c9;font-size:12px;font-weight:800;padding:5px 11px;border-radius:16px;cursor:pointer}"
+ + ".vs-mode button.on{background:#2f6fed;color:#fff}"
  + ".vs-tabs{display:flex;gap:4px;background:#fff;border-bottom:1px solid #e7edf5;padding:8px 10px 0;overflow-x:auto;position:sticky;top:52px;z-index:5}"
  + ".vs-tab{padding:10px 14px;font-size:13px;font-weight:700;color:#6b7787;border-radius:11px 11px 0 0;cursor:pointer;white-space:nowrap}"
  + ".vs-tab.on{background:#eef4ff;color:#2f6fed}"
  + ".vs-body{padding:14px}"
  + ".vs-testbn{display:flex;gap:8px;align-items:center;background:#fff8e1;border:1px solid #ffe082;color:#8a6100;border-radius:11px;padding:9px 12px;margin-bottom:12px;font-size:12.5px;font-weight:700}"
- + ".vs-scope{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#f3f8ff,#fbfdff);border:1px solid #e2ecfb;border-radius:14px;padding:10px 13px;margin-bottom:14px;font-size:13px}"
+ + ".vs-scope{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#f3f8ff,#fbfdff);border:1px solid #e2ecfb;border-radius:14px;padding:10px 13px;margin-bottom:14px;font-size:13px;flex-wrap:wrap}"
  + ".vs-scope .lab{font-weight:800;color:#0f2747}"
  + ".vs-scope .chip{background:#e8f0ff;border:1px solid #cfe0ff;color:#2f6fed;border-radius:20px;padding:4px 11px;font-weight:800;font-size:12px}"
+ + ".vs-selwrap{position:relative;display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}"
+ + ".vs-selbtn{border:1.5px solid #c9d9f2;background:#fff;color:#0f2747;border-radius:11px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer}.vs-selbtn b{color:#2f6fed}"
+ + ".vs-selall{font-size:12px;color:#9aa7b8;font-weight:700}.vs-selclear{font-size:12px;color:#2f6fed;font-weight:700;border:1px solid #cfe0ff;background:#eef4ff;border-radius:9px;padding:6px 10px;cursor:pointer}"
+ + ".vs-drop{position:absolute;z-index:30;top:46px;left:0;width:min(400px,88vw);background:#fff;border:1px solid #d6e2f2;border-radius:13px;box-shadow:0 16px 40px rgba(20,45,90,.22);padding:9px}"
+ + ".vs-droptools{display:flex;gap:6px;margin-bottom:7px}.vs-droptools button{flex:1;font-size:12px;font-weight:700;padding:8px;border-radius:8px;border:1px solid #d6e2f2;background:#f7fafe;color:#1c3f6e;cursor:pointer}.vs-droptools button.p{background:#2f6fed;color:#fff;border-color:#2f6fed}"
+ + ".vs-droplist{max-height:250px;overflow:auto;display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px}"
+ + ".vs-droplist label{display:flex;align-items:center;gap:5px;font-size:12px;padding:6px 7px;border-radius:7px;cursor:pointer;color:#4a586c;font-weight:600}.vs-droplist label.on{background:#e8f0ff;color:#2f6fed;font-weight:800}"
  + ".vs-kcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:11px;margin-bottom:14px}"
  + ".vs-kc{position:relative;background:#fff;border:1px solid #e7edf5;border-radius:15px;padding:14px 15px;box-shadow:0 4px 14px rgba(20,45,90,.06);overflow:hidden}"
  + ".vs-kc::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:#2f6fed}"
- + ".vs-kc.g::before{background:#12a06a}.vs-kc.o::before{background:#f5951a}.vs-kc.r::before{background:#e5484d}.vs-kc.p::before{background:#7c5cff}"
+ + ".vs-kc.g::before{background:#12a06a}.vs-kc.o::before{background:#f5951a}.vs-kc.r::before{background:#e5484d}"
  + ".vs-kc.g{background:linear-gradient(135deg,#eafaf1,#f4fdf8)}.vs-kc.o{background:linear-gradient(135deg,#fff6e9,#fffdf8)}"
  + ".vs-kc .k{font-size:12px;color:#6b7787;font-weight:700}"
  + ".vs-kc .v{font-size:25px;font-weight:800;color:#0f2747;margin-top:4px;font-variant-numeric:tabular-nums}"
  + ".vs-kc .v small{font-size:13px;color:#6b7787;font-weight:700}"
  + ".vs-kc .d{font-size:11px;color:#6b7787;margin-top:3px}"
- + ".vs-kc.up .v{color:#0e8f5e}.vs-kc.down .v{color:#c0392b}"
- + ".vs-chip{display:inline-flex;font-size:11.5px;font-weight:800;border-radius:20px;padding:2px 8px;margin-top:5px}"
- + ".vs-chip.up{background:#e5f7ee;color:#12a06a}.vs-chip.down{background:#fdeaea;color:#e5484d}.vs-chip.flat{background:#eef1f6;color:#6b7787}"
+ + ".vs-kc.up .v{color:#0e8f5e}"
  + ".vs-fb{background:#faf7ff;border:1px solid #e6dcfb;border-radius:15px;padding:13px 14px;margin-bottom:14px}"
  + ".vs-fb h4{margin:0 0 10px;font-size:13px;font-weight:800;color:#5a2fb0;display:flex;justify-content:space-between;align-items:center}"
  + ".vs-fbgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}"
- + ".vs-fbb{background:#fff;border:1px solid #ece3fb;border-radius:12px;padding:10px 12px}"
- + ".vs-fbb .k{font-size:11px;color:#8a7fb0;font-weight:700}.vs-fbb .v{font-size:17px;font-weight:800;color:#7c5cff;margin-top:3px}"
+ + ".vs-fbb{background:#fff;border:1px solid #ece3fb;border-radius:12px;padding:10px 12px}.vs-fbb .k{font-size:11px;color:#8a7fb0;font-weight:700}.vs-fbb .v{font-size:17px;font-weight:800;color:#7c5cff;margin-top:3px}"
  + ".vs-panel{background:#fff;border:1px solid #e7edf5;border-radius:15px;padding:14px;margin-bottom:12px}"
  + ".vs-panel h4{font-size:13.5px;font-weight:800;color:#0f2747;margin:0 0 10px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}"
  + ".vs-tag{font-size:10.5px;font-weight:800;color:#8a6100;background:#fff3d6;border:1px solid #f3d29a;border-radius:20px;padding:2px 8px}"
@@ -3733,24 +3740,18 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  + ".vs-bars{display:flex;align-items:flex-end;gap:5px;height:170px;padding-top:22px;overflow-x:auto}"
  + ".vs-bars .c{flex:1 0 auto;min-width:24px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}"
  + ".vs-stk{width:74%;min-width:15px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:5px 5px 2px 2px;overflow:hidden;box-shadow:0 2px 5px rgba(47,111,237,.15)}"
- + ".vs-stk .s1{background:linear-gradient(180deg,#5b8def,#2f6fed);min-height:2px}"
- + ".vs-stk .s2{background:linear-gradient(180deg,#ff8a8a,#e5484d)}"
+ + ".vs-stk .s1{background:linear-gradient(180deg,#5b8def,#2f6fed);min-height:2px}.vs-stk .s2{background:linear-gradient(180deg,#ff8a8a,#e5484d)}"
  + ".vs-bars .c.hi .vs-stk .s1{background:linear-gradient(180deg,#ffc152,#f5951a)}"
- + ".vs-bars .c .val{font-size:10px;font-weight:800;color:#3a4a60}"
- + ".vs-bars .c .lb{font-size:10.5px;font-weight:700;color:#5a6a80;text-align:center;white-space:nowrap}"
- + ".vs-bars .c.sun .lb{color:#e5484d}"
+ + ".vs-bars .c .val{font-size:10px;font-weight:800;color:#3a4a60}.vs-bars .c .lb{font-size:10.5px;font-weight:700;color:#5a6a80;text-align:center;white-space:nowrap}.vs-bars .c.sun .lb{color:#e5484d}"
  + ".vs-tbl{width:100%;border-collapse:collapse;font-size:12.5px}"
  + ".vs-tbl th,.vs-tbl td{padding:8px;border-bottom:1px solid #eef2f7;text-align:right}"
  + ".vs-tbl th{background:#f5f8fd;color:#6b7787;font-weight:700}"
  + ".vs-tbl th:first-child,.vs-tbl td:first-child,.vs-tbl th:nth-child(2),.vs-tbl td:nth-child(2){text-align:left}"
- + ".vs-tbl tr.sum td{background:#eef4ff;font-weight:800;color:#0f2747}"
- + ".vs-tbl tr.on td{background:#f0f6ff}"
+ + ".vs-tbl tr.sum td{background:#eef4ff;font-weight:800;color:#0f2747}.vs-tbl tr.on td{background:#f0f6ff}"
  + ".vs-up{color:#12a06a;font-weight:800}.vs-down{color:#e5484d;font-weight:800}"
  + ".vs-pill{display:inline-flex;gap:6px;flex-wrap:wrap}.vs-pbtn{padding:8px 13px;border:1.5px solid #dde7f4;background:#fff;color:#1c3f6e;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}.vs-pbtn.on{background:linear-gradient(90deg,#0f2747,#2f6fed);color:#fff;border-color:transparent}"
- + ".vs-note{background:linear-gradient(180deg,#fafcff,#f4f8ff);border:1.5px dashed #cfdcee;border-radius:14px;padding:36px 18px;text-align:center;color:#6b7787}"
- + ".vs-note .big{font-size:34px;margin-bottom:8px}.vs-note b{color:#0f2747;font-size:15px}"
- + ".vs-empty{text-align:center;color:#98a6b8;padding:50px 20px;font-weight:700}"
- + ".vs-load{text-align:center;color:#3a4a60;padding:70px 20px;font-weight:700}";
+ + ".vs-note{background:linear-gradient(180deg,#fafcff,#f4f8ff);border:1.5px dashed #cfdcee;border-radius:14px;padding:36px 18px;text-align:center;color:#6b7787}.vs-note .big{font-size:34px;margin-bottom:8px}.vs-note b{color:#0f2747;font-size:15px}"
+ + ".vs-empty{text-align:center;color:#98a6b8;padding:50px 20px;font-weight:700}.vs-load{text-align:center;color:#3a4a60;padding:70px 20px;font-weight:700}";
  document.head.appendChild(s);}
  function mRows(m){return VS.data.filter(function(r){return r.month===m;});}
  function sumQ(rows){return rows.reduce(function(a,r){return a+(+r.qty||0);},0);}
@@ -3758,8 +3759,11 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  function baseMonNum(){return +String(VS.base||'2026-08').split('-')[1];}
  function baseYear(){return +String(VS.base||'2026-08').split('-')[0];}
  function anchor(){return sumQ(mRows(VS.base))||60000;}
- function m2026(mm){ var key=baseYear()+'-'+('0'+mm).slice(-2); if(VS.realBy[key]!=null)return {v:VS.realBy[key],real:true}; var a=anchor(),bn=baseMonNum(); return {v:Math.round(a*MF[mm-1]/MF[bn-1]),real:false}; }
- function m2025(mm){ var key=(baseYear()-1)+'-'+('0'+mm).slice(-2); if(VS.realBy[key]!=null)return {v:VS.realBy[key],real:true}; var c=m2026(mm).v; var h=(mm*37+13)%11; return {v:Math.round(c*(0.90+h/100)),real:false}; }
+ function m2026(mm){var key=baseYear()+'-'+('0'+mm).slice(-2);if(VS.realBy[key]!=null)return {v:VS.realBy[key],real:true};var a=anchor(),bn=baseMonNum();return {v:Math.round(a*MF[mm-1]/MF[bn-1]),real:false};}
+ function m2025(mm){var key=(baseYear()-1)+'-'+('0'+mm).slice(-2);if(VS.realBy[key]!=null)return {v:VS.realBy[key],real:true};var c=m2026(mm).v;var h=(mm*37+13)%11;return {v:Math.round(c*(0.90+h/100)),real:false};}
+ function allRoutesList(){var o={};VS.data.forEach(function(r){o[r.route]=1;});return Object.keys(o).sort();}
+ function inSel(rt){return !VS.selRoutes||VS.selRoutes.indexOf(rt)>=0;}
+ function scopeMonths(){return VS.avgMode?VS.months.slice():[VS.base];}
  window.openVolStats=async function(){
   if(!(typeof IS_ADMIN==='function'&&IS_ADMIN())){alert('관리자·대표만 이용할 수 있습니다.');return;}
   injectCSS();
@@ -3779,8 +3783,13 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  };
  window.closeVolStats=function(){var ov=document.getElementById('vs-modal');if(ov)ov.remove();};
  window._vsShift=function(d){var i=VS.months.indexOf(VS.base);if(i<0)return;var n=i+d;if(n<0||n>=VS.months.length)return;VS.base=VS.months[n];render();};
- window._vsTab=function(t){VS.tab=t;render();};
+ window._vsTab=function(t){VS.tab=t;VS.routeOpen=false;render();};
+ window._vsAvg=function(b){VS.avgMode=!!b;render();};
  window._vsWP=function(n){VS.wp=n;render();};
+ window._vsRouteToggle=function(){VS.routeOpen=!VS.routeOpen;render();};
+ window._vsRouteClear=function(){VS.selRoutes=null;render();};
+ window._vsRouteAll=function(on){VS.selRoutes=on?null:[];render();};
+ window._vsRoutePick=function(rt){var all=allRoutesList();if(VS.selRoutes===null)VS.selRoutes=all.slice();var i=VS.selRoutes.indexOf(rt);if(i>=0)VS.selRoutes.splice(i,1);else VS.selRoutes.push(rt);if(VS.selRoutes.length>=all.length)VS.selRoutes=null;render();};
  function render(){
   var ov=document.getElementById('vs-modal'); if(!ov)return; var sheet=ov.querySelector('.vs-sheet');
   if(!VS.data){sheet.innerHTML='<div class="vs-load">불러오는 중…</div>';return;}
@@ -3793,13 +3802,20 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  }
  function header(){
   var m=VS.base||'—',i=VS.months.indexOf(VS.base);
-  var nav=VS.months.length?('<div class="vs-mnav"><button onclick="_vsShift(-1)" '+(i<=0?'disabled':'')+'>‹</button><b>'+m+'</b><button onclick="_vsShift(1)" '+(i>=VS.months.length-1?'disabled':'')+'>›</button></div>'):'';
+  var nav=VS.avgMode?'<b style="color:#0f2747;font-size:14px">📊 평균 (1~현재 '+VS.months.length+'개월)</b>':('<div class="vs-mnav"><button onclick="_vsShift(-1)" '+(i<=0?'disabled':'')+'>‹</button><b>'+m+'</b><button onclick="_vsShift(1)" '+(i>=VS.months.length-1?'disabled':'')+'>›</button></div>');
+  var mode='<div class="vs-mode"><button class="'+(!VS.avgMode?'on':'')+'" onclick="_vsAvg(0)">특정월</button><button class="'+(VS.avgMode?'on':'')+'" onclick="_vsAvg(1)">평균(1~현재)</button></div>';
   return '<div class="vs-top"><div class="t">📊 라우트 수량 데이터</div><span class="vs-badge">🔒 관리자만</span><button class="vs-x" onclick="closeVolStats()">✕</button></div>'
-   +'<div class="vs-sub"><span style="font-size:12px;color:#9aa7b8;font-weight:700">기준월</span>'+nav+'<span style="margin-left:auto;font-size:11px;color:#9aa7b8">총 '+VS.months.length+'개월 실측 · 정산과 무관</span></div>';
+   +'<div class="vs-sub"><span style="font-size:12px;color:#9aa7b8;font-weight:700">기준</span>'+nav+mode+'<span style="margin-left:auto;font-size:11px;color:#9aa7b8">총 '+VS.months.length+'개월 실측 · 정산무관</span></div>';
  }
  function tab(id,label){return '<div class="vs-tab'+(VS.tab===id?' on':'')+'" onclick="_vsTab(\''+id+'\')">'+label+'</div>';}
- function chip(p){ if(p===null)return '<span class="vs-chip flat">—</span>'; var up=p>=0; return '<span class="vs-chip '+(Math.abs(p)<0.05?'flat':(up?'up':'down'))+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%</span>'; }
+ function chip(p){ if(p===null)return '<span style="color:#9aa7b8">—</span>'; var up=p>=0; return (up?'▲':'▼')+Math.abs(p).toFixed(1)+'%'; }
  function kc(cls,k,vv,extra,d){return '<div class="vs-kc '+(cls||'')+'"><div class="k">'+k+'</div><div class="v">'+vv+'</div>'+(extra||'')+(d?'<div class="d">'+d+'</div>':'')+'</div>';}
+ function routeSel(){
+  var all=allRoutesList(); var sel=VS.selRoutes; var n=sel?sel.length:all.length;
+  var wrap='<div class="vs-selwrap"><button class="vs-selbtn" onclick="_vsRouteToggle()">🚚 라우트 선택 <b>'+n+'개</b> ▾</button>'+((sel&&sel.length<all.length)?('<button class="vs-selclear" onclick="_vsRouteClear()">전체 '+all.length+'개 보기</button>'):('<span class="vs-selall">전체 '+all.length+'개</span>'));
+  if(VS.routeOpen){ wrap+='<div class="vs-drop"><div class="vs-droptools"><button onclick="_vsRouteAll(1)">전체선택</button><button onclick="_vsRouteAll(0)">전체해제</button><button class="p" onclick="_vsRouteToggle()">적용·닫기</button></div><div class="vs-droplist">'+all.map(function(rt){var on=inSel(rt);return '<label class="'+(on?'on':'')+'"><input type="checkbox" '+(on?'checked':'')+' onchange="_vsRoutePick(\''+rt+'\')">'+rt+'</label>';}).join('')+'</div></div>'; }
+  return wrap+'</div>';
+ }
  function lineChart(labels,a,b){
   var W=760,H=280,top=18,bot=H-24,left=46,right=W-12;
   var all=a.concat(b); var mx=Math.max.apply(null,all),mn=Math.min.apply(null,all); if(mn===mx){mn=mn*0.9;mx=mx*1.1;} var span=(mx-mn)||1;
@@ -3817,24 +3833,31 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   b.forEach(function(vv,i){dots+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(vv).toFixed(1)+'" r="3" fill="#fff" stroke="#e5484d" stroke-width="1.8"/>';});
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'+g+area+pB+pA+dots+'</svg>';
  }
+ function barsStk(items,showRet){
+  var max=Math.max.apply(null,items.map(function(x){return (x.d||0)+(showRet?(x.r||0):0);}).concat([1]));
+  var h='<div class="vs-bars">';
+  items.forEach(function(x){ var tot=(x.d||0)+(showRet?(x.r||0):0); var pctH=Math.round(tot/max*100); var dH=tot>0?Math.round((x.d||0)/tot*100):100; var rH=100-dH;
+    h+='<div class="c'+(x.cls||'')+'"><div class="val">'+fmt(tot)+'</div><div class="vs-stk" style="height:'+pctH+'%">'+(showRet?('<div class="s2" style="height:'+rH+'%"></div>'):'')+'<div class="s1" style="height:'+dH+'%"></div></div><div class="lb">'+x.lb+'</div></div>'; });
+  return h+'</div>';
+ }
  function paneBrief(){
   var bn=baseMonNum(); var labels=[],s26=[],s25=[]; var cum26=0,cum25=0,anyTest=false;
-  for(var mm=1;mm<=bn;mm++){ labels.push(('0'+mm).slice(-2)+'월'); var A=m2026(mm),B=m2025(mm); s26.push(A.v); s25.push(B.v); cum26+=A.v; cum25+=B.v; if(!A.real)anyTest=true; if(!B.real)anyTest=true; }
+  for(var mm=1;mm<=bn;mm++){ labels.push(('0'+mm).slice(-2)+'월'); var A=m2026(mm),B=m2025(mm); s26.push(A.v); s25.push(B.v); cum26+=A.v; cum25+=B.v; if(!A.real||!B.real)anyTest=true; }
   var aug=m2026(bn).v, jul=bn>1?m2026(bn-1).v:null;
   var annRet=Math.round(cum26*RET), dayCntAll=bn*26;
-  var h='<div class="vs-scope"><span class="lab">📌 브리핑 범위</span><span class="chip">🚚 전체 '+ (Object.keys(VS.camp).length||Object.keys((function(){var o={};mRows(VS.base).forEach(function(r){o[r.route]=1;});return o;})()).length) +'개 라우트</span><span style="margin-left:auto;color:#9aa7b8;font-size:11px">2026 1~'+bn+'월 기준</span></div>';
+  var nRoutes=allRoutesList().length;
+  var h='<div class="vs-scope"><span class="lab">📌 브리핑 범위</span><span class="chip">🚚 전체 '+nRoutes+'개 라우트</span><span style="margin-left:auto;color:#9aa7b8;font-size:11px">2026 1~'+bn+'월 기준</span></div>';
   h+='<div class="vs-kcards">';
   h+=kc('','누적 총 배송 (2026 1~'+bn+'월)',fmt(cum26)+' <small>개</small>','','월평균 '+fmt(cum26/bn));
-  h+=kc('g up','전년 대비 (동기간)',(function(){var p=pct(cum26,cum25);return (p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%';})(),'','+'+fmt(cum26-cum25)+'건 · 2025 동기간'+(anyTest?' 🧪':''));
-  h+=kc('g up','전월 대비',(function(){var p=pct(aug,jul);return jul?((p>=0?'▲':'▼')+Math.abs(p).toFixed(1)+'%'):'—';})(),'',jul?('+'+fmt(aug-jul)+'건 · '+bn+'월 vs '+(bn-1)+'월'):'전월 데이터 없음');
+  h+=kc('g up','전년 대비 (동기간)',chip(pct(cum26,cum25)),'','+'+fmt(cum26-cum25)+'건 · 2025 동기간'+(anyTest?' 🧪':''));
+  h+=kc('g up','전월 대비',jul?chip(pct(aug,jul)):'—','',jul?('+'+fmt(aug-jul)+'건 · '+bn+'월 vs '+(bn-1)+'월'):'전월 데이터 없음');
   h+=kc('o','연간 반품'+(VS.testRet?' 🧪':''),fmt(annRet)+' <small>개</small>','','일평균 '+fmt(annRet/dayCntAll)+' · 배송대비 6.8%');
   h+='</div>';
   h+='<div class="vs-fb"><h4>📦 프레시백 회수 금액 (누적) <span class="vs-tag">테스트🧪</span></h4><div class="vs-fbgrid">'
    +'<div class="vs-fbb"><div class="k">누적 총 금액</div><div class="v">'+won(88283899)+'</div></div>'
    +'<div class="vs-fbb"><div class="k">월평균</div><div class="v">'+won(11035487)+'</div></div>'
    +'<div class="vs-fbb"><div class="k">일평균</div><div class="v">'+won(363009)+'</div></div>'
-   +'<div class="vs-fbb"><div class="k">전년 대비</div><div class="v" style="color:#12a06a">▲4.4%</div></div>'
-   +'</div></div>';
+   +'<div class="vs-fbb"><div class="k">전년 대비</div><div class="v" style="color:#12a06a">▲4.4%</div></div></div></div>';
   h+='<div class="vs-panel"><h4>📈 연도별 월 배송 · 전년 대비 <span class="vs-legend"><span class="vs-lg"><i style="background:#2f6fed"></i>2026</span><span class="vs-lg"><i style="background:#e5484d"></i>2025</span></span></h4>'+lineChart(labels,s26,s25)+'</div>';
   var rowsT=''; for(var mm2=bn;mm2>=1;mm2--){var A=m2026(mm2),B=m2025(mm2);var d=pct(A.v,B.v);rowsT+='<tr'+(mm2===bn?' class="on"':'')+'><td>'+('0'+mm2).slice(-2)+'월</td><td>'+fmt(A.v)+(A.real?'':' <span style="color:#c9a227">🧪</span>')+'</td><td style="color:#93a1b5">'+fmt(B.v)+'</td><td>'+fmt(A.v-B.v)+'</td><td>'+(d===null?'—':((d>=0?'<span class=vs-up>▲':'<span class=vs-down>▼')+Math.abs(d).toFixed(1)+'%</span>'))+'</td></tr>';}
   h+='<div class="vs-panel"><h4>월별 표 <span class="vs-tag">전년/미실측=테스트🧪</span></h4><div style="max-height:230px;overflow:auto"><table class="vs-tbl"><thead><tr><th>월</th><th style="text-align:right">2026(올해)</th><th style="text-align:right">2025</th><th style="text-align:right">증감</th><th style="text-align:right">증감률</th></tr></thead><tbody>'+rowsT+'</tbody></table></div></div>';
@@ -3853,38 +3876,39 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   h+='<div class="vs-panel"><h4>주차별 합계 배송</h4>'+barsStk(witems,false)+'</div>';
   return h;
  }
- function barsStk(items,showRet){
-  var max=Math.max.apply(null,items.map(function(x){return (x.d||0)+(showRet?(x.r||0):0);}).concat([1]));
-  var h='<div class="vs-bars">';
-  items.forEach(function(x){ var tot=(x.d||0)+(showRet?(x.r||0):0); var pctH=Math.round(tot/max*100); var dH=tot>0?Math.round((x.d||0)/tot*100):100; var rH=100-dH;
-    h+='<div class="c'+(x.cls||'')+'"><div class="val">'+fmt(tot)+'</div><div class="vs-stk" style="height:'+pctH+'%">'+(showRet?('<div class="s2" style="height:'+rH+'%"></div>'):'')+'<div class="s1" style="height:'+dH+'%"></div></div><div class="lb">'+x.lb+'</div></div>'; });
-  return h+'</div>';
- }
  function paneRoute(){
-  var m=VS.base, rows=mRows(m), pm=prevM(m);
-  var prev={}; if(pm)mRows(pm).forEach(function(r){prev[r.route]=(prev[r.route]||0)+(+r.qty||0);});
+  var months=scopeMonths(); var mn=months.length||1;
+  var rows=VS.data.filter(function(r){return months.indexOf(r.month)>=0 && inSel(r.route);});
   var cur={},days={}; rows.forEach(function(r){cur[r.route]=(cur[r.route]||0)+(+r.qty||0);days[r.route]=days[r.route]||{};days[r.route][r.fdate]=1;});
+  var prev={}; if(!VS.avgMode){var pm=prevM(VS.base); if(pm)VS.data.filter(function(r){return r.month===pm&&inSel(r.route);}).forEach(function(r){prev[r.route]=(prev[r.route]||0)+(+r.qty||0);});}
   var names=Object.keys(cur).sort(); var tot=0,tret=0;
-  var body=names.map(function(rt){var c=cur[rt]||0;var dc=Object.keys(days[rt]||{}).length||1;var rr=retOf(c);tot+=c;tret+=rr;var camp=VS.camp[rt]||'-';var p=prev[rt]||0;var d=pct(c,p);
-   return '<tr><td>'+rt+'</td><td>'+camp+'</td><td>'+fmt(c+rr)+'</td><td>'+fmt(c/dc)+'</td><td>'+fmt(rr/dc)+'</td><td>'+(d===null?'<span style="color:#b0b8c4">—</span>':((d>=0?'<span class=vs-up>▲':'<span class=vs-down>▼')+Math.abs(d).toFixed(1)+'%</span>'))+'</td></tr>';}).join('');
+  var body=names.map(function(rt){var raw=cur[rt]||0;var shown=VS.avgMode?Math.round(raw/mn):raw;var dc=Object.keys(days[rt]||{}).length||1;var rr=retOf(shown);tot+=shown;tret+=rr;var camp=VS.camp[rt]||'-';var d=VS.avgMode?null:pct(raw,prev[rt]||0);
+   return '<tr><td>'+rt+'</td><td>'+camp+'</td><td>'+fmt(shown+rr)+'</td><td>'+fmt(raw/dc)+'</td><td>'+fmt(rr/dc)+'</td><td>'+(d===null?'<span style="color:#b0b8c4">—</span>':((d>=0?'<span class=vs-up>▲':'<span class=vs-down>▼')+Math.abs(d).toFixed(1)+'%</span>'))+'</td></tr>';}).join('');
+  var col3=VS.avgMode?'월평균 배송+반품':'배송+반품';
+  var scopeLabel=VS.avgMode?('평균 · 1~현재 '+mn+'개월'):VS.base;
   var sumrow='<tr class="sum"><td>합계</td><td>'+names.length+'개</td><td>'+fmt(tot+tret)+'</td><td>—</td><td>—</td><td>—</td></tr>';
-  return '<div class="vs-panel"><h4>라우트별 상세 <span class="vs-tag">반품=테스트🧪 · 캠프=스케줄</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">배송+반품</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
+  return '<div class="vs-panel">'+routeSel()+'<h4>라우트별 상세 <span class="vs-tag">'+scopeLabel+' · 반품=테스트🧪</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">'+col3+'</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
  }
  function paneRevenue(){
   var wp=VS.wp||5; var patt={4:18,5:22,6:26,7:31}; var days=patt[wp];
-  var rows=mRows(VS.base); var perDay={}; rows.forEach(function(r){perDay[r.fdate]=(perDay[r.fdate]||0)+(+r.qty||0);}); var dl=Object.keys(perDay).length||1; var avg=Math.round(sumQ(rows)/dl);
+  var months=scopeMonths();
+  var rows=VS.data.filter(function(r){return months.indexOf(r.month)>=0 && inSel(r.route);});
+  var perDay={}; rows.forEach(function(r){perDay[r.fdate]=(perDay[r.fdate]||0)+(+r.qty||0);}); var dl=Object.keys(perDay).length||1; var avg=Math.round(sumQ(rows)/dl);
   var unit=800; var expQty=avg*days; var expRev=expQty*unit;
-  var h='<div class="vs-panel"><h4>💰 예상 수익 계산 <span class="vs-tag">단가=테스트 800원🧪</span></h4>';
-  h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin-bottom:6px">근무 패턴</div><div class="vs-pill">'+[4,5,6,7].map(function(n){return '<button class="vs-pbtn'+(wp===n?' on':'')+'" onclick="_vsWP('+n+')">주'+n+'일 · '+patt[n]+'일</button>';}).join('')+'</div>';
+  var selN=VS.selRoutes?VS.selRoutes.length:allRoutesList().length;
+  var scopeLabel=VS.avgMode?('평균 1~현재 '+months.length+'개월'):VS.base;
+  var h='<div class="vs-panel">'+routeSel()+'<h4>💰 예상 수익 계산 <span class="vs-tag">'+scopeLabel+' · 단가=테스트 800원🧪</span></h4>';
+  h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin-bottom:6px">대상 라우트 '+selN+'개 · 일평균 배송 '+fmt(avg)+'개</div>';
+  h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin:8px 0 6px">근무 패턴</div><div class="vs-pill">'+[4,5,6,7].map(function(n){return '<button class="vs-pbtn'+(wp===n?' on':'')+'" onclick="_vsWP('+n+')">주'+n+'일 · '+patt[n]+'일</button>';}).join('')+'</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px">'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">근무일수(월)</div><div class="v" style="color:#fff">'+days+'일</div></div>'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">예상 수량</div><div class="v" style="color:#fff">'+fmt(expQty)+'</div></div>'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">예상 수익</div><div class="v" style="color:#ffd873">'+won(expRev)+'</div></div></div>';
-  h+='<div style="font-size:12px;color:#8a6100;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin-top:12px;font-weight:700">⚠️ 일평균 '+fmt(avg)+'개 × 근무 '+days+'일 × 단가 '+unit+'원 (테스트) — 실제 단가는 [본사 계약용] 저장값과 연동 예정</div>';
+  h+='<div style="font-size:12px;color:#8a6100;background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:10px;margin-top:12px;font-weight:700">⚠️ 일평균 '+fmt(avg)+'개 × 근무 '+days+'일 × 단가 '+unit+'원(테스트) — 실제 단가는 [본사 계약용] 저장값과 연동 예정</div>';
   return h+'</div>';
  }
- function paneMap(){ return '<div class="vs-note"><div class="big">🗺️</div><b>등록된 라우트 지도가 없습니다</b><div style="margin-top:8px;font-size:13px">라우트별 지도 이미지 업로드 기능은 준비 중입니다.<br>업로드하면 여기에서 라우트 위치를 확인할 수 있습니다.</div></div>'; }
- function paneBackup(){ return '<div class="vs-note"><div class="big">🧰</div><b>백업 기사 스케줄 관리</b><div style="margin-top:8px;font-size:13px">요일별 라우트·백업 기사 배정 및 예상 수익 관리 기능은 준비 중입니다.<br>소원 스케줄 데이터와 연동하여 제공될 예정입니다.</div></div>'; }
+ function paneMap(){ return '<div class="vs-note"><div class="big">🗺️</div><b>등록된 라우트 지도가 없습니다</b><div style="margin-top:8px;font-size:13px">라우트별 지도 이미지 업로드 기능은 준비 중입니다.</div></div>'; }
+ function paneBackup(){ return '<div class="vs-note"><div class="big">🧰</div><b>백업용 — 준비 중</b><div style="margin-top:8px;font-size:13px">백업 기사 스케줄 배정·예상 수익 관리 기능은 아직 미구현입니다.<br>소원 스케줄 데이터와 연동하여 추후 제공될 예정입니다.</div></div>'; }
 })();
 </script>
 </body>
