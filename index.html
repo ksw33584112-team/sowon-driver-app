@@ -3743,9 +3743,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   var ms={}; VS.data.forEach(function(r){ms[r.month]=1;}); VS.months=Object.keys(ms).sort();
   VS.base=VS.months[VS.months.length-1]||'2026-08';
   VS.camp={}; VS.routeUnit={}; VS.unitAvg=0;
-  try{ var ru=await rpc('settle_route_units',{p_token:S.token}); (ru||[]).forEach(function(x){VS.routeUnit[normRt(x.route)]=+x.unit||0;}); }catch(e){}
-  try{ VS.unitAvg=+(await rpc('settle_unit_avg',{p_token:S.token}))||0; }catch(e){}
-  try{ if(typeof iso==='function'&&typeof mondayOf==='function'&&typeof kstNow==='function'){ var sc=await rpc('list_schedules',{p_token:S.token,p_week_start:iso(mondayOf(kstNow()))}); (sc||[]).forEach(function(s){ if(s.route&&s.camp&&!VS.camp[s.route])VS.camp[s.route]=s.camp; }); } }catch(e){}
+  try{ var rm=await rpc('route_meta_get',{p_token:S.token}); var _us=[]; (rm||[]).forEach(function(x){var k=normRt(x.route);VS.routeUnit[k]=+x.base_price||0; if(x.camp)VS.camp[k]=x.camp; if(x.base_price>0)_us.push(+x.base_price);}); if(_us.length)VS.unitAvg=Math.round(_us.reduce(function(a,b){return a+b;},0)/_us.length); }catch(e){}
   render();
  };
  window.closeVolStats=function(){var ov=document.getElementById('vs-modal');if(ov)ov.remove();};
@@ -3763,7 +3761,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   if(!VS.data){sheet.innerHTML='<div class="vs-load">불러오는 중…</div>';return;}
   var TABS=[['brief','🏢 회사 전체·브리핑'],['route','🚚 라우트별'],['revenue','💰 예상 수익']];
   var h=header()+'<div class="vs-tabs">'+TABS.map(function(x){return tab(x[0],x[1]);}).join('')+'</div><div class="vs-body">';
-  if(VS.testRet){ h+='<div class="vs-testbn">🧪 <span>반품·전년(2025)·프레시백 금액은 <b>테스트 표시</b>입니다. 실제 데이터를 올리면 자동 전환됩니다. (단가는 정산 실제값)</span></div>'; }
+  if(VS.testRet){ h+='<div class="vs-testbn">🧪 <span>반품·전년(2025)·프레시백 금액은 <b>테스트 표시</b>입니다. 실제 데이터를 올리면 자동 전환됩니다. (단가·캠프는 소원 기본값)</span></div>'; }
   if(!VS.months.length){ h+='<div class="vs-empty">📦 아직 업로드된 물량 데이터가 없습니다.<br><span style="font-size:12px;font-weight:500">상단 <b>엑셀 업로드</b> 버튼으로 물량 엑셀을 올리세요.</span></div></div>'; sheet.innerHTML=h; return; }
   h+=(VS.tab==='route'?paneRoute():VS.tab==='revenue'?paneRevenue():paneBrief());
   h+='</div>'; sheet.innerHTML=h;
@@ -3846,12 +3844,12 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   var cur={},days={}; rows.forEach(function(r){cur[r.route]=(cur[r.route]||0)+(+r.qty||0);days[r.route]=days[r.route]||{};days[r.route][r.fdate]=1;});
   var prev={}; if(!VS.avgMode){var pm=prevM(VS.base); if(pm)VS.data.filter(function(r){return r.month===pm&&inSel(r.route);}).forEach(function(r){prev[r.route]=(prev[r.route]||0)+(+r.qty||0);});}
   var names=Object.keys(cur).sort(); var tot=0,tret=0;
-  var body=names.map(function(rt){var raw=cur[rt]||0;var shown=VS.avgMode?Math.round(raw/mn):raw;var dc=Object.keys(days[rt]||{}).length||1;var rr=retOf(shown);tot+=shown;tret+=rr;var camp=VS.camp[rt]||'-';var u=unitOf(rt);var d=VS.avgMode?null:pct(raw,prev[rt]||0);
+  var body=names.map(function(rt){var raw=cur[rt]||0;var shown=VS.avgMode?Math.round(raw/mn):raw;var dc=Object.keys(days[rt]||{}).length||1;var rr=retOf(shown);tot+=shown;tret+=rr;var camp=VS.camp[normRt(rt)]||'-';var u=unitOf(rt);var d=VS.avgMode?null:pct(raw,prev[rt]||0);
    return '<tr><td>'+rt+'</td><td>'+camp+'</td><td class="vs-unit">'+(u?fmt(u)+'원':'—')+'</td><td>'+fmt(shown+rr)+'</td><td>'+fmt(raw/dc)+'</td><td>'+fmt(rr/dc)+'</td><td>'+(d===null?'<span style="color:#b0b8c4">—</span>':((d>=0?'<span class=vs-u>▲':'<span class=vs-d>▼')+Math.abs(d).toFixed(1)+'%</span>'))+'</td></tr>';}).join('');
   var col4=VS.avgMode?'월평균 배송+반품':'배송+반품';
   var scopeLabel=VS.avgMode?('평균 · 1~현재 '+mn+'개월'):VS.base;
   var sumrow='<tr class="sum"><td>합계</td><td>'+names.length+'개</td><td>—</td><td>'+fmt(tot+tret)+'</td><td>—</td><td>—</td><td>—</td></tr>';
-  return '<div class="vs-panel">'+routeSel()+'<h4>라우트별 상세 <span class="vs-tag real">단가=정산 실제값</span> <span class="vs-tag">'+scopeLabel+' · 반품=테스트🧪</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">단가(정산)</th><th style="text-align:right">'+col4+'</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
+  return '<div class="vs-panel">'+routeSel()+'<h4>라우트별 상세 <span class="vs-tag real">단가=소원 기본단가</span> <span class="vs-tag">'+scopeLabel+' · 반품=테스트🧪</span></h4><div style="overflow-x:auto"><table class="vs-tbl"><thead><tr><th>라우트</th><th>캠프</th><th style="text-align:right">단가(정산)</th><th style="text-align:right">'+col4+'</th><th style="text-align:right">일평균</th><th style="text-align:right">일평균반품</th><th style="text-align:right">전월대비</th></tr></thead><tbody>'+sumrow+body+'</tbody></table></div></div>';
  }
  function paneRevenue(){
   var wp=VS.wp||5; var patt={4:18,5:22,6:26,7:31}; var days=patt[wp];
@@ -3863,14 +3861,14 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   var avgU=us.length?Math.round(us.reduce(function(a,b){return a+b;},0)/us.length):0;
   var selN=VS.selRoutes?VS.selRoutes.length:allRoutesList().length;
   var scopeLabel=VS.avgMode?('평균 1~현재 '+months.length+'개월'):VS.base;
-  var h='<div class="vs-panel">'+routeSel()+'<h4>💰 예상 수익 계산 <span class="vs-tag real">라우트별 정산 실제단가</span> <span class="vs-tag">'+scopeLabel+'</span></h4>';
-  h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin-bottom:6px">대상 라우트 '+selN+'개 · 라우트별 실제 단가 적용(평균 '+fmt(avgU)+'원)'+(noUnit?(' · <span style="color:#c26a00">단가없음 '+noUnit+'개는 평균단가 대체</span>'):'')+'</div>';
+  var h='<div class="vs-panel">'+routeSel()+'<h4>💰 예상 수익 계산 <span class="vs-tag real">라우트별 소원 기본단가</span> <span class="vs-tag">'+scopeLabel+'</span></h4>';
+  h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin-bottom:6px">대상 라우트 '+selN+'개 · 라우트별 소원 기본단가 적용(평균 '+fmt(avgU)+'원)'+(noUnit?(' · <span style="color:#c26a00">단가없음 '+noUnit+'개는 평균단가 대체</span>'):'')+'</div>';
   h+='<div style="font-size:12px;color:#6b7787;font-weight:700;margin:8px 0 6px">근무 패턴</div><div class="vs-pill">'+[4,5,6,7].map(function(n){return '<button class="vs-pbtn'+(wp===n?' on':'')+'" onclick="_vsWP('+n+')">주'+n+'일 · '+patt[n]+'일</button>';}).join('')+'</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:14px">'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">근무일수(월)</div><div class="v" style="color:#fff">'+days+'일</div></div>'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">예상 수량</div><div class="v" style="color:#fff">'+fmt(totQty)+'</div></div>'
    +'<div class="vs-fbb" style="background:#0f2747"><div class="k" style="color:#cfe0ff">예상 수익</div><div class="v" style="color:#ffd873">'+won(totRev)+'</div></div></div>';
-  h+='<div style="font-size:12px;color:#0e6b4e;background:#e5f7ee;border:1px solid #a7e3c8;border-radius:10px;padding:10px;margin-top:12px;font-weight:700">✅ 라우트별 <b>정산 실제 배송단가</b> × (라우트 일평균 × 근무일) 합산 · 최신 정산월(단가) 기준</div>';
+  h+='<div style="font-size:12px;color:#0e6b4e;background:#e5f7ee;border:1px solid #a7e3c8;border-radius:10px;padding:10px;margin-top:12px;font-weight:700">✅ 라우트별 <b>소원 기본단가</b>(정산 프로그램 설정) × (라우트 일평균 × 근무일) 합산</div>';
   return h+'</div>';
  }
 })();
