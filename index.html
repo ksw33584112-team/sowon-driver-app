@@ -3874,10 +3874,10 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
 })();
 </script>
 <script>
-/* ===== 🔒 본사 계약용 · 단가 협상 (soweon · 대표전용 · 가림/비번/지문) ===== */
+/* ===== 🔒 본사 계약용 · 단가 협상 v2 (soweon · 대표전용 · 다중비번/지문/가림/브리핑) ===== */
 (function(){
  if(window.__HQDEAL)return; window.__HQDEAL=1;
- var HQ={vol:{},unit:{},camp:{},deal:{},months:[],mFrom:null,mTo:null,td:true,tr:true,tm:true,mask:false,pwSet:false};
+ var HQ={vol:{},deal:{},months:[],mFrom:null,mTo:null,td:true,tr:true,tm:true,mask:false,sec:{pw1:false,bio:false,mask:false},setTab:'pw1'};
  var RET=0.068;
  function fmt(n){return Math.round(n||0).toLocaleString('ko-KR');}
  function won(n){return '₩'+fmt(n);}
@@ -3891,12 +3891,12 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  + ".hq-sheet{background:#eef2f8;min-height:100%;max-width:1180px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,.35)}"
  + ".hq-load{text-align:center;color:#3a4a60;padding:80px 20px;font-weight:700}"
  + ".hq-gatewrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(700px 400px at 50% 0%,#12305a,#0b1b33)}"
- + ".hq-gate{background:#fff;border-radius:18px;padding:26px 22px;width:min(360px,90vw);box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center}"
- + ".hq-gtitle{font-size:17px;font-weight:800;color:#0f2747}.hq-gsub{font-size:13px;color:#6b7787;margin:8px 0 16px;line-height:1.5}"
+ + ".hq-gate{background:#fff;border-radius:18px;padding:24px 22px;width:min(380px,92vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}"
+ + ".hq-gtitle{font-size:16px;font-weight:800;color:#0f2747;display:flex;align-items:center;gap:8px}.hq-gsub{font-size:12.5px;color:#6b7787;margin:8px 0 16px;line-height:1.5}"
  + ".hq-in{width:100%;box-sizing:border-box;border:1.5px solid #cfd8e6;border-radius:11px;padding:12px;font-size:15px;margin-bottom:10px}"
- + ".hq-btn{width:100%;border:none;background:linear-gradient(90deg,#0f2747,#2f6fed);color:#fff;font-size:15px;font-weight:800;border-radius:11px;padding:13px;cursor:pointer}"
+ + ".hq-btn{width:100%;border:none;background:#2f6fed;color:#fff;font-size:15px;font-weight:800;border-radius:11px;padding:13px;cursor:pointer}"
+ + ".hq-btn2{width:100%;border:1.5px solid #cfd8e6;background:#fff;color:#5a6a80;font-size:14px;font-weight:700;border-radius:11px;padding:11px;cursor:pointer;margin-top:8px}"
  + ".hq-bio{width:100%;border:1.5px solid #12a06a;background:#e7f7ef;color:#0e6b4e;font-size:14px;font-weight:800;border-radius:11px;padding:12px;cursor:pointer;margin-bottom:12px}"
- + ".hq-x2{background:none;border:none;color:#9aa7b8;font-size:13px;margin-top:12px;cursor:pointer}"
  + ".hq-top{position:sticky;top:0;z-index:6;background:linear-gradient(100deg,#3a1d5e,#5a2fb0);color:#fff;padding:13px 16px;display:flex;align-items:center;gap:10px}"
  + ".hq-top .t{font-size:15px;font-weight:800}.hq-x{margin-left:auto;background:rgba(255,255,255,.18);border:none;color:#fff;width:32px;height:32px;border-radius:10px;font-size:16px;cursor:pointer}"
  + ".hq-ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-bottom:1px solid #e7edf5;padding:10px 14px}"
@@ -3904,7 +3904,8 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  + ".hq-tg{border:1.5px solid #cfd8e6;background:#fff;color:#6b7787;border-radius:9px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer}.hq-tg.on{background:#2f6fed;color:#fff;border-color:#2f6fed}"
  + ".hq-mask{border:none;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer}.hq-mask.off{background:#e5f0ff;color:#2f6fed}.hq-mask.on{background:#e5484d;color:#fff}"
  + ".hq-save{border:none;background:#12a06a;color:#fff;border-radius:9px;padding:7px 14px;font-size:12.5px;font-weight:800;cursor:pointer}"
- + ".hq-reg{border:1.5px solid #cbb8ef;background:#f3ecff;color:#5a2fb0;border-radius:9px;padding:7px 11px;font-size:12px;font-weight:800;cursor:pointer}"
+ + ".hq-brief{border:none;background:#2f6fed;color:#fff;border-radius:9px;padding:7px 13px;font-size:12.5px;font-weight:800;cursor:pointer}"
+ + ".hq-set{border:1.5px solid #cbb8ef;background:#f3ecff;color:#5a2fb0;border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:800;cursor:pointer}"
  + ".hq-body{padding:12px}"
  + ".hq-tbl{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;border-radius:12px;overflow:hidden}"
  + ".hq-tbl th,.hq-tbl td{padding:7px 8px;border-bottom:1px solid #eef2f7;text-align:right;white-space:nowrap}"
@@ -3914,122 +3915,172 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  + ".hq-tbl input{width:66px;border:1.5px solid #cfd8e6;border-radius:7px;padding:5px 6px;font-size:12.5px;text-align:right}"
  + ".hq-real input{border-color:#f0a020;background:#fff9ee}"
  + ".hq-u{color:#12a06a;font-weight:800}.hq-d{color:#e5484d;font-weight:800}"
- + ".hq-note{font-size:11px;color:#8a6100;background:#fff8e1;border:1px solid #ffe082;border-radius:9px;padding:8px 11px;margin:0 0 10px}";
+ + ".hq-note{font-size:11px;color:#8a6100;background:#fff8e1;border:1px solid #ffe082;border-radius:9px;padding:8px 11px;margin:0 0 10px}"
+ + ".hq-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}"
+ + ".hq-tab{border:1.5px solid #d6dfea;background:#fff;color:#39506e;border-radius:11px;padding:11px;font-size:13px;font-weight:800;cursor:pointer}.hq-tab.on{background:#2f6fed;color:#fff;border-color:#2f6fed}";
  document.head.appendChild(s);}
  function ov(){var o=document.getElementById('hq-modal');if(!o){o=document.createElement('div');o.id='hq-modal';document.body.appendChild(o);}return o;}
  window.closeHqDeal=function(){var o=document.getElementById('hq-modal');if(o)o.remove();};
+ function waId(){return localStorage.getItem('hq_wa_'+location.hostname);}
  window.openHqDeal=async function(){
    if(!daepyo()){alert('대표만 이용할 수 있습니다.');return;}
    injectCSS(); var o=ov(); o.innerHTML='<div class="hq-sheet"><div class="hq-load">🔒 확인 중…</div></div>';
-   try{ HQ.pwSet=await rpc('hq_pw_get',{p_token:S.token}); }catch(e){ HQ.pwSet=false; }
-   gate();
+   try{ HQ.sec=await rpc('hq_sec_status',{p_token:S.token})||{pw1:false,bio:false,mask:false}; }catch(e){ HQ.sec={pw1:false,bio:false,mask:false}; }
+   showGate();
  };
- function gate(){
-   var o=ov(); var h='<div class="hq-sheet hq-gatewrap"><div class="hq-gate"><div class="hq-gtitle">🔒 본사 계약용 · 단가 협상</div>';
-   if(!HQ.pwSet){
-     h+='<div class="hq-gsub">처음 입장입니다. 이 화면을 보호할 <b>비밀번호</b>를 설정하세요.</div>';
-     h+='<input id="hq-pw1" type="password" class="hq-in" placeholder="새 비밀번호 (4자 이상)">';
-     h+='<input id="hq-pw2" type="password" class="hq-in" placeholder="비밀번호 확인">';
-     h+='<button class="hq-btn" onclick="_hqSetPw()">설정하고 입장</button>';
+ function gateShell(inner){ return '<div class="hq-sheet hq-gatewrap"><div class="hq-gate">'+inner+'<button class="hq-btn2" onclick="closeHqDeal()">닫기</button></div></div>'; }
+ function showGate(){
+   var o=ov(); var h='<div class="hq-gtitle">🔒 본사 계약용 · 단가 협상</div>';
+   if(!HQ.sec.pw1){
+     h+='<div class="hq-gsub">처음 입장입니다. 입장용 <b>1차 비밀번호</b>를 설정하세요.</div>';
+     h+='<input id="hq-n1" type="password" class="hq-in" placeholder="새 1차 비밀번호 (4자 이상)">';
+     h+='<input id="hq-n2" type="password" class="hq-in" placeholder="1차 비밀번호 확인">';
+     h+='<button class="hq-btn" onclick="_hqSetPw1()">설정하고 입장</button>';
    } else {
-     h+='<div class="hq-gsub">비밀번호 또는 지문/얼굴로 입장</div>';
-     h+='<button class="hq-bio" onclick="_hqBio()">👆 지문 / 얼굴로 입장</button>';
-     h+='<input id="hq-pw" type="password" class="hq-in" placeholder="비밀번호" onkeydown="if(event.key===\'Enter\')_hqLogin()">';
+     h+='<div class="hq-gsub">1차 비밀번호 또는 지문/얼굴로 입장</div>';
+     h+='<button class="hq-bio" onclick="_hqEntryBio()">👆 지문 / 얼굴로 입장</button>';
+     h+='<input id="hq-pw" type="password" class="hq-in" placeholder="1차 비밀번호" onkeydown="if(event.key===\'Enter\')_hqLogin()">';
      h+='<button class="hq-btn" onclick="_hqLogin()">입장</button>';
    }
-   h+='<button class="hq-x2" onclick="closeHqDeal()">닫기</button></div></div>';
-   o.innerHTML=h;
+   o.innerHTML=gateShell(h);
  }
- window._hqSetPw=async function(){
-   var a=(document.getElementById('hq-pw1')||{}).value||'', b=(document.getElementById('hq-pw2')||{}).value||'';
-   if(a.length<4){alert('비밀번호는 4자 이상으로');return;} if(a!==b){alert('비밀번호가 일치하지 않습니다');return;}
-   try{ await rpc('hq_pw_set',{p_token:S.token,p_hash:await sha(a)}); HQ.pwSet=true; await loadShow(); }catch(e){alert('설정 실패: '+e);}
+ window._hqSetPw1=async function(){
+   var a=(document.getElementById('hq-n1')||{}).value||'', b=(document.getElementById('hq-n2')||{}).value||'';
+   if(a.length<4){alert('4자 이상 입력하세요');return;} if(a!==b){alert('비밀번호가 일치하지 않습니다');return;}
+   try{ await rpc('hq_sec_set',{p_token:S.token,p_which:'pw1',p_hash:await sha(a)}); HQ.sec.pw1=true; await loadShow(); }catch(e){alert('설정 실패: '+e);}
  };
  window._hqLogin=async function(){
    var a=(document.getElementById('hq-pw')||{}).value||'';
-   try{ var ok=await rpc('hq_pw_verify',{p_token:S.token,p_hash:await sha(a)}); if(ok){await loadShow();}else{alert('비밀번호가 틀립니다');} }catch(e){alert('오류: '+e);}
+   try{ var ok=await rpc('hq_sec_verify',{p_token:S.token,p_which:'pw1',p_hash:await sha(a)}); if(ok)await loadShow(); else alert('비밀번호가 틀립니다'); }catch(e){alert('오류: '+e);}
  };
- window._hqBio=async function(){
-   var id=localStorage.getItem('hq_wa_'+location.hostname);
-   if(!id){alert('이 기기에 등록된 지문이 없습니다.\n비밀번호로 입장 후 [이 기기에 지문 등록]을 눌러주세요.');return;}
+ async function bioAuth(){
+   var id=waId(); if(!id){alert('이 기기에 등록된 지문이 없습니다.\n설정 → 지문/얼굴 인식에서 먼저 등록하세요.');return false;}
    try{ var ch=crypto.getRandomValues(new Uint8Array(32));
      await navigator.credentials.get({publicKey:{challenge:ch,allowCredentials:[{id:b64d(id),type:'public-key'}],userVerification:'required',timeout:60000,rpId:location.hostname}});
-     await loadShow();
-   }catch(e){alert('지문 인증 실패 또는 취소됨');}
- };
- window._hqRegBio=async function(){
+     return true;
+   }catch(e){ alert('지문 인증 실패 또는 취소됨'); return false; }
+ }
+ window._hqEntryBio=async function(){ if(await bioAuth()) await loadShow(); };
+ async function regBio(){
    try{ var ch=crypto.getRandomValues(new Uint8Array(32)); var uid=crypto.getRandomValues(new Uint8Array(16));
      var cred=await navigator.credentials.create({publicKey:{challenge:ch,rp:{name:'소원물류',id:location.hostname},user:{id:uid,name:(S&&S.name)||'대표',displayName:(S&&S.name)||'대표'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},timeout:60000}});
      localStorage.setItem('hq_wa_'+location.hostname, b64e(cred.rawId));
-     alert('✅ 이 기기에 지문/얼굴 등록 완료. 다음부터 지문으로 입장할 수 있어요.'); render();
-   }catch(e){alert('지문 등록 실패 또는 취소됨 (기기가 생체인증 미지원일 수 있어요)');}
- };
+     alert('✅ 이 기기에 지문/얼굴 등록 완료.'); return true;
+   }catch(e){ alert('지문 등록 실패 또는 취소됨 (기기 미지원일 수 있어요)'); return false; }
+ }
  async function loadShow(){
    var o=ov(); o.innerHTML='<div class="hq-sheet"><div class="hq-load">📊 불러오는 중…</div></div>';
    try{ var vv=await rpc('volume_all',{p_token:S.token})||[]; HQ.vol={}; var ms={};
      vv.forEach(function(r){ if(/^(total|합계|계|sum)$/i.test(String(r.route||'').replace(/\s/g,'')))return; var k=normRt(r.route); HQ.vol[k]=HQ.vol[k]||{}; HQ.vol[k][r.month]=(HQ.vol[k][r.month]||0)+(+r.qty||0); ms[r.month]=1; });
-     HQ.months=Object.keys(ms).sort(); HQ.mFrom=HQ.months[0]||null; HQ.mTo=HQ.months[HQ.months.length-1]||null;
+     HQ.months=Object.keys(ms).sort(); if(!HQ.mFrom)HQ.mFrom=HQ.months[0]||null; if(!HQ.mTo)HQ.mTo=HQ.months[HQ.months.length-1]||null;
    }catch(e){}
-   try{ var rm=await rpc('route_meta_get',{p_token:S.token})||[]; HQ.unit={}; HQ.camp={}; rm.forEach(function(x){var k=normRt(x.route); HQ.unit[k]=+x.base_price||0; if(x.camp)HQ.camp[k]=x.camp;}); }catch(e){}
-   try{ var dd=await rpc('hq_deal_get',{p_token:S.token})||[]; HQ.deal={}; dd.forEach(function(x){HQ.deal[normRt(x.route)]={offer:x.offer_unit,real:x.real_unit};}); }catch(e){}
-   render();
+   try{ var dd=await rpc('hq_deal_get',{p_token:S.token})||[]; HQ.deal={}; dd.forEach(function(x){HQ.deal[normRt(x.route)]={prev:x.prev_unit,offer:x.offer_unit,real:x.real_unit};}); }catch(e){}
+   showTable();
  }
  function volOf(k){ var t=0; (HQ.months||[]).forEach(function(m){ if((!HQ.mFrom||m>=HQ.mFrom)&&(!HQ.mTo||m<=HQ.mTo)){ t+=(HQ.vol[k]&&HQ.vol[k][m])||0; } }); return t; }
  function qtyOf(k){ var del=volOf(k); return (HQ.td?del:0)+(HQ.tr?Math.round(del*RET):0); }
- window._hqType=function(t){ HQ[t]=!HQ[t]; render(); };
- window._hqMask=function(){ HQ.mask=!HQ.mask; render(); };
- window._hqFrom=function(el){HQ.mFrom=el.value;render();};
- window._hqTo=function(el){HQ.mTo=el.value;render();};
- window._hqIn=function(k,f,el){ HQ.deal[k]=HQ.deal[k]||{}; var val=parseInt(String(el.value).replace(/[^0-9]/g,''),10); HQ.deal[k][f]=isNaN(val)?null:val; render(); };
- window._hqSave=async function(){
-   var rows=Object.keys(HQ.unit).map(function(k){var d=HQ.deal[k]||{}; return {route:k, prev_unit:HQ.unit[k]||0, offer_unit:(d.offer||null), real_unit:(d.real||null)};});
-   try{ var n=await rpc('hq_deal_set',{p_token:S.token,p_rows:rows}); alert('💾 협상 단가 저장 완료 ('+n+'개 라우트)'); }catch(e){ alert('저장 실패: '+e); }
+ window._hqType=function(t){ HQ[t]=!HQ[t]; showTable(); };
+ window._hqFrom=function(el){HQ.mFrom=el.value;showTable();};
+ window._hqTo=function(el){HQ.mTo=el.value;showTable();};
+ window._hqIn=function(k,f,el){ HQ.deal[k]=HQ.deal[k]||{}; var val=parseInt(String(el.value).replace(/[^0-9]/g,''),10); HQ.deal[k][f]=isNaN(val)?null:val; showTable(); };
+ window._hqMaskToggle=async function(){
+   if(!HQ.mask){ HQ.mask=true; showTable(); return; }
+   if(HQ.sec.mask){ var p=prompt('가림 해제 비밀번호를 입력하세요'); if(p===null)return; try{ var ok=await rpc('hq_sec_verify',{p_token:S.token,p_which:'mask',p_hash:await sha(p)}); if(!ok){alert('비밀번호가 틀립니다');return;} }catch(e){alert('오류');return;} }
+   HQ.mask=false; showTable();
  };
+ window._hqSave=async function(){
+   var rows=Object.keys(HQ.vol).map(function(k){var d=HQ.deal[k]||{}; return {route:k, prev_unit:(d.prev||null), offer_unit:(d.offer||null), real_unit:(d.real||null)};});
+   try{ var n=await rpc('hq_deal_set',{p_token:S.token,p_rows:rows}); alert('💾 저장 완료 ('+n+'개 라우트)'); }catch(e){ alert('저장 실패: '+e); }
+ };
+ window._hqBrief=function(){ if(typeof window.openVolStats==='function'){ window.openVolStats(); } else { alert('라우트 수량 데이터를 불러올 수 없습니다.'); } };
  function pctCell(p){ if(p===null||!isFinite(p))return '<span style="color:#b0b8c4">—</span>'; var up=p>=0; return '<span class="'+(up?'hq-u':'hq-d')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%</span>'; }
- function render(){
-   var o=ov(); var reg=localStorage.getItem('hq_wa_'+location.hostname);
+ function showTable(){
+   var o=ov();
    var monOpts=function(sel){return (HQ.months||[]).map(function(m){return '<option value="'+m+'"'+(m===sel?' selected':'')+'>'+m+'</option>';}).join('');};
-   var routes={}; Object.keys(HQ.unit).forEach(function(k){routes[k]=1;}); Object.keys(HQ.vol).forEach(function(k){routes[k]=1;});
-   var names=Object.keys(routes).sort();
+   var names=Object.keys(HQ.vol).sort();
    var sumV=0,sumPrev=0,sumNeg=0;
    var body=names.map(function(k){
-     var vol=qtyOf(k), base=HQ.unit[k]||0, d=HQ.deal[k]||{}, offer=(d.offer!=null?d.offer:''), real=(d.real!=null?d.real:'');
-     var chg=(real!==''&&base)?((real-base)/base*100):null;
-     var prevRev=vol*base, negRev=vol*(real!==''?real:0), diff=negRev-prevRev;
+     var vol=qtyOf(k), d=HQ.deal[k]||{}, prev=(d.prev!=null?d.prev:''), offer=(d.offer!=null?d.offer:''), real=(d.real!=null?d.real:'');
+     var chg=(real!==''&&prev!=='')?((real-prev)/prev*100):null;
+     var prevRev=vol*(prev!==''?prev:0), negRev=vol*(real!==''?real:0), diff=negRev-prevRev;
      var prevPct=prevRev>0?((negRev-prevRev)/prevRev*100):null;
-     sumV+=vol; sumPrev+=prevRev; if(real!=='')sumNeg+=negRev;
-     var offIn='<input inputmode="numeric" value="'+offer+'" onchange="_hqIn(\''+k+'\',\'offer\',this)">';
-     var realIn='<td class="hq-real"><input inputmode="numeric" value="'+real+'" onchange="_hqIn(\''+k+'\',\'real\',this)"></td>';
-     if(HQ.mask){
-       return '<tr><td>'+k+'</td><td>'+fmt(vol)+'</td><td>'+offIn+'</td><td>'+pctCell(chg)+'</td></tr>';
-     }
-     return '<tr><td>'+k+'</td><td>'+fmt(vol)+'</td><td>'+(base?fmt(base):'—')+'</td><td>'+offIn+'</td>'+realIn+'<td>'+pctCell(chg)+'</td><td>'+won(prevRev)+'</td><td>'+won(negRev)+'</td><td>'+pctCell(prevPct)+'</td><td class="'+(diff<0?'hq-d':'hq-u')+'">'+(diff<0?'−':'+')+won(Math.abs(diff))+'</td></tr>';
+     sumV+=vol; sumPrev+=prevRev; sumNeg+=negRev;
+     var pin='<input inputmode="numeric" value="'+prev+'" onchange="_hqIn(\''+k+'\',\'prev\',this)">';
+     var oin='<input inputmode="numeric" value="'+offer+'" onchange="_hqIn(\''+k+'\',\'offer\',this)">';
+     var rin='<input inputmode="numeric" value="'+real+'" onchange="_hqIn(\''+k+'\',\'real\',this)">';
+     if(HQ.mask){ return '<tr><td>'+k+'</td><td>'+fmt(vol)+'</td><td>'+oin+'</td><td>'+pctCell(chg)+'</td></tr>'; }
+     return '<tr><td>'+k+'</td><td>'+fmt(vol)+'</td><td>'+pin+'</td><td>'+oin+'</td><td class="hq-real">'+rin+'</td><td>'+pctCell(chg)+'</td><td>'+won(prevRev)+'</td><td>'+won(negRev)+'</td><td>'+pctCell(prevPct)+'</td><td class="'+(diff<0?'hq-d':'hq-u')+'">'+(diff<0?'−':'+')+won(Math.abs(diff))+'</td></tr>';
    }).join('');
    var totPct=sumPrev>0?((sumNeg-sumPrev)/sumPrev*100):null; var totDiff=sumNeg-sumPrev;
-   var sumrow = HQ.mask
-     ? '<tr class="sum"><td>합계</td><td>'+fmt(sumV)+'</td><td>—</td><td>'+pctCell(totPct)+'</td></tr>'
-     : '<tr class="sum"><td>합계</td><td>'+fmt(sumV)+'</td><td>—</td><td>—</td><td>—</td><td>'+pctCell(totPct)+'</td><td>'+won(sumPrev)+'</td><td>'+won(sumNeg)+'</td><td>'+pctCell(totPct)+'</td><td class="'+(totDiff<0?'hq-d':'hq-u')+'">'+(totDiff<0?'−':'+')+won(Math.abs(totDiff))+'</td></tr>';
-   var head = HQ.mask
-     ? '<tr><th>라우트</th><th>물량</th><th>제시단가</th><th>증감%</th></tr>'
+   var head = HQ.mask ? '<tr><th>라우트</th><th>물량</th><th>제시단가</th><th>증감%</th></tr>'
      : '<tr><th>라우트</th><th>물량</th><th>전년단가</th><th>제시단가</th><th>실단가</th><th>증감%</th><th>전년수익</th><th>협상수익</th><th>이전대비%</th><th>차액</th></tr>';
-   var h='<div class="hq-sheet">';
-   h+='<div class="hq-top"><div class="t">🔒 본사 계약용 · 단가 협상</div><button class="hq-x" onclick="closeHqDeal()">✕</button></div>';
+   var sumrow = HQ.mask ? '<tr class="sum"><td>합계</td><td>'+fmt(sumV)+'</td><td>—</td><td>'+pctCell(totPct)+'</td></tr>'
+     : '<tr class="sum"><td>합계</td><td>'+fmt(sumV)+'</td><td>—</td><td>—</td><td>—</td><td>'+pctCell(totPct)+'</td><td>'+won(sumPrev)+'</td><td>'+won(sumNeg)+'</td><td>'+pctCell(totPct)+'</td><td class="'+(totDiff<0?'hq-d':'hq-u')+'">'+(totDiff<0?'−':'+')+won(Math.abs(totDiff))+'</td></tr>';
+   var h='<div class="hq-sheet"><div class="hq-top"><div class="t">🔒 본사 계약용 · 단가 협상</div><button class="hq-x" onclick="closeHqDeal()">✕</button></div>';
    h+='<div class="hq-ctl"><span style="font-size:12px;color:#6b7787;font-weight:700">기간</span>'
      +'<select class="hq-sel" onchange="_hqFrom(this)">'+monOpts(HQ.mFrom)+'</select><span>~</span><select class="hq-sel" onchange="_hqTo(this)">'+monOpts(HQ.mTo)+'</select>'
      +'<span style="font-size:12px;color:#6b7787;font-weight:700;margin-left:6px">물량</span>'
      +'<button class="hq-tg'+(HQ.td?' on':'')+'" onclick="_hqType(\'td\')">배송</button>'
      +'<button class="hq-tg'+(HQ.tr?' on':'')+'" onclick="_hqType(\'tr\')">반품🧪</button>'
      +'<button class="hq-tg'+(HQ.tm?' on':'')+'" onclick="_hqType(\'tm\')">수기</button>'
-     +'<button class="hq-mask '+(HQ.mask?'on':'off')+'" onclick="_hqMask()">'+(HQ.mask?'🙈 가림 ON':'👁 가림 OFF')+'</button>'
-     +'<button class="hq-save" onclick="_hqSave()">💾 저장</button>'
-     +(reg?'':'<button class="hq-reg" onclick="_hqRegBio()">👆 이 기기에 지문 등록</button>')
-     +'</div>';
-   h+='<div class="hq-body">';
-   h+='<div class="hq-note">🧪 물량의 반품은 테스트값(배송×6.8%)이고, 전년단가=소원 기본단가입니다. 제시·실단가를 입력하면 협상수익·차액이 자동 계산됩니다. [저장]으로 클라우드에 보관됩니다.</div>';
-   h+='<div style="overflow:auto;max-height:calc(100vh - 190px)"><table class="hq-tbl"><thead>'+head+'</thead><tbody>'+sumrow+body+'</tbody></table></div>';
-   h+='</div></div>';
+     +'<button class="hq-set" onclick="_hqOpenSettings()">⚙️ 설정</button>'
+     +'<button class="hq-brief" onclick="_hqBrief()">📊 브리핑</button>'
+     +'<button class="hq-mask '+(HQ.mask?'on':'off')+'" onclick="_hqMaskToggle()">'+(HQ.mask?'🙈 가림 ON':'👁 가림 OFF')+'</button>'
+     +'<button class="hq-save" onclick="_hqSave()">💾 저장</button></div>';
+   h+='<div class="hq-body"><div class="hq-note">🧪 물량의 반품은 테스트값(배송×6.8%)입니다. <b>전년단가·제시단가·실단가는 직접 입력</b>하세요(본사 계약단가는 라우트 단가와 다르므로 공란 기본). [저장]으로 클라우드에 보관됩니다.</div>';
+   h+='<div style="overflow:auto;max-height:calc(100vh - 190px)"><table class="hq-tbl"><thead>'+head+'</thead><tbody>'+sumrow+body+'</tbody></table></div></div></div>';
    o.innerHTML=h;
  }
+ /* ===== 설정 ===== */
+ window._hqOpenSettings=async function(){
+   var o=ov();
+   if(!HQ.sec.bio){
+     var h='<div class="hq-gtitle">🔑 설정 · 본인확인 비밀번호 설정</div><div class="hq-gsub">설정을 보호할 <b>생체인식 대체 비밀번호</b>를 먼저 설정하세요.</div>';
+     h+='<input id="hq-b1" type="password" class="hq-in" placeholder="새 대체 비밀번호 (4자 이상)"><input id="hq-b2" type="password" class="hq-in" placeholder="확인">';
+     h+='<button class="hq-btn" onclick="_hqBioFirst()">설정</button><button class="hq-btn2" onclick="showTable()">취소</button>';
+     o.innerHTML=gateShell(h); return;
+   }
+   var h='<div class="hq-gtitle">🔑 비밀번호 변경 · 본인확인</div><div class="hq-gsub">생체인식 대체 비밀번호를 입력하거나, 지문/얼굴로 본인확인하세요.</div>';
+   h+='<button class="hq-bio" onclick="_hqSetAuthBio()">👆 지문 / 얼굴로 본인확인</button>';
+   h+='<input id="hq-ba" type="password" class="hq-in" placeholder="생체인식 대체 비밀번호" onkeydown="if(event.key===\'Enter\')_hqSetAuthPw()">';
+   h+='<button class="hq-btn" onclick="_hqSetAuthPw()">확인</button><button class="hq-btn2" onclick="showTable()">취소</button>';
+   o.innerHTML=gateShell(h);
+ };
+ window._hqBioFirst=async function(){
+   var a=(document.getElementById('hq-b1')||{}).value||'', b=(document.getElementById('hq-b2')||{}).value||'';
+   if(a.length<4){alert('4자 이상');return;} if(a!==b){alert('일치하지 않습니다');return;}
+   try{ await rpc('hq_sec_set',{p_token:S.token,p_which:'bio',p_hash:await sha(a)}); HQ.sec.bio=true; showSettings(); }catch(e){alert('실패: '+e);}
+ };
+ window._hqSetAuthPw=async function(){
+   var a=(document.getElementById('hq-ba')||{}).value||'';
+   try{ var ok=await rpc('hq_sec_verify',{p_token:S.token,p_which:'bio',p_hash:await sha(a)}); if(ok)showSettings(); else alert('비밀번호가 틀립니다'); }catch(e){alert('오류');}
+ };
+ window._hqSetAuthBio=async function(){ if(await bioAuth()) showSettings(); };
+ window._hqSetTab=function(t){ HQ.setTab=t; showSettings(); };
+ function showSettings(){
+   var o=ov(); var reg=waId();
+   function tab(id,label){return '<button class="hq-tab'+(HQ.setTab===id?' on':'')+'" onclick="_hqSetTab(\''+id+'\')">'+label+'</button>';}
+   var h='<div class="hq-gtitle">🔑 변경 항목 선택</div><div class="hq-gsub">변경할 항목을 선택하세요.</div>';
+   h+='<div class="hq-tabs">'+tab('pw1','1차 비밀번호')+tab('wa','지문/얼굴 인식')+tab('bio','생체인식 대체 비밀번호')+tab('mask','가림 비밀번호')+'</div>';
+   if(HQ.setTab==='wa'){
+     h+='<div class="hq-gsub" style="text-align:center">'+(reg?'✅ 이 기기에 지문이 등록되어 있습니다. 다시 등록하면 교체됩니다.':'이 기기에 지문/얼굴을 등록하면 지문으로 입장·본인확인할 수 있습니다.')+'</div>';
+     h+='<button class="hq-bio" onclick="_hqRegBioBtn()">👆 이 기기에 지문/얼굴 등록</button>';
+     if(reg)h+='<button class="hq-btn2" onclick="_hqDelBio()">이 기기 지문 등록 해제</button>';
+   } else {
+     var lab={pw1:'1차',bio:'생체인식 대체',mask:'가림 해제'}[HQ.setTab];
+     h+='<input id="hq-s1" type="password" class="hq-in" placeholder="새 '+lab+' 비밀번호 (4자 이상)"><input id="hq-s2" type="password" class="hq-in" placeholder="새 '+lab+' 비밀번호 확인">';
+     h+='<button class="hq-btn" onclick="_hqSaveSec()">저장</button>';
+   }
+   h+='<button class="hq-btn2" onclick="showTable()">닫기</button>';
+   o.innerHTML=gateShell(h);
+ }
+ window._hqSaveSec=async function(){
+   var a=(document.getElementById('hq-s1')||{}).value||'', b=(document.getElementById('hq-s2')||{}).value||'';
+   if(a.length<4){alert('4자 이상 입력하세요');return;} if(a!==b){alert('두 번 입력한 비밀번호가 일치해야 변경됩니다');return;}
+   try{ await rpc('hq_sec_set',{p_token:S.token,p_which:HQ.setTab,p_hash:await sha(a)}); HQ.sec[HQ.setTab]=true; alert('✅ 변경되었습니다'); showTable(); }catch(e){alert('실패: '+e);}
+ };
+ window._hqRegBioBtn=async function(){ if(await regBio()) showSettings(); };
+ window._hqDelBio=function(){ localStorage.removeItem('hq_wa_'+location.hostname); alert('이 기기의 지문 등록을 해제했습니다.'); showSettings(); };
 })();
 </script>
 </body>
