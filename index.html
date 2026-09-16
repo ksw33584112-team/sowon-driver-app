@@ -1605,7 +1605,7 @@ async function renderPbackAdmin(){
 }
 /* 설정 */
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
-function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#mi-volstats").classList.toggle("hide",!(S&&S.rank==="대표"));$("#mi-hqdeal").classList.toggle("hide",!(S&&S.rank==="대표"));$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
+function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#mi-volstats").classList.toggle("hide",!(S&&(S.rank==="대표"||S.role==="admin")));$("#mi-hqdeal").classList.toggle("hide",!(S&&(S.rank==="대표"||S.role==="admin")));$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
 document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else if(mi.id==="mi-meta"){wkMetaCfg();}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
@@ -3730,7 +3730,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  function inSel(rt){return !VS.selRoutes||VS.selRoutes.indexOf(rt)>=0;}
  function scopeMonths(){return VS.avgMode?VS.months.slice():[VS.base];}
  window.openVolStats=async function(){
-  if(!(typeof S!=='undefined'&&S&&S.rank==='대표')){alert('대표만 이용할 수 있습니다.');return;}
+  if(!(typeof S!=='undefined'&&S&&(S.rank==='대표'||S.role==='admin'))){alert('대표·관리자만 이용할 수 있습니다.');return;}
   injectCSS();
   var ov=document.getElementById('vs-modal'); if(ov)ov.remove();
   ov=document.createElement('div'); ov.id='vs-modal';
@@ -3882,7 +3882,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  function fmt(n){return Math.round(n||0).toLocaleString('ko-KR');}
  function won(n){return '₩'+fmt(n);}
  function normRt(r){return String(r||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
- function daepyo(){return !!(typeof S!=='undefined'&&S&&S.rank==='대표');}
+ function daepyo(){return !!(typeof S!=='undefined'&&S&&(S.rank==='대표'||S.role==='admin'));}
  async function sha(s){var b=new TextEncoder().encode(s);var h=await crypto.subtle.digest('SHA-256',b);return Array.prototype.map.call(new Uint8Array(h),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}
  function b64e(buf){var b=new Uint8Array(buf),s='';for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s);}
  function b64d(str){var s=atob(str),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a.buffer;}
@@ -3923,7 +3923,8 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  window.closeHqDeal=function(){var o=document.getElementById('hq-modal');if(o)o.remove();};
  function waId(){return localStorage.getItem('hq_wa_'+location.hostname);}
  window.openHqDeal=async function(){
-   if(!daepyo()){alert('대표만 이용할 수 있습니다.');return;}
+   if(!daepyo()){alert('대표·관리자만 이용할 수 있습니다.');return;}
+   HQ.mask=true;
    injectCSS(); var o=ov(); o.innerHTML='<div class="hq-sheet"><div class="hq-load">🔒 확인 중…</div></div>';
    try{ HQ.sec=await rpc('hq_sec_status',{p_token:S.token})||{pw1:false,bio:false,mask:false}; }catch(e){ HQ.sec={pw1:false,bio:false,mask:false}; }
    showGate();
@@ -3992,7 +3993,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
    var rows=Object.keys(HQ.vol).map(function(k){var d=HQ.deal[k]||{}; return {route:k, prev_unit:(d.prev||null), offer_unit:(d.offer||null), real_unit:(d.real||null)};});
    try{ var n=await rpc('hq_deal_set',{p_token:S.token,p_rows:rows}); alert('💾 저장 완료 ('+n+'개 라우트)'); }catch(e){ alert('저장 실패: '+e); }
  };
- window._hqBrief=function(){ if(typeof window.openVolStats==='function'){ window.openVolStats(); } else { alert('라우트 수량 데이터를 불러올 수 없습니다.'); } };
+ window._hqBrief=function(){ if(typeof window.openVolStats==='function'){ window.openVolStats(); setTimeout(function(){var m=document.getElementById('vs-modal'); if(m)m.style.zIndex=11300;},350); } else { alert('라우트 수량 데이터를 불러올 수 없습니다.'); } };
  function pctCell(p){ if(p===null||!isFinite(p))return '<span style="color:#b0b8c4">—</span>'; var up=p>=0; return '<span class="'+(up?'hq-u':'hq-d')+'">'+(up?'▲':'▼')+Math.abs(p).toFixed(1)+'%</span>'; }
  function showTable(){
    var o=ov();
