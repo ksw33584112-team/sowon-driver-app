@@ -3698,7 +3698,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  function fmt(n){return Math.round(n||0).toLocaleString('ko-KR');}
  function won(n){return '₩'+fmt(n);}
  function pct(a,b){return b>0?((a-b)/b*100):null;}
- function retOf(q){return Math.round((+q||0)*RET);}
+ function retOf(q){return Math.round((+q||0)*((typeof VS!=='undefined'&&VS.retRate)?VS.retRate:RET));}
  function normRt(r){return String(r||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
  function unitOf(rt){var u=VS.routeUnit[normRt(rt)];return (u&&u>0)?u:(VS.unitAvg||0);}
  function injectCSS(){ if(document.getElementById('vs-css'))return; var s=document.createElement('style'); s.id='vs-css'; s.textContent=""
@@ -3749,7 +3749,7 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   document.body.appendChild(ov);
   try{ VS.data=await rpc('volume_all',{p_token:S.token})||[]; }catch(e){ VS.data=[]; }
   VS.data=(VS.data||[]).filter(function(r){return !/^(total|합계|총계|계|소계|sum)$/i.test(String(r.route||'').replace(/\s/g,''));});
-  VS.testRet=!VS.data.some(function(r){return r.qty_return!=null||r.delivery!=null;});
+  var _tq26=0,_tr26=0; VS.data.forEach(function(r){var m=String(r.month||''); if(m.slice(0,4)==='2026'){_tq26+=(+r.qty||0); _tr26+=(+r.qty_r||0);}}); VS.retRate=(_tr26>0&&_tq26>0)?(_tr26/_tq26):RET; VS.hasRet=(_tr26>0); VS.retTot26=_tr26; VS.testRet=!VS.hasRet;
   VS.realBy={}; VS.data.forEach(function(r){VS.realBy[r.month]=(VS.realBy[r.month]||0)+(+r.qty||0);});
   var ms={}; VS.data.forEach(function(r){ms[r.month]=1;}); VS.months=Object.keys(ms).sort();
   VS.base=VS.months[VS.months.length-1]||'2026-08';
@@ -3766,13 +3766,13 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
  window._vsRouteClear=function(){VS.selRoutes=null;render();};
  window._vsRouteAll=function(on){VS.selRoutes=on?null:[];render();};
  window._vsRoutePick=function(rt){var all=allRoutesList();if(VS.selRoutes===null)VS.selRoutes=all.slice();var i=VS.selRoutes.indexOf(rt);if(i>=0)VS.selRoutes.splice(i,1);else VS.selRoutes.push(rt);if(VS.selRoutes.length>=all.length)VS.selRoutes=null;render();};
- window._vsUpload=function(){var inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;function go(){try{lcParseExcel('volume',f);}catch(e){alert('엑셀 처리 오류: '+e.message);}}if(window.XLSX)go();else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=go;s.onerror=function(){alert('엑셀 라이브러리 로드 실패 (인터넷 확인)');};document.head.appendChild(s);}};inp.click();};
+ window._vsUpload=function(){var inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;function go(){var rd=new FileReader();rd.onload=async function(e){try{var rows=_lcSheetRows(e.target.result,'volume');var hr=-1,rc=-1,dc=-1,sc=-1,rrc=-1,gc=-1;for(var i=0;i<Math.min(8,rows.length);i++){var cs=(rows[i]||[]).map(_lcCell);for(var c=0;c<cs.length;c++){if(['라우트','Route','route','ROUTE'].indexOf(cs[c])>=0){rc=c;hr=i;}}if(rc>=0){for(var c2=0;c2<cs.length;c2++){var h=cs[c2];if(h.indexOf('배송일자')>=0||['일자','날짜','date','Date'].indexOf(h)>=0)dc=c2;if(h.indexOf('배송건수')>=0||['수량','물량','qty'].indexOf(h)>=0)sc=c2;if(h.indexOf('반품')>=0)rrc=c2;if(h.indexOf('구분')>=0)gc=c2;}break;}}if(rc<0||dc<0||sc<0){alert('❌ 인식 실패\n정산원천데이터 시트에서 라우트·배송일자·배송건수 컬럼을 찾지 못했습니다.\n(파일에 정산원천데이터/정산Raw 시트가 있는지 확인)');return;}function isod(v){var t=_lcCell(v);var m=/(\\d{4})[.\\-\\/](\\d{1,2})[.\\-\\/](\\d{1,2})/.exec(t);return m?(m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2)):'';}var agg={},mon='';for(var k=hr+1;k<rows.length;k++){var r=(rows[k]||[]).map(_lcCell);var rt=rc<r.length?r[rc]:'';if(!rt)continue;var rtc=rt.split(' ').join('').toLowerCase();if(['total','합계','총계','계','소계','sum'].indexOf(rtc)>=0)continue;if(gc>=0){var gb=gc<r.length?r[gc]:'';if(gb&&gb!=='배송')continue;}var fd=isod(r[dc]);if(!fd)continue;if(!mon)mon=fd.slice(0,7);var q=parseInt(_lcDigits(r[sc])||'0',10);var qr=rrc>=0?parseInt(_lcDigits(r[rrc])||'0',10):0;var kk=rt+'|'+fd;if(!agg[kk])agg[kk]={route:rt,fdate:fd,qty:0,qty_r:0};agg[kk].qty+=q;agg[kk].qty_r+=qr;}var out=Object.keys(agg).map(function(x){return agg[x];});if(!out.length){alert('❌ 인식된 배송 물량이 없습니다.\n구분=배송 행이 있는지 확인하세요.');return;}var tq=out.reduce(function(a,x){return a+x.qty;},0),tr=out.reduce(function(a,x){return a+x.qty_r;},0);if(!confirm('📊 '+mon+' 물량 적용\n\n라우트×날짜 '+out.length+'건\n배송 '+tq.toLocaleString()+'개 · 반품 '+tr.toLocaleString()+'개\n\n해당 월 기존 물량은 교체됩니다. 진행할까요?'))return;var n=await rpc('admin_replace_volume',{p_token:S.token,p_month:mon,p_rows:out});alert('✅ 업로드 완료\n'+mon+' · '+out.length+'건 적용되었습니다.');try{if(typeof VS!=='undefined')VS.data=await rpc('volume_all',{p_token:S.token})||[];}catch(e2){}try{openVolStats();}catch(e3){}}catch(err){alert('❌ 업로드 오류: '+(err&&err.message?err.message:err));}};rd.readAsArrayBuffer(f);}if(window.XLSX)go();else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=go;s.onerror=function(){alert('엑셀 라이브러리 로드 실패 (인터넷 확인)');};document.head.appendChild(s);}};inp.click();};
  function render(){
   var ov=document.getElementById('vs-modal'); if(!ov)return; var sheet=ov.querySelector('.vs-sheet');
   if(!VS.data){sheet.innerHTML='<div class="vs-load">불러오는 중…</div>';return;}
   var TABS=[['brief','🏢 회사 전체·브리핑'],['route','🚚 라우트별'],['revenue','💰 예상 수익']];
   var h=header()+'<div class="vs-tabs">'+TABS.map(function(x){return tab(x[0],x[1]);}).join('')+'</div><div class="vs-body">';
-  if(VS.testRet){ h+='<div class="vs-testbn">🧪 <span>반품·전년(2025)·프레시백 금액은 <b>테스트 표시</b>입니다. 실제 데이터를 올리면 자동 전환됩니다. (단가·캠프는 소원 기본값)</span></div>'; }
+  var _miss=[]; if(VS.testRet)_miss.push('반품'); if(!VS.months.some(function(m){return String(m).slice(0,4)==='2025';}))_miss.push('전년(2025)'); _miss.push('프레시백'); if(_miss.length){ h+='<div class="vs-testbn">🧪 <span>'+_miss.join('·')+' 금액은 <b>테스트 표시</b>입니다. 실제 데이터를 올리면 자동 전환됩니다. (단가·캠프는 소원 기본값)</span></div>'; }
   if(!VS.months.length){ h+='<div class="vs-empty">📦 아직 업로드된 물량 데이터가 없습니다.<br><span style="font-size:12px;font-weight:500">상단 <b>엑셀 업로드</b> 버튼으로 물량 엑셀을 올리세요.</span></div></div>'; sheet.innerHTML=h; return; }
   h+=(VS.tab==='route'?paneRoute():VS.tab==='revenue'?paneRevenue():paneBrief());
   h+='</div>'; sheet.innerHTML=h;
@@ -3821,13 +3821,13 @@ window.closeBackupShare=function(){var ov=document.getElementById("bp-overlay");
   var bn=baseMonNum(); var labels=[],s26=[],s25=[]; var cum26=0,cum25=0,anyTest=false;
   for(var mm=1;mm<=bn;mm++){ labels.push(('0'+mm).slice(-2)+'월'); var A=m2026(mm),B=m2025(mm); s26.push(A.v); s25.push(B.v); cum26+=A.v; cum25+=B.v; if(!A.real||!B.real)anyTest=true; }
   var aug=m2026(bn).v, jul=bn>1?m2026(bn-1).v:null;
-  var annRet=Math.round(cum26*RET), dayCntAll=bn*26;
+  var annRet=((typeof VS!=='undefined'&&VS.hasRet)?VS.retTot26:Math.round(cum26*RET)), dayCntAll=bn*26;
   var h='<div class="vs-scope"><span class="lab">📌 브리핑 범위</span><span class="chip">🚚 전체 '+allRoutesList().length+'개 라우트</span><span style="margin-left:auto;color:#9aa7b8;font-size:11px">2026 1~'+bn+'월 기준</span></div>';
   h+='<div class="vs-kcards">';
   h+=kc('','누적 총 배송 (2026 1~'+bn+'월)',fmt(cum26)+' <small>개</small>','','월평균 '+fmt(cum26/bn));
   h+=kc('g up','전년 대비 (동기간)',chip(pct(cum26,cum25)),'','+'+fmt(cum26-cum25)+'건 · 2025 동기간'+(anyTest?' 🧪':''));
   h+=kc('g up','전월 대비',jul?chip(pct(aug,jul)):'—','',jul?('+'+fmt(aug-jul)+'건 · '+bn+'월 vs '+(bn-1)+'월'):'전월 데이터 없음');
-  h+=kc('o','연간 반품'+(VS.testRet?' 🧪':''),fmt(annRet)+' <small>개</small>','','일평균 '+fmt(annRet/dayCntAll)+' · 배송대비 6.8%');
+  h+=kc('o','연간 반품'+(VS.testRet?' 🧪':''),fmt(annRet)+' <small>개</small>','','일평균 '+fmt(annRet/dayCntAll)+' · 배송대비 '+(((typeof VS!=='undefined'&&VS.retRate)?VS.retRate:RET)*100).toFixed(1)+'%');
   h+='</div>';
   h+='<div class="vs-fb"><h4>📦 프레시백 회수 금액 (누적) <span class="vs-tag">테스트🧪</span></h4><div class="vs-fbgrid">'
    +'<div class="vs-fbb"><div class="k">누적 총 금액</div><div class="v">'+won(88283899)+'</div></div><div class="vs-fbb"><div class="k">월평균</div><div class="v">'+won(11035487)+'</div></div><div class="vs-fbb"><div class="k">일평균</div><div class="v">'+won(363009)+'</div></div><div class="vs-fbb"><div class="k">전년 대비</div><div class="v" style="color:#12a06a">▲4.4%</div></div></div></div>';
