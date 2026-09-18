@@ -822,6 +822,7 @@ window.ddApprove=async function(name){if(!confirm(name+' 님을 승인(활성화
 function enterApp(){
   $("#login").style.display="none";$("#app").style.display="flex";
   loadSchedCfg();
+  loadSettleCfg();
   $("#av").textContent=S.name.slice(0,1);
   $("#an").textContent=S.name;$("#ar").textContent=S.rank;
   $("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>';
@@ -837,6 +838,7 @@ document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.da
   try{history.pushState({a:1},'');}catch(e){}
 })();
 function switchView(v){
+  if(v==='settle'&&!(window.SETTLECFG&&SETTLECFG.active)&&!(S&&(S.rank==="대표"||S.role==="admin"))){v='home';}
   if(v==='backup'){window.openBackupShare&&window.openBackupShare();return;}
   var navv=(["list","loss","weight","sla","volume","pback"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":v);
   document.querySelectorAll(".bn button").forEach(b=>b.classList.toggle("on",b.dataset.v===navv));
@@ -1327,7 +1329,7 @@ async function loadMonths(){
     const rows=await rpc("get_my_months",{p_token:S.token});
     let h='';
     if(IS_ADMIN()){
-      h+='<div class="segtab"><button id="seg-mine" class="'+(rows.length?'on':'')+'" onclick="stTab(0)">내 정산</button><button id="seg-all" class="'+(rows.length?'':'on')+'" onclick="stTab(1)">전체 정산</button></div>';
+      h+='<div class="segtab"><button id="seg-all" class="'+(rows.length?'':'on')+'" onclick="stTab(1)">전체 정산</button><button id="seg-mine" class="'+(rows.length?'on':'')+'" onclick="stTab(0)">내 정산</button><button id="seg-act" onclick="toggleSettleActive()" style="'+(SETTLECFG.active?'background:#e6f7ec;color:#1e7d3c;border-color:#a7e0bb':'background:#fdecec;color:#c0392b;border-color:#f0b4b4')+'">'+(SETTLECFG.active?'노출 ON':'노출 OFF')+'</button><button id="seg-notify" onclick="toggleSettleNotify()" style="'+(SETTLECFG.notify?'background:#e6f7ec;color:#1e7d3c;border-color:#a7e0bb':'background:#fdecec;color:#c0392b;border-color:#f0b4b4')+'">'+(SETTLECFG.notify?'알림 ON':'알림 OFF')+'</button></div>';
     }
     if(rows.length){
       h+='<div id="st-mine" class="card"><div class="ct">💰 내 정산 내역</div>';
@@ -1341,6 +1343,14 @@ async function loadMonths(){
     if(IS_ADMIN()){ if(!_admView)_admView={y:2026,m:6}; renderAdminSettle(_admView.y,_admView.m); if(!rows.length)stTab(1); else stTab(0); }
   }catch(e){$("#st-list").innerHTML='<div class="center">'+e.message+'</div>';}
 }
+var SETTLECFG={active:true,notify:true};
+async function loadSettleCfg(){try{var c=await rpc("get_settle_cfg",{});if(c&&typeof c==="object"){SETTLECFG.active=(c.active!==false);SETTLECFG.notify=(c.notify!==false);}}catch(e){}try{applySettleGate();}catch(e){}}
+function _isAdminUI(){return !!(S&&(S.rank==="대표"||S.role==="admin"));}
+function applySettleGate(){try{var b=document.querySelector('.bn button[data-v="settle"]');if(b)b.style.display=(SETTLECFG.active||_isAdminUI())?"":"none";}catch(e){}}
+async function _saveSettleCfg(){try{await rpc("admin_set_settle_cfg",{p_token:S.token,p_cfg:{active:SETTLECFG.active,notify:SETTLECFG.notify}});return true;}catch(e){alert("저장 실패: "+(e.message||e));return false;}}
+async function toggleSettleActive(){if(!_isAdminUI()){alert("관리자만 변경할 수 있습니다.");return;}SETTLECFG.active=!SETTLECFG.active;if(!(await _saveSettleCfg())){SETTLECFG.active=!SETTLECFG.active;return;}applySettleGate();loadMonths();}
+async function toggleSettleNotify(){if(!_isAdminUI()){alert("관리자만 변경할 수 있습니다.");return;}SETTLECFG.notify=!SETTLECFG.notify;if(!(await _saveSettleCfg())){SETTLECFG.notify=!SETTLECFG.notify;return;}loadMonths();}
+window.toggleSettleActive=toggleSettleActive;window.toggleSettleNotify=toggleSettleNotify;
 window.stTab=(i)=>{const mine=$("#st-mine"),all=$("#st-all");if(mine)mine.style.display=i?'none':'';if(all)all.style.display=i?'':'none';const a=$("#seg-mine"),b=$("#seg-all");if(a)a.className=i?'':'on';if(b)b.className=i?'on':'';};
 window.admMonth=(dy,dm)=>{let y=_admView.y,m=_admView.m+dm;if(m<1){m=12;y--;}if(m>12){m=1;y++;}_admView={y,m};renderAdminSettle(y,m);};
 async function renderAdminSettle(y,m){
@@ -1350,9 +1360,9 @@ async function renderAdminSettle(y,m){
     const _pri=rk=>({"대표":0,"총괄":1,"팀장":2,"조장":3}[rk]!=null?{"대표":0,"총괄":1,"팀장":2,"조장":3}[rk]:4);
     rows.sort((a,b)=>{const d=_pri(a.rank)-_pri(b.rank);return d!==0?d:String(a.driver_name||"").localeCompare(String(b.driver_name||""),"ko");});
     const tg=rows.reduce((a,x)=>a+Number(x.gross||0),0), tn=rows.reduce((a,x)=>a+Number(x.net||0),0);
-    let _dv=0,_rt=0,_pb=0;try{const _R=await Promise.all(rows.map(r=>rpc("admin_get_settlement",{p_token:S.token,p_name:r.driver_name,p_year:y,p_month:m}).catch(()=>null)));_R.forEach(d=>{const rv=d&&d["수익"];if(rv)rv.forEach(x=>{if(x.g==="배송")_dv+=(+x.q||0);else if(x.g==="반품")_rt+=(+x.q||0);else if(x.g==="프백")_pb+=(+x.q||0);});});}catch(e){}
+    let _dv=0,_rt=0,_pb=0;try{const _R=await Promise.all(rows.map(r=>rpc("admin_get_settlement",{p_token:S.token,p_name:r.driver_name,p_year:y,p_month:m}).catch(()=>null)));_R.forEach(d=>{const rv=d&&d["수익"];if(rv)rv.forEach(x=>{if(x.g==="배송")_dv+=(+x.q||0);else if(x.g==="반품")_rt+=(+x.q||0);if(x.n&&String(x.n).indexOf("프레시백")>=0)_pb+=(+x.s||0);});});}catch(e){}
     let h='<div class="admnav"><button onclick="admMonth(0,-1)">◀</button><b>'+y+'년 '+m+'월 전체 정산</b><button onclick="admMonth(0,1)">▶</button></div>';
-    h+='<div class="admstat"><div class="s"><div class="l">총 기사수</div><div class="v">'+rows.length+'명</div></div><div class="s"><div class="l">세금계산서 합계</div><div class="v">'+won(tg)+'</div></div><div class="s main"><div class="l">총 지급액 합계</div><div class="v">'+won(tn)+'</div></div></div>'+'<div style="display:flex;gap:6px;margin:6px 2px 0;padding:9px 12px;background:linear-gradient(135deg,#eaf2ff,#f3ecff);border:1px solid #dfe6f5;border-radius:12px;font-size:12px;font-weight:700;color:#2f4468;justify-content:space-around;flex-wrap:wrap;text-align:center"><span>총 배송 <b style="color:#1565c0">'+_dv.toLocaleString()+'</b></span><span>총 반품 <b style="color:#1565c0">'+_rt.toLocaleString()+'</b></span><span>총수량 <b style="color:#1565c0">'+(_dv+_rt).toLocaleString()+'</b></span><span>총 프백회수 <b style="color:#7e57c2">'+_pb.toLocaleString()+'</b></span></div>';
+    h+='<div class="admstat"><div class="s"><div class="l">총 기사수</div><div class="v">'+rows.length+'명</div></div><div class="s"><div class="l">세금계산서 합계</div><div class="v">'+won(tg)+'</div></div><div class="s main"><div class="l">총 지급액 합계</div><div class="v">'+won(tn)+'</div></div></div>'+'<div style="display:flex;gap:6px;margin:6px 2px 0;padding:9px 12px;background:linear-gradient(135deg,#eaf2ff,#f3ecff);border:1px solid #dfe6f5;border-radius:12px;font-size:12px;font-weight:700;color:#2f4468;justify-content:space-around;flex-wrap:wrap;text-align:center"><span>총 배송 <b style="color:#1565c0">'+_dv.toLocaleString()+'</b></span><span>총 반품 <b style="color:#1565c0">'+_rt.toLocaleString()+'</b></span><span>총수량 <b style="color:#1565c0">'+(_dv+_rt).toLocaleString()+'</b></span><span>총 프백정산금 <b style="color:#7e57c2">'+won(_pb)+'</b></span></div>';
     if(!rows.length){h+='<div class="card"><div class="center">해당 월 정산 내역이 없습니다.</div></div>';box.innerHTML=h;return;}
     h+='<div class="ct" style="margin:4px 2px 8px">👥 기사별 지급액 <span style="font-size:11px;color:#98a3b3;font-weight:400">(카드 클릭 → 상세, 다시 클릭 시 접힘)</span></div>';
     h+='<div class="drvlist">';
