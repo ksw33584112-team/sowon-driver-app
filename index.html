@@ -699,6 +699,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
       </div>
       <!-- 설정 -->
       <div class="scr" id="s-list"><div id="lc-body"><div class="center">불러오는 중…</div></div></div>
+      <div class="scr" id="s-contacts"><div id="ct-body"><div class="center">불러오는 중…</div></div></div>
       <div class="scr" id="s-loss"><div id="loss-body"></div></div>
       <div class="scr" id="s-weight"><div id="wf-body"></div></div>
       <div class="scr" id="s-sla"><div id="sla-body"></div></div>
@@ -841,7 +842,7 @@ document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.da
 function switchView(v){
   if(v==='settle'&&!(window.SETTLECFG&&SETTLECFG.active)&&!(S&&(S.rank==="대표"||S.role==="admin"))){v='home';}
   if(v==='backup'){window.openBackupShare&&window.openBackupShare();return;}
-  var navv=(["list","loss","weight","sla","volume","pback"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":v);
+  var navv=(["list","loss","weight","sla","volume","pback","contacts"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":v);
   document.querySelectorAll(".bn button").forEach(b=>b.classList.toggle("on",b.dataset.v===navv));
   document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));
   $("#s-"+v).classList.add("on");window.scrollTo(0,0);
@@ -850,6 +851,7 @@ function switchView(v){
   if(v==="settle")loadMonths();
   if(v==="pback")loadPback();
   if(v==="list")loadListHub();
+  if(v==="contacts")loadContacts();
   if(v==="loss")loadLoss();
   if(v==="weight")loadWeight();
   if(v==="sla")loadSla();
@@ -859,9 +861,51 @@ function switchView(v){
   if(v==="play")loadPlay();
 }
 /* 리스트확인 허브 */
+window.loadContacts=async function(){
+  var host=document.getElementById('ct-body');if(!host)return;
+  host.innerHTML='<div class="center">불러오는 중…</div>';
+  var list=[],hot='';
+  try{list=await rpc('contacts_all',{p_token:S.token})||[];}catch(e){host.innerHTML='<div class="center">'+(e.message||e)+'</div>';return;}
+  try{hot=await rpc('hotline_get',{p_token:S.token})||'';}catch(e){}
+  window._ctHot=hot;window._ctList=list;
+  var isAdm=!!(S&&((typeof IS_ADMIN==='function'&&IS_ADMIN())||S.rank==='대표'));
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 2px 10px"><div style="font-weight:900;color:#c0392b;font-size:17px">📞 비상연락망</div><button onclick="ctHotline()" style="background:#e5342e;color:#fff;border:none;border-radius:12px;padding:9px 12px;font-weight:800;font-size:12px;cursor:pointer">🚨 쿠팡 핫라인</button></div>';
+  h+='<input id="ct-search" oninput="ctFilter()" placeholder="🔎 이름 또는 차량번호 검색..." style="width:100%;padding:11px 12px;border:1.5px solid #d5e2f0;border-radius:12px;font-size:13px;margin-bottom:6px;box-sizing:border-box">';
+  h+='<div id="ct-groups"></div>';
+  if(isAdm)h+='<div style="text-align:center;margin-top:10px"><button onclick="ctHotlineSet()" style="background:#eef2f6;color:#5a6b7c;border:none;border-radius:9px;padding:7px 12px;font-size:11px;cursor:pointer">⚙ 쿠팡 핫라인 번호 설정</button></div>';
+  host.innerHTML=h;
+  ctRender(list);
+};
+window.ctRender=function(list){
+  var order=['대표','총괄','팀장','조장','일반','백업'];
+  var groups={};list.forEach(function(d){var r=d.rank||'일반';(groups[r]=groups[r]||[]).push(d);});
+  var keys=order.filter(function(k){return groups[k];}).concat(Object.keys(groups).filter(function(k){return order.indexOf(k)<0;}));
+  var esc=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');};
+  var telN=function(p){return String(p||'').replace(/[^0-9+]/g,'');};
+  var out='';
+  keys.forEach(function(rk){
+    out+='<div style="background:#eceff3;border-radius:10px;padding:8px 12px;font-weight:800;color:#334;margin:12px 0 8px">◆ '+esc(rk)+' ('+groups[rk].length+')</div>';
+    groups[rk].forEach(function(d){
+      var main=telN(d.phone),sub=telN(d.phone_sub);
+      var chips='';
+      if(d.vehicle_type)chips+='<span style="background:#fdf0e6;border-radius:6px;padding:2px 7px;font-size:10.5px;color:#a5642a;margin-right:4px">🚚 '+esc(d.vehicle_type)+'</span>';
+      if(d.is_ev)chips+='<span style="background:#e8f7ee;border-radius:6px;padding:2px 7px;font-size:10.5px;color:#1b8a4b">⚡ EV</span>';
+      var mainBtn=main?('<a href="tel:'+main+'" style="display:block;text-align:center;background:#12a374;color:#fff;border-radius:9px;padding:10px;font-weight:800;font-size:12.5px;text-decoration:none">📞 메인 '+esc(d.phone)+'</a>'):('<div style="text-align:center;background:#eef2f6;color:#9aa;border-radius:9px;padding:10px;font-size:11.5px">메인폰 없음</div>');
+      var subBtn=sub?('<a href="tel:'+sub+'" style="display:block;text-align:center;background:#2f6fed;color:#fff;border-radius:9px;padding:10px;font-weight:800;font-size:12.5px;text-decoration:none">📱 서브 '+esc(d.phone_sub)+'</a>'):('<div style="text-align:center;background:#eef2f6;color:#9aa;border-radius:9px;padding:10px;font-size:11.5px">📱 서브폰 없음</div>');
+      var veh='<div style="text-align:center;background:#eef4ff;color:#2f5fc8;border-radius:9px;padding:9px;font-size:12px;font-weight:700">🚗 '+(esc(d.vehicle_no)||'차량 미등록')+'</div>';
+      var cp='<div style="text-align:center;background:#eafaf0;color:#1b8a4b;border-radius:9px;padding:9px;font-size:12px;font-weight:700">🛒 '+(esc(d.coupang_id)||'-')+'</div>';
+      var sk=String((d.name||'')+' '+(d.vehicle_no||'')).split(' ').join('').toLowerCase();
+      out+='<div class="ct-card" data-s="'+esc(sk)+'" style="border:1px solid #eef2f6;border-radius:14px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05)"><div style="font-weight:800;color:#22364a;font-size:14px;margin-bottom:6px">'+esc(d.name)+' <span style="font-size:10px;color:#8090a0">'+esc(d.rank||'')+'</span> '+chips+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">'+mainBtn+subBtn+veh+cp+'</div></div>';
+    });
+  });
+  document.getElementById('ct-groups').innerHTML=out||'<div class="center">공개된 기사가 없습니다.</div>';
+};
+window.ctFilter=function(){var q=(document.getElementById('ct-search').value||'').split(' ').join('').toLowerCase();document.querySelectorAll('#ct-groups .ct-card').forEach(function(c){var t=c.getAttribute('data-s')||'';c.style.display=(!q||t.indexOf(q)>=0)?'':'none';});};
+window.ctHotline=function(){var n=String(window._ctHot||'').replace(/[^0-9+]/g,'');if(!n){alert('쿠팡 핫라인 번호가 아직 설정되지 않았습니다.\n관리자에게 문의하세요.');return;}location.href='tel:'+n;};
+window.ctHotlineSet=async function(){var cur=window._ctHot||'';var v=prompt('쿠팡 핫라인 전화번호를 입력하세요.\n(기사들이 비상연락망에서 이 번호로 바로 전화합니다)',cur);if(v===null)return;try{await rpc('hotline_set',{p_token:S.token,p_num:(v||'').trim()});window._ctHot=(v||'').trim();alert('✅ 저장되었습니다: '+((v||'').trim()||'(삭제)'));}catch(e){alert(e.message||e);}};
 function lcCard(icon,bg,title,sub,target){return '<div class="lcm" onclick="switchView(\''+target+'\')"><div class="lcm-i" style="background:'+bg+'">'+icon+'</div><div class="lcm-t"><b>'+title+'</b><span>'+sub+'</span></div><div class="lcm-a">›</div></div>';}
 function lcBack(title){return '<div class="lc-back" onclick="switchView(\'list\')"><span>‹</span> '+escN(title)+'</div>';}
-function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
+function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');h+=lcCard('📞','#e9f8ee','비상연락망','기사 연락처·차량번호·쿠팡ID','contacts');$("#lc-body").innerHTML=h;}
 /* ===== 리스트확인 파일 업로드 (관리자 전용 · PC 스케줄프로그램 파서 이식) ===== */
 function lcCanUpload(){return !!(S&&((typeof IS_ADMIN==='function'&&IS_ADMIN())||S.rank==='대표'));}
 function lcUpBar(kind){if(!lcCanUpload())return '';var lbl={loss:'분실차감 엑셀',weight:'가중요인 엑셀',sla:'SLA 엑셀',volume:'월초물량 엑셀',pback:'프레시백 소명 PDF'}[kind]||'파일';return '<div class="lc-upbar"><button class="lc-upbtn" onclick="lcPick(\''+kind+'\')">📥 '+lbl+' 불러오기</button><span class="lc-uphint">폰에서 파일 선택 → 미리보기 → 적용</span></div>';}
