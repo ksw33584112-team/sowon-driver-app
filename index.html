@@ -2996,7 +2996,7 @@ function ctSection(kind,label,openFirst){
   var done=drs.filter(function(d){return ctDoneOf(d.name,kind);});
   var pend=drs.filter(function(d){return ctSharedOf(d.name,kind);});
   var h='<div class="card" style="background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)"><div style="font-weight:800;color:#123a6b;margin-bottom:8px">'+label+'</div>';
-  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><button class="ctc-btn" style="flex:1;background:#5a2fb0" onclick="openCtShare(\''+kind+'\')">📤 기사 지정 공유</button><button class="ctc-btn" style="flex:1;background:#455a94" onclick="openContractSign(\'\',\''+kind+'\',\'admin\')">✍️ 직접 작성</button></div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px"><button class="ctc-btn" style="flex:1;background:#5a2fb0" onclick="openCtShare(\''+kind+'\')">📤 기사 지정 공유</button><button class="ctc-btn" style="flex:1;background:#455a94" onclick="openContractSign(\'\',\''+kind+'\',\'admin\')">✍️ 직접 작성</button></div><div style="margin-top:6px"><button class="ctc-btn" style="width:100%;background:#0b6b4a" onclick="ctExcelBulk(\'wc\')">📄 엑셀 양식으로 일괄 설정·공유</button></div>';
   h+='<div style="font-weight:800;color:#1b8a3f;font-size:12px;margin:8px 2px 4px">✅ 작성자 ('+done.length+')</div>';
   h+=done.length?done.map(function(d){return ctRow(d,kind,true);}).join(''):'<div style="font-size:12px;color:#bbb;text-align:center;padding:8px">없음</div>';
   h+='<div style="font-weight:800;color:#1565c0;font-size:12px;margin:10px 2px 4px">📤 공유·진행중 ('+pend.length+')</div>';
@@ -3042,7 +3042,7 @@ function ctAdminRender(){
 window.CT_approve=async function(name,kind){ if(!confirm(name+' 님의 계약서를 최종 승인할까요?'))return; try{await ctApproveApi(name,kind);await openContractAdmin();}catch(e){alert(e.message);} };
 window.CT_reject=async function(name,kind){ if(!confirm(name+' 님 계약을 반려하고 재작성을 요청할까요?'))return; try{await ctShareApi([name],kind,'reject');await openContractAdmin();}catch(e){alert(e.message);} };
 window.CT_delete=async function(name,kind){ if(!confirm(name+' 님의 계약서를 삭제할까요?\n작성내용·서명이 지워지고 미작성 상태로 돌아갑니다.'))return; try{await ctDeleteApi(name,kind);await openContractAdmin();}catch(e){alert(e.message);} };
-window.CT_shareOne=async function(name,kind){ try{await ctShareApi([name],kind,'share');await openContractAdmin();}catch(e){alert(e.message);} };
+window.CT_shareOne=function(name,kind){ _ctBulkOpen([name],kind,'share'); };
 window.CT_gateToggle=async function(){
   var next=!ctGateOn();
   if(next&&!confirm('미작성자 권한 제한을 켤까요?\n위·수탁 계약서를 작성하지 않은 기사·팀장·조장은 계약서 작성 화면만 볼 수 있습니다.\n(대표·관리자는 제외)'))return;
@@ -3083,6 +3083,84 @@ window.ctGateWrite=function(){ var nm=(window.S&&S.name)||''; if(!nm){alert('로
 
 /* 공유 대상 선택 */
 var _ctSel={};
+
+/* ── 계약 공유 팝업(라우트·단가·계약기간) + 엑셀 일괄 ── */
+window.ctPrefillShareApi=async function(items,kind,action){return await rpc('contract_prefill_share',{p_token:S.token,p_kind:kind,p_action:action,p_items:items});};
+window._ctEnsureXLSX=function(cb){if(window.XLSX){cb(true);return;}var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=function(){cb(!!window.XLSX);};sc.onerror=function(){cb(false);};document.head.appendChild(sc);};
+window._ctEscA=function(x){return String(x==null?'':x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');};
+window._ctPlusYear=function(v){if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(v))return '';var d=new Date(v);if(isNaN(d.getTime()))return '';d.setFullYear(d.getFullYear()+1);d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);};
+window._ctIso=function(v){if(v&&typeof v.getFullYear==='function'){return v.getFullYear()+'-'+('0'+(v.getMonth()+1)).slice(-2)+'-'+('0'+v.getDate()).slice(-2);}var t=String(v==null?'':v).trim();var p=t.split(/[^0-9]+/).filter(Boolean);if(p.length>=3&&p[0].length===4)return p[0]+'-'+('0'+p[1]).slice(-2)+'-'+('0'+p[2]).slice(-2);return '';};
+window._ctBulkNames=[];window._ctBulkKind='wc';window._ctBulkAction='share';window._ctXlsKind='wc';
+window._ctBulkClose=function(){var p=document.getElementById('ctbulk-pop');if(p)p.remove();};
+window._ctXlsClose=function(){var p=document.getElementById('ctxls-pop');if(p)p.remove();};
+window._ctBulkOpen=function(names,kind,action){
+  if(!names||!names.length){alert('대상을 선택하세요.');return;}
+  _ctBulkNames=names.slice();_ctBulkKind=kind;_ctBulkAction=action;
+  var rankOf={};(_ctData.drivers||[]).forEach(function(d){rankOf[d.name]=d.rank||'';});
+  var rows=names.map(function(nm,i){
+    var doc=docOf(nm,kind);var dt=(doc&&doc.data)||{};
+    var route=_ctEscA(dt.route||'');var price=_ctEscA(dt.price||'');
+    var st=/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(dt.start||'')?dt.start:'';
+    return '<tr><td class="cbnm">'+_ctEscA(nm)+'<span class="cbrl">'+_ctEscA(rankOf[nm]||'')+'</span></td>'+
+      '<td><input id="cbrt'+i+'" value="'+route+'" placeholder="라우트"></td>'+
+      '<td><input id="cbpr'+i+'" value="'+price+'" inputmode="numeric" placeholder="단가"></td>'+
+      '<td><input id="cbst'+i+'" type="date" min="2020-01-01" max="2099-12-31" value="'+st+'" oninput="_ctBulkEnd('+i+')"></td>'+
+      '<td class="cbend" id="cbend'+i+'">—</td></tr>';
+  }).join('');
+  var title=(action==='renew'?'🔄 위·수탁 계약서 갱신':'📤 위·수탁 계약서 공유')+' — 계약 정보 입력';
+  _ctBulkClose();
+  var pop=document.createElement('div');pop.id='ctbulk-pop';pop.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;justify-content:flex-end';
+  pop.innerHTML='<style>.ctbulk{width:100%;border-collapse:collapse;min-width:440px}.ctbulk thead th{position:sticky;top:0;background:#e7f6ef;color:#0b6b4a;font-size:11.5px;font-weight:800;padding:8px 5px;border:1px solid #cbe6da;white-space:nowrap}.ctbulk td{border:1px solid #eef2f6;padding:5px;vertical-align:middle}.ctbulk .cbnm{font-size:12.5px;font-weight:800;color:#22364a;white-space:nowrap}.ctbulk .cbnm .cbrl{font-size:9px;color:#8090a0;margin-left:3px;font-weight:700}.ctbulk input{width:100%;border:1.3px solid #d5e2f0;border-radius:7px;padding:6px 7px;font-size:12px;box-sizing:border-box;outline:none}.ctbulk .cbend{font-size:10.5px;color:#1b7a38;font-weight:700;white-space:nowrap;text-align:center}</style>'+
+    '<div onclick="_ctBulkClose()" style="flex:1;background:rgba(0,0,0,.45)"></div>'+
+    '<div style="background:#fff;border-radius:22px 22px 0 0;max-height:92vh;display:flex;flex-direction:column">'+
+    '<div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 8px"></div>'+
+    '<div style="font-size:15px;font-weight:900;color:#0b6b4a;text-align:center">'+title+'</div>'+
+    '<div style="font-size:11px;color:#8090a0;text-align:center;margin:3px 14px 8px;line-height:1.5">선택한 <b>'+names.length+'명</b>의 라우트·단가·계약 시작일 입력. 시작일만 넣으면 종료일 +1년 자동. 비우면 기존 값 유지.</div>'+
+    '<div style="overflow:auto;padding:0 12px;flex:1"><table class="ctbulk"><thead><tr><th style="text-align:left">이름</th><th>라우트</th><th>단가</th><th>계약 시작일</th><th>종료(자동)</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div style="padding:10px 14px calc(14px + env(safe-area-inset-bottom));border-top:1px solid #eef2f6">'+
+      '<div style="display:flex;gap:8px;margin-bottom:9px">'+
+        '<button onclick="_ctBulkCopyFirst()" style="flex:1;border:1.4px solid #cfe0d8;background:#f2fbf6;color:#0b6b4a;border-radius:9px;padding:8px;font-size:11px;font-weight:800">📋 첫 행→전체</button>'+
+        '<button onclick="_ctBulkSameStart()" style="flex:1;border:1.4px solid #cfe0d8;background:#f2fbf6;color:#0b6b4a;border-radius:9px;padding:8px;font-size:11px;font-weight:800">📅 시작일 동일</button>'+
+        '<button onclick="_ctBulkPickExcel()" style="flex:1;border:1.4px solid #cfe0d8;background:#f2fbf6;color:#0b6b4a;border-radius:9px;padding:8px;font-size:11px;font-weight:800">📄 엑셀 불러오기</button>'+
+      '</div>'+
+      '<button onclick="_ctBulkConfirm()" style="width:100%;padding:14px;background:linear-gradient(135deg,#12a374,#0b6b4a);color:#fff;border:none;border-radius:12px;font-weight:900;font-size:15px">'+(action==='renew'?('🔄 '+names.length+'명 갱신 요청'):('📤 '+names.length+'명에게 공유'))+'</button>'+
+    '</div></div>';
+  document.body.appendChild(pop);
+  names.forEach(function(_n,i){_ctBulkEnd(i);});
+};
+window._ctBulkEnd=function(i){var s=document.getElementById('cbst'+i);var e=document.getElementById('cbend'+i);if(!s||!e)return;e.textContent=_ctPlusYear(s.value)||'—';};
+window._ctBulkCopyFirst=function(){var r=document.getElementById('cbrt0');var p=document.getElementById('cbpr0');for(var i=1;i<_ctBulkNames.length;i++){var ri=document.getElementById('cbrt'+i);var pi=document.getElementById('cbpr'+i);if(ri&&r)ri.value=r.value;if(pi&&p)pi.value=p.value;}};
+window._ctBulkSameStart=function(){var s=document.getElementById('cbst0');if(!s||!s.value)return;for(var i=1;i<_ctBulkNames.length;i++){var si=document.getElementById('cbst'+i);if(si){si.value=s.value;_ctBulkEnd(i);}}};
+window._ctParseExcelMap=function(ab){var wb=XLSX.read(new Uint8Array(ab),{type:'array',cellDates:true});var ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});var map={};for(var r=1;r<rows.length;r++){var row=rows[r]||[];var nm=String(row[0]==null?'':row[0]).split(' ').join('');if(!nm)continue;var st=_ctIso(row[3]);var en=_ctIso(row[4]);if(st&&!en)en=_ctPlusYear(st);map[nm]={route:String(row[1]==null?'':row[1]).trim(),price:String(row[2]==null?'':row[2]).replace(/[^0-9]/g,''),start:st,end:en};}return map;};
+window._ctBulkPickExcel=function(){var inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;_ctEnsureXLSX(function(ok){if(!ok){alert('엑셀 라이브러리 로드 실패(인터넷 확인)');return;}var rd=new FileReader();rd.onload=function(e){try{var map=_ctParseExcelMap(e.target.result);var n=0;_ctBulkNames.forEach(function(nm,i){var v=map[nm.split(' ').join('')];if(!v)return;var a=document.getElementById('cbrt'+i);if(a&&v.route!=='')a.value=v.route;var b=document.getElementById('cbpr'+i);if(b&&v.price!=='')b.value=v.price;if(v.start){var c=document.getElementById('cbst'+i);if(c){c.value=v.start;_ctBulkEnd(i);}}n++;});alert('✅ 엑셀에서 '+n+'명 정보를 채웠습니다. 확인 후 공유하세요.');}catch(err){alert('엑셀 처리 오류: '+(err.message||err));}};rd.readAsArrayBuffer(f);});};inp.click();};
+window._ctBulkConfirm=async function(){
+  var names=_ctBulkNames.slice();var kind=_ctBulkKind;var action=_ctBulkAction;if(!names.length)return;
+  var items=names.map(function(nm,i){var st=((document.getElementById('cbst'+i)||{}).value)||'';var okd=/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(st);return {name:nm,route:(((document.getElementById('cbrt'+i)||{}).value)||'').trim(),price:(((document.getElementById('cbpr'+i)||{}).value)||'').trim(),start:okd?st:'',end:okd?_ctPlusYear(st):''};});
+  try{
+    await ctPrefillShareApi(items,kind,action);
+    _ctBulkClose();
+    try{ if(typeof sendContractPush==='function')sendContractPush(names,kind); }catch(e){}
+    try{ await openContractAdmin(kind); }catch(e){}
+    alert('✅ '+names.length+'명에게 '+(action==='renew'?'갱신 요청':'공유')+'했습니다.');
+  }catch(e){alert(e.message||e);}
+};
+window.ctExcelBulk=function(kind){
+  _ctXlsKind=kind||'wc';_ctXlsClose();
+  var pop=document.createElement('div');pop.id='ctxls-pop';pop.style.cssText='position:fixed;inset:0;z-index:100000;display:flex;flex-direction:column;justify-content:flex-end';
+  pop.innerHTML='<div onclick="_ctXlsClose()" style="flex:1;background:rgba(0,0,0,.45)"></div>'+
+    '<div style="background:#fff;border-radius:22px 22px 0 0;padding:6px 16px calc(18px + env(safe-area-inset-bottom))">'+
+    '<div style="width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:12px auto 10px"></div>'+
+    '<div style="font-size:15px;font-weight:900;color:#0b6b4a;text-align:center">📄 엑셀 양식으로 일괄 설정·공유</div>'+
+    '<div style="font-size:11px;color:#8090a0;text-align:center;margin:6px 6px 14px;line-height:1.5">양식을 내려받아 라우트·단가·계약시작·계약종료를 채운 뒤 업로드하면 기사별로 자동 적용됩니다. (계약종료 비우면 시작+1년)</div>'+
+    '<button onclick="_ctTplDownload()" style="width:100%;padding:13px;margin-bottom:8px;background:#eef4ff;color:#2f5fc8;border:1.5px solid #cfe0f5;border-radius:12px;font-weight:800;font-size:14px">📥 양식 다운로드 (기사 명단 포함)</button>'+
+    '<button onclick="_ctExcelUploadDirect()" style="width:100%;padding:14px;margin-bottom:8px;background:linear-gradient(135deg,#12a374,#0b6b4a);color:#fff;border:none;border-radius:12px;font-weight:900;font-size:15px">📁 채운 파일 업로드</button>'+
+    '<button onclick="_ctXlsClose()" style="width:100%;padding:12px;background:#eef2f6;color:#5a6b7c;border:none;border-radius:12px;font-weight:700;font-size:13px">닫기</button>'+
+    '</div>';
+  document.body.appendChild(pop);
+};
+window._ctTplDownload=function(){_ctEnsureXLSX(function(ok){if(!ok){alert('엑셀 라이브러리 로드 실패(인터넷 확인)');return;}try{var aoa=[['기사명','라우트','단가','계약시작(YYYY-MM-DD)','계약종료(비우면+1년)']];(_ctData.drivers||[]).forEach(function(d){aoa.push([d.name,'','','','']);});var wb=XLSX.utils.book_new();var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:12},{wch:10},{wch:10},{wch:20},{wch:20}];XLSX.utils.book_append_sheet(wb,ws,'계약조건');XLSX.writeFile(wb,'계약조건_양식.xlsx');}catch(e){alert('양식 생성 오류: '+(e.message||e));}});};
+window._ctExcelUploadDirect=function(){var kind=_ctXlsKind;var inp=document.createElement('input');inp.type='file';inp.accept='.xlsx,.xls';inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;_ctEnsureXLSX(function(ok){if(!ok){alert('엑셀 라이브러리 로드 실패(인터넷 확인)');return;}var rd=new FileReader();rd.onload=async function(e){try{var map=_ctParseExcelMap(e.target.result);var real={};(_ctData.drivers||[]).forEach(function(d){real[d.name.split(' ').join('')]=d.name;});var items=[];Object.keys(map).forEach(function(k){var v=map[k];if(!v.route&&!v.price&&!v.start)return;items.push({name:real[k]||k,route:v.route,price:v.price,start:v.start,end:v.end});});if(!items.length){alert('채워진 행이 없습니다. 라우트/단가/계약시작 중 하나 이상 입력하세요.');return;}if(!confirm('📄 엑셀 '+items.length+'명에게 계약 정보를 적용하고 공유할까요?'))return;await ctPrefillShareApi(items,kind,'share');_ctXlsClose();try{ if(typeof sendContractPush==='function')sendContractPush(items.map(function(x){return x.name;}),kind); }catch(e){}try{ await openContractAdmin(kind); }catch(e){}alert('✅ 엑셀 '+items.length+'명에게 적용·공유했습니다.');}catch(err){alert('엑셀 처리 오류: '+(err.message||err));}};rd.readAsArrayBuffer(f);});};inp.click();};
+
 window.openCtShare=function(kind,renew){
   _ctSel={};
   var drivers=_ctData.drivers.slice();
@@ -3102,15 +3180,7 @@ window.openCtShare=function(kind,renew){
 };
 window.CT_selSet=function(v,on){_ctSel[v]=on;};
 window.CT_selAll=function(on){var m=document.getElementById('ctc-sig-modal');if(!m)return;m.querySelectorAll('input[type=checkbox][value]').forEach(function(cb){if(!cb.disabled){cb.checked=on;_ctSel[cb.value]=on;}});};
-window.CT_shareConfirm=async function(kind,action){
-  var names=Object.keys(_ctSel).filter(function(k){return _ctSel[k];});
-  if(!names.length){alert('대상을 선택하세요.');return;}
-  try{ await ctShareApi(names,kind,action); var m=document.getElementById('ctc-sig-modal');if(m)m.remove();
-    try{ if(names.length&&typeof sendContractPush==='function')sendContractPush(names,kind); }catch(e){}
-    await openContractAdmin(kind);
-    alert('✅ '+names.length+'명에게 '+(action==='renew'?'갱신 요청':'공유')+'했습니다.');
-  }catch(e){alert(e.message);}
-};
+window.CT_shareConfirm=function(kind,action){ var names=Object.keys(_ctSel).filter(function(k){return _ctSel[k];}); if(!names.length){alert('대상을 선택하세요.');return;} var m=document.getElementById('ctc-sig-modal');if(m)m.remove(); _ctBulkOpen(names,kind,action==='renew'?'renew':'share'); };
 
 /* ============================================================
    위탁자(발행처) 설정
