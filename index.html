@@ -3166,8 +3166,8 @@ window.openCtShare=function(kind,renew){
   var drivers=_ctData.drivers.slice();
   var rows=drivers.map(function(d){
     var x=docOf(d.name,kind); var isDone=x&&x.status==='done'; var isShared=x&&x.shared;
-    var selectable = renew ? isDone : !(x&&x.status==='done');
-    var note = renew?(isDone?'':'(완료자 아님)'):(isDone?'완료':(isShared?'공유됨':''));
+    var selectable = renew ? true : !(x&&x.status==='done');
+    var note = (isDone?'완료':(isShared?'공유됨':''));
     var nm=esc(d.name);
     return '<label style="display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid #f2f5f8;'+(selectable?'':'opacity:.4')+'"><input type="checkbox" '+(selectable?'':'disabled')+' onchange="CT_selSet(this.value,this.checked)" value="'+nm+'" style="width:18px;height:18px"><span style="flex:1;font-size:13px;font-weight:700;color:#33475b">'+esc(d.name)+' <span style="font-size:9px;color:#9aa">'+esc(d.rank||'')+'</span></span><span style="font-size:10px;color:#8a97a6">'+note+'</span></label>';
   }).join('');
