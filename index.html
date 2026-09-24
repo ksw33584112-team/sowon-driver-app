@@ -712,6 +712,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
           <div class="menu-item mi-purple hide" id="mi-perm"><span class="mi-ic">🛡️</span><span class="mi-tx"><b>권한 관리</b><i>기사 직급·정지·PW·관리자</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-green hide" id="mi-meta"><span class="mi-ic">📋</span><span class="mi-tx"><b>리스트·변경분 메타 설정</b><i>사업자번호·웨이브·회전·야간라우트</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-blue" id="mi-pw"><span class="mi-ic">🔑</span><span class="mi-tx"><b>비밀번호 변경</b><i>내 로그인 비밀번호</i></span><span class="mi-ar">›</span></div>
+          <div class="menu-item mi-green" id="mi-contacts"><span class="mi-ic">📞</span><span class="mi-tx"><b>비상연락망</b><i>기사 연락처·차량번호·쿠팡ID</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-green" id="mi-me"><span class="mi-ic">ℹ️</span><span class="mi-tx"><b>내 정보</b><i>이름·직급 확인</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-blue" id="mi-push"><span class="mi-ic">🔔</span><span class="mi-tx"><b>푸시 알림</b><i>공지·정산·리스트 새 글 알림 받기</i></span><span class="mi-ar">›</span></div>
           <div class="menu-item mi-red" id="mi-logout"><span class="mi-ic">🚪</span><span class="mi-tx"><b>로그아웃</b><i>앱에서 나가기</i></span><span class="mi-ar">›</span></div>
@@ -842,7 +843,7 @@ document.querySelectorAll(".bn button").forEach(b=>b.onclick=()=>switchView(b.da
 function switchView(v){
   if(v==='settle'&&!(window.SETTLECFG&&SETTLECFG.active)&&!(S&&(S.rank==="대표"||S.role==="admin"))){v='home';}
   if(v==='backup'){window.openBackupShare&&window.openBackupShare();return;}
-  var navv=(["list","loss","weight","sla","volume","pback","contacts"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":v);
+  var navv=(["list","loss","weight","sla","volume","pback"].indexOf(v)>=0)?"list":((["play","game"].indexOf(v)>=0)?"play":(v==="contacts"?"set":v));
   document.querySelectorAll(".bn button").forEach(b=>b.classList.toggle("on",b.dataset.v===navv));
   document.querySelectorAll(".scr").forEach(s=>s.classList.remove("on"));
   $("#s-"+v).classList.add("on");window.scrollTo(0,0);
@@ -905,7 +906,7 @@ window.ctHotline=function(){var n=String(window._ctHot||'').replace(/[^0-9+]/g,'
 window.ctHotlineSet=async function(){var cur=window._ctHot||'';var v=prompt('쿠팡 핫라인 전화번호를 입력하세요.\n(기사들이 비상연락망에서 이 번호로 바로 전화합니다)',cur);if(v===null)return;try{await rpc('hotline_set',{p_token:S.token,p_num:(v||'').trim()});window._ctHot=(v||'').trim();alert('✅ 저장되었습니다: '+((v||'').trim()||'(삭제)'));}catch(e){alert(e.message||e);}};
 function lcCard(icon,bg,title,sub,target){return '<div class="lcm" onclick="switchView(\''+target+'\')"><div class="lcm-i" style="background:'+bg+'">'+icon+'</div><div class="lcm-t"><b>'+title+'</b><span>'+sub+'</span></div><div class="lcm-a">›</div></div>';}
 function lcBack(title){return '<div class="lc-back" onclick="switchView(\'list\')"><span>‹</span> '+escN(title)+'</div>';}
-function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');h+=lcCard('📞','#e9f8ee','비상연락망','기사 연락처·차량번호·쿠팡ID','contacts');$("#lc-body").innerHTML=h;}
+function loadListHub(){var h='<div class="lc-h">📋 리스트확인</div>';h+=lcCard('📋','#eef7f0','프레시백 소명 자료','미회수 소명 제출·확인','pback');h+=lcCard('🔍','#eef1fc','분실 차감 내역','분실·파손 차감 (본인+전체)','loss');h+=lcCard('📊','#f2eefe','가중요인 확인','주차별 가중요인·라우트','weight');h+=lcCard('📦','#fff4e5','월초 예상 물량','라우트·일자별 예상 수량','volume');h+=lcCard('📈','#e9f1ff','SLA 점수 확인','월별 SLA·전체 평균','sla');$("#lc-body").innerHTML=h;}
 /* ===== 리스트확인 파일 업로드 (관리자 전용 · PC 스케줄프로그램 파서 이식) ===== */
 function lcCanUpload(){return !!(S&&((typeof IS_ADMIN==='function'&&IS_ADMIN())||S.rank==='대표'));}
 function lcUpBar(kind){if(!lcCanUpload())return '';var lbl={loss:'분실차감 엑셀',weight:'가중요인 엑셀',sla:'SLA 엑셀',volume:'월초물량 엑셀',pback:'프레시백 소명 PDF'}[kind]||'파일';return '<div class="lc-upbar"><button class="lc-upbtn" onclick="lcPick(\''+kind+'\')">📥 '+lbl+' 불러오기</button><span class="lc-uphint">폰에서 파일 선택 → 미리보기 → 적용</span></div>';}
@@ -1663,7 +1664,7 @@ async function renderPbackAdmin(){
 const IS_ADMIN=()=>S&&(S.is_admin||S.rank==="대표");
 function setMenu(){$("#set-menu").classList.remove("hide");$("#set-sub").classList.add("hide");$("#mi-perm").classList.toggle("hide",!IS_ADMIN());$("#mi-meta").classList.toggle("hide",!IS_ADMIN());$("#mi-volstats").classList.toggle("hide",!(S&&(S.rank==="대표"||S.role==="admin")));$("#mi-hqdeal").classList.toggle("hide",!(S&&(S.rank==="대표"||S.role==="admin")));$("#me-info").innerHTML='<div class="kv"><span>이름</span><b>'+S.name+'</b></div><div class="kv"><span>직급</span><b>'+S.rank+'</b></div>'+(IS_ADMIN()?'<div class="kv"><span>관리자</span><b>예</b></div>':'')+'<button class="btn-p" style="margin-top:12px;background:#0a7a6a" onclick="openDriverDetail(\''+String(S.name).replace(/\x27/g,"\\\x27")+'\',true)">📋 내 상세정보 입력/수정</button>';}
 function openSub(name){$("#set-menu").classList.add("hide");$("#set-sub").classList.remove("hide");["pw","me","perm"].forEach(x=>$("#sub-"+x).classList.toggle("hide",x!==name));if(name==="perm")loadAdmin();}
-document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else if(mi.id==="mi-meta"){wkMetaCfg();}else openSub(mi.id.replace("mi-",""));});
+document.addEventListener("click",e=>{if(e.target.id==="set-back"){setMenu();return;}const mi=e.target.closest?e.target.closest(".menu-item"):null;if(!mi)return;if(mi.id==="mi-logout"){doLogout();}else if(mi.id==="mi-push"){pushToggle();}else if(mi.id==="mi-meta"){wkMetaCfg();}else if(mi.id==="mi-contacts"){switchView("contacts");}else openSub(mi.id.replace("mi-",""));});
 const RANKS=["대표","총괄","팀장","조장","일반","백업"];
 async function loadAdmin(){$("#ad-list").innerHTML='<div class="center">불러오는 중…</div>';try{var rows=await rpc("admin_list_drivers",{p_token:S.token});try{var cp=await rpc("admin_list_coupang",{p_token:S.token});var m={};(cp||[]).forEach(function(x){m[x.nm]=x.cid;});rows.forEach(function(r){r.coupang_id=m[r.name]||"";});}catch(e){}window.__adrows=rows;renderAdmin();}catch(e){$("#ad-list").innerHTML='<div class="center">'+e.message+'</div>';}}
 function renderAdmin(){
