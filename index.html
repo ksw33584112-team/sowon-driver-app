@@ -1141,9 +1141,9 @@ function wkExportBtns(){return '<button onclick="wkTableDown()" style="backgroun
 async function _weekSched(){var ws=iso(weekStart);var rows=schedCache[ws];if(!rows){rows=await rpc('list_schedules',{p_token:S.token,p_week_start:ws});schedCache[ws]=rows;}return rows||[];}
 window.wkTableDown=function(){_sxEnsure(async function(){try{
   var rows=await _weekSched();var dates=_weekDates();
-  var campR={};rows.forEach(function(r){var cp=r.camp||'기타';(campR[cp]=campR[cp]||{})[r.route]=1;});
+  var campR={};rows.forEach(function(r){var cp=r.camp||'기타';(campR[cp]=campR[cp]||{})[_rotParse(r.route).base]=1;});
   var camps=Object.keys(campR).sort(function(a,b){return (parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0);});
-  var map={};rows.forEach(function(r){map[r.route+'|'+r.work_date]=r.driver_name;});
+  var map={},_rotAcc={};rows.forEach(function(r){var _p=_rotParse(r.route);if(_p.rot){var _k=_p.base+'|'+r.work_date;(_rotAcc[_k]=_rotAcc[_k]||{})[_p.rot]=r.driver_name;}else{map[r.route+'|'+r.work_date]=r.driver_name;}});Object.keys(_rotAcc).forEach(function(_k){var o=_rotAcc[_k];map[_k]='1회전:'+(o[1]||'')+' 2회전:'+(o[2]||'');});
   var aoa=[['캠프','라우트'].concat(dates.map(function(d){return _sxDate(d);}))];
   camps.forEach(function(cp){var rts=Object.keys(campR[cp]).sort();rts.forEach(function(rt){var row=[cp,rt];dates.forEach(function(d){row.push(map[rt+'|'+d]||'');});aoa.push(row);});});
   var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
@@ -1168,10 +1168,10 @@ function _wkTableUpDo(f){var rd=new FileReader();rd.onload=async function(e){try
 async function _drvMap(){var dm={};try{var dl=await rpc('admin_driver_map',{p_token:S.token});(dl||[]).forEach(function(x){dm[x.name]=x.cid;});}catch(e){}return dm;}
 window.wkMetaList=function(){_sxEnsure(async function(){try{
   var rows=await _weekSched();await _mcLoad();var cfg=_MCFG;var dm=await _drvMap();
-  var g={};rows.forEach(function(r){if(!r.driver_name)return;var key=r.work_date+'|'+r.driver_name;if(!g[key])g[key]={d:r.work_date,nm:r.driver_name,routes:{}};splitRt(r.route).forEach(function(rt){g[key].routes[rt]=1;});});
+  var g={};rows.forEach(function(r){if(!r.driver_name)return;var _pr=_rotParse(r.route);var _baseR=_pr.base;var _rot=_pr.rot;var key=r.work_date+'|'+r.driver_name+'|'+(_rot||0);if(!g[key])g[key]={d:r.work_date,nm:r.driver_name,rot:_rot,routes:{}};splitRt(_baseR).forEach(function(rt){g[key].routes[rt]=1;});});
   var keys=Object.keys(g).sort();
   var aoa=[['업무일','사업자등록번호','캠프명','웨이브','아이디','업무상태','회전','업무라우트']];
-  keys.forEach(function(k){var it=g[k];var routes=Object.keys(it.routes).sort();if(!routes.length)return;var first=routes[0];var night=_isNight(first,cfg.night_routes);var did=dm[it.nm]||it.nm;aoa.push([_sxDate(it.d),cfg.bizno||'',_campOf(first),night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,routes.join(',')]);});
+  keys.forEach(function(k){var it=g[k];var routes=Object.keys(it.routes).sort();if(!routes.length)return;var first=routes[0];var night=_isNight(first,cfg.night_routes);var did=dm[it.nm]||it.nm;aoa.push([_sxDate(it.d),cfg.bizno||'',_campOf(first),night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',(it.rot?(it.rot+'회전'):(night?cfg.night_rot:cfg.day_rot)),routes.join(',')]);});
   if(aoa.length<2){alert('리스트로 만들 스케줄이 없습니다.');return;}
   var wsx=XLSX.utils.aoa_to_sheet(aoa,{cellDates:true});
   for(var r=1;r<aoa.length;r++){var ad=XLSX.utils.encode_cell({r:r,c:0});if(wsx[ad])wsx[ad].z='yyyy-mm-dd hh:mm:ss';}
@@ -1228,7 +1228,7 @@ window.wkChangeList=function(){_sxEnsure(async function(){try{
         }
       }
       var night=_isNight(fs[0],cfg.night_routes);     // 근무 라인(원복이면 재삽입=New)
-      aoa.push([_sxDate(dt),cfg.bizno||'',newCamp,night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',night?cfg.night_rot:cfg.day_rot,fs.join(',')]);
+      aoa.push([_sxDate(dt),cfg.bizno||'',newCamp,night?cfg.night_wave:cfg.day_wave,did,cfg.status||'출근',_rotColOf(fs,night?cfg.night_rot:cfg.day_rot),_cleanRoutes(fs).join(',')]);
     });
   });
   if(aoa.length<2){alert('실제 반영할 변경(휴무·라우트변경)이 없습니다.\n(당일·익일 라인은 변경 불가로 제외됩니다.)');return;}
@@ -1255,11 +1255,13 @@ async function loadSched(){
     const _ws=iso(weekStart);let rows=schedCache[_ws];if(!rows){rows=await rpc("list_schedules",{p_token:S.token,p_week_start:_ws});schedCache[_ws]=rows;}
     if(!rows.length){$("#sc-body").innerHTML='<div class="center">이번 주 스케줄이 아직 없습니다.</div>';return;}
     const dates=[...new Set(rows.map(r=>r.work_date))].sort();try{if(window.scLoadNew)await scLoadNew();}catch(e){}
-    const allRts=[...new Set(rows.map(r=>r.route))];const parentOf={};
+    function _splitRot(rk){var mm=/^(.+?)@([12])$/.exec(String(rk));return mm?{base:mm[1],rot:+mm[2]}:{base:String(rk),rot:0};}
+    const allRts=[...new Set(rows.map(r=>_splitRot(r.route).base))];const parentOf={};
     allRts.forEach(function(C){if(splitRt(C).length>=2){splitRt(C).forEach(function(sub){if(!parentOf[sub])parentOf[sub]=C;});}});
-    const map={},splitMap={},campR={};
-    rows.forEach(r=>{const disp=parentOf[r.route]||r.route;const cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(disp);
-      if(parentOf[r.route]){if(r.driver_name)(splitMap[disp+"|"+r.work_date]=splitMap[disp+"|"+r.work_date]||{})[r.route]=r.driver_name;}
+    const map={},splitMap={},rotMap={},campR={};
+    rows.forEach(function(r){var _pr=_splitRot(r.route);var _phys=_pr.base;var _rot=_pr.rot;var disp=parentOf[_phys]||_phys;var cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(disp);
+      if(_rot){var _rk=disp+"|"+r.work_date;(rotMap[_rk]=rotMap[_rk]||{});(rotMap[_rk][_phys]=rotMap[_rk][_phys]||{})[_rot]=r.driver_name||"";}
+      else if(parentOf[_phys]){if(r.driver_name)(splitMap[disp+"|"+r.work_date]=splitMap[disp+"|"+r.work_date]||{})[_phys]=r.driver_name;}
       else{map[disp+"|"+r.work_date]=r.driver_name;}});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
     const t=kstNow();const today=t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
@@ -1293,11 +1295,13 @@ async function loadSched(){
       h+='<div class="camp-card"><div class="camp-head"><span>📦 '+cp+'</span><span class="rc">'+rts.length+'개 라우트</span></div><div class="tbl-wrap"><div class="tbl-inner"><table class="sched"><thead><tr>'+headCells()+'</tr></thead><tbody>';
       rts.forEach(rt=>{
         h+='<tr><td class="cRoute">'+rt+'</td>';
-        dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];const _nw=(window.scIsNew?scIsNew(rt,d):false);const _nc=_nw?' sched-new':'';const _nb=_nw?'<span class="sched-new-badge">New</span>':'';
-          if(sp&&Object.keys(sp).length){const subs=splitRt(rt);let inner='';
-            subs.forEach(function(s){if(sp[s]!==undefined){const snm=sp[s]||'';const sr=RANKMAP[snm];const sic=isTopRank(sr)?RMARK[sr]+' ':'';inner+='<div class="sch-half">'+s+' : '+sic+escN(snm)+'</div>';}});
-            const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':'';
-            h+='<td class="scsplit'+(to?' tcol':'')+_nc+'"'+rs+da+'>'+_nb+inner+'</td>';
+        dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];const rp=rotMap[rt+"|"+d];const _nw=(window.scIsNew?scIsNew(rt,d):false);const _nc=_nw?" sched-new":"";const _nb=_nw?'<span class="sched-new-badge">New</span>':"";
+          if((sp&&Object.keys(sp).length)||(rp&&Object.keys(rp).length)){var _ln=function(nm){var sr=RANKMAP[nm];var sic=isTopRank(sr)?RMARK[sr]+" ":"";return sic+escN(nm||"");};var _lines=[];
+            if(rp&&rp[rt]){_lines.push([rt+" 1회전",rp[rt][1]]);_lines.push([rt+" 2회전",rp[rt][2]]);}
+            splitRt(rt).forEach(function(su){if(su===rt)return;if(rp&&rp[su]){_lines.push([su+" 1회전",rp[su][1]]);_lines.push([su+" 2회전",rp[su][2]]);}else if(sp&&sp[su]!==undefined){_lines.push([su,sp[su]]);}});
+            var inner=_lines.map(function(l){return '<div class="sch-half">'+l[0]+' : '+_ln(l[1])+'</div>';}).join("");
+            const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':"";
+            h+='<td class="scsplit'+(to?" tcol":"")+_nc+'"'+rs+da+'>'+_nb+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
             if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+mg+_nc+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+rs+da+'>'+_nb+ic+escN(nm)+'</td>';}
@@ -1321,50 +1325,74 @@ async function loadSched(){
 }
 function splitRt(r){var b=String(r).replace(/\s*\(.*?\)/g,'').trim();var m=b.match(/^(\d+)([A-Z]{2,})$/);if(m){return m[2].split('').map(function(c){return m[1]+c;});}if(b.indexOf('/')>=0)return b.split('/').map(function(x){return x.trim();}).filter(Boolean);return [b];}
 function sceRoster(cur){var s={};Object.keys(RANKMAP).forEach(function(n){s[n]=1;});Object.keys(schedCache).forEach(function(k){(schedCache[k]||[]).forEach(function(r){if(r.driver_name)s[r.driver_name]=1;});});if(cur)s[cur]=1;return Object.keys(s).sort();}
+window._rotParse=function(rk){var mm=/^(.+?)@([12])$/.exec(String(rk));return mm?{base:mm[1],rot:+mm[2]}:{base:String(rk),rot:0};};
+window._cleanRoutes=function(arr){return arr.map(function(x){return _rotParse(x).base;});};
+window._rotColOf=function(arr,def){var r={};arr.forEach(function(x){var p=_rotParse(x);if(p.rot)r[p.rot]=1;});var ks=Object.keys(r);return ks.length===1?(ks[0]+"회전"):def;};
+window._sceState=null;
 window.editCell=async(wd,rt,camp,cur)=>{
   var _lr=schedLockReason(wd);if(_lr){alert(schedLockMsg(_lr));return;}
   var subs=splitRt(rt);var splittable=subs.length>=2;
-  var cs={};var wsr=schedCache[iso(weekStart)]||[];
-  wsr.forEach(function(r){if(r.work_date===wd&&subs.indexOf(r.route)>=0&&r.driver_name)cs[r.route]=r.driver_name;});
-  var hasSplit=Object.keys(cs).length>0;window._sceSplitMode=hasSplit;
+  var wsr=schedCache[iso(weekStart)]||[];
+  var st={rt:rt,wd:wd,camp:camp,subs:subs,splittable:splittable,mode:'whole',rotWhole:false,base:cur||'',w1:'',w2:'',sub:{}};
+  subs.forEach(function(su){st.sub[su]={rot:false,base:'',r1:'',r2:''};});
+  var anySub=false,anyWholeRot=false;
+  wsr.forEach(function(r){if(r.work_date!==wd)return;var pr=_rotParse(r.route);var base=pr.base;var rot=pr.rot;
+    if(base===rt){if(rot){anyWholeRot=true;if(rot===1)st.w1=r.driver_name||'';else st.w2=r.driver_name||'';}else{st.base=r.driver_name||'';}}
+    else if(subs.indexOf(base)>=0){anySub=true;if(rot){st.sub[base].rot=true;if(rot===1)st.sub[base].r1=r.driver_name||'';else st.sub[base].r2=r.driver_name||'';}else{st.sub[base].base=r.driver_name||'';}}});
+  if(anySub)st.mode='split';else if(anyWholeRot){st.mode='whole';st.rotWhole=true;}
+  _sceState=st;
   var roster=sceRoster(cur);
   var dl='<datalist id="sc-roster">'+roster.map(function(n){return '<option value="'+escN(n)+'"></option>';}).join('')+'</datalist>';
-  var srows=subs.map(function(s){return '<div class="sc-srow"><span class="sc-sr">'+s+'</span><input class="sc-sin" list="sc-roster" data-rt="'+s+'" value="'+escN(cs[s]||'')+'" placeholder="담당 기사"></div>';}).join('');
   var h='<div id="sc-ov" class="ovbg" onclick="if(event.target.id===\'sc-ov\')this.remove()"><div class="pbmodal scedit">'
-    +'<div class="sce-h">✏️ 기사 변경</div>'
-    +'<div class="sce-b">'
+    +'<div class="sce-h">✏️ 기사 변경</div><div class="sce-b">'
       +'<div class="sce-meta">라우트: <b>'+escN(rt)+'</b><br>날짜: '+wd+'</div>'
-      +'<div id="sce-single" style="display:'+(hasSplit?'none':'')+'"><label class="sce-lb">기사 이름</label><input id="sce-name" list="sc-roster" value="'+escN(cur||'')+'" placeholder="이름"></div>'
-      +'<div id="sce-split" style="display:'+(hasSplit?'':'none')+'"><label class="sce-lb">✂ 분할 배정 (라우트별 기사)</label>'+srows+'</div>'
-      +dl
-      +'<div class="sce-btns">'
-        +(splittable?'<button class="sce-split'+(hasSplit?' on':'')+'" onclick="sceToggleSplit()">'+(hasSplit?'🔗 병합 배정':'✂ 분할 배정')+'</button>':'')
-        +'<span style="flex:1"></span>'
-        +'<button class="sce-save" onclick="sceSave(\''+wd+'\',\''+rt+'\',\''+escN(camp)+'\')">변경 저장</button>'
-        +'<button class="sce-cancel" onclick="document.getElementById(\'sc-ov\').remove()">취소</button>'
-      +'</div>'
+      +'<div id="sce-body"></div>'+dl
+      +'<div class="sce-btns"><span style="flex:1"></span><button class="sce-save" onclick="sceSave()">변경 저장</button><button class="sce-cancel" onclick="document.getElementById(\'sc-ov\').remove()">취소</button></div>'
     +'</div></div></div>';
-  document.body.insertAdjacentHTML('beforeend',h);
+  document.body.insertAdjacentHTML('beforeend',h);sceRenderBody();
 };
-window.sceToggleSplit=function(){window._sceSplitMode=!window._sceSplitMode;var sm=window._sceSplitMode;document.getElementById('sce-single').style.display=sm?'none':'';document.getElementById('sce-split').style.display=sm?'':'none';var b=document.querySelector('.sce-split');if(b){b.textContent=sm?'🔗 병합 배정':'✂ 분할 배정';b.classList.toggle('on',sm);}};
-window.sceSave=async function(wd,rt,camp){
-  var ov=document.getElementById('sc-ov');
+window._sceInput=function(id,val,ph){return '<input id="'+id+'" list="sc-roster" value="'+escN(val||'')+'" placeholder="'+(ph||'담당 기사')+'" style="width:100%">';};
+window.sceRenderBody=function(){var st=_sceState;if(!st)return;var h='';
+  var seg=function(active,label,onclick){return '<button onclick="'+onclick+'" style="flex:1;padding:8px;border-radius:9px;border:1.4px solid #cfe0d8;font-size:12px;font-weight:800;'+(active?'background:#2f6fed;color:#fff;border-color:#2f6fed':'background:#f4f7fb;color:#42566b')+'">'+label+'</button>';};
+  if(st.mode==='whole'){
+    h+='<div style="font-size:11px;color:#8090a0;margin-bottom:5px">회전</div>';
+    h+='<div style="display:flex;gap:6px;margin-bottom:9px">'+seg(!st.rotWhole,'1,2회전 모두','sceSetWholeRot(false)')+seg(st.rotWhole,'회전 분할','sceSetWholeRot(true)')+'</div>';
+    if(!st.rotWhole){h+=_sceInput('sce-w',st.base,'이름');}
+    else{h+='<div style="font-size:11px;color:#2f6fed;font-weight:700;margin:4px 0 3px">1회전</div>'+_sceInput('sce-w1',st.w1,'1회전 기사')+'<div style="font-size:11px;color:#2f6fed;font-weight:700;margin:7px 0 3px">2회전</div>'+_sceInput('sce-w2',st.w2,'비우면 배정 없음');}
+    if(st.splittable){h+='<div style="margin-top:10px"><button onclick="sceToRouteSplit()" style="width:100%;padding:9px;border-radius:10px;border:1.5px dashed #b9c8da;background:#f2f7ff;color:#2f5fc8;font-size:12px;font-weight:800">✂ 분할 배정 (라우트 나눠서 각각 지정)</button></div>';}
+  }else{
+    h+='<div style="font-size:11px;color:#8090a0;margin-bottom:6px">라우트를 나눠서 각각 기사를 지정하세요</div>';
+    st.subs.forEach(function(su){var sd=st.sub[su];
+      h+='<div style="border:1px solid #eef2f6;border-radius:10px;padding:8px;margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><b style="color:#2f6fed;font-size:13px">'+su+'</b><span style="flex:1"></span>'+seg(!sd.rot,'1,2회전 모두','sceSetSubRot(\''+su+'\',false)')+seg(sd.rot,'회전 분할','sceSetSubRot(\''+su+'\',true)')+'</div>';
+      if(!sd.rot){h+=_sceInput('sce-s-'+su,sd.base,'담당 기사');}
+      else{h+='<div style="font-size:10.5px;color:#2f6fed;font-weight:700;margin:3px 0 2px">1회전</div>'+_sceInput('sce-s1-'+su,sd.r1,'1회전')+'<div style="font-size:10.5px;color:#2f6fed;font-weight:700;margin:5px 0 2px">2회전</div>'+_sceInput('sce-s2-'+su,sd.r2,'비우면 배정 없음');}
+      h+='</div>';});
+    h+='<div><button onclick="sceToWhole()" style="width:100%;padding:9px;border-radius:10px;border:1.5px solid #cfd8e3;background:#f4f7fb;color:#5a6b7c;font-size:12px;font-weight:700">← 하나로 (병합)</button></div>';
+  }
+  document.getElementById('sce-body').innerHTML=h;
+};
+window._sceReadInputs=function(){var st=_sceState;if(!st)return;var g=function(id){var e=document.getElementById(id);return e?e.value.trim():undefined;};
+  if(st.mode==='whole'){if(!st.rotWhole){var v=g('sce-w');if(v!==undefined)st.base=v;}else{var a=g('sce-w1'),b=g('sce-w2');if(a!==undefined)st.w1=a;if(b!==undefined)st.w2=b;}}
+  else{st.subs.forEach(function(su){var sd=st.sub[su];if(!sd.rot){var v=g('sce-s-'+su);if(v!==undefined)sd.base=v;}else{var a=g('sce-s1-'+su),b=g('sce-s2-'+su);if(a!==undefined)sd.r1=a;if(b!==undefined)sd.r2=b;}});}
+};
+window.sceSetWholeRot=function(on){_sceReadInputs();_sceState.rotWhole=!!on;sceRenderBody();};
+window.sceSetSubRot=function(su,on){_sceReadInputs();_sceState.sub[su].rot=!!on;sceRenderBody();};
+window.sceToRouteSplit=function(){_sceReadInputs();var st=_sceState;st.mode='split';st.subs.forEach(function(su){var sd=st.sub[su];if(!sd.base&&!sd.r1&&!sd.r2){if(st.rotWhole){sd.rot=true;sd.r1=st.w1;sd.r2=st.w2;}else{sd.base=st.base;}}});sceRenderBody();};
+window.sceToWhole=function(){_sceReadInputs();_sceState.mode='whole';sceRenderBody();};
+window.sceSave=async function(){_sceReadInputs();var st=_sceState;if(!st)return;var ws=iso(weekStart),wd=st.wd,camp=st.camp,rt=st.rt;
+  var setC=function(route,driver){return rpc("set_schedule_cell",{p_token:S.token,p_week_start:ws,p_work_date:wd,p_route:route,p_driver:driver||"",p_camp:camp});};
   try{
-    if(window._sceSplitMode){
-      var ins=[].slice.call(document.querySelectorAll('#sce-split .sc-sin'));
-      var asg=ins.map(function(i){return {rt:i.dataset.rt,dn:i.value.trim()};});
-      if(!asg.some(function(a){return a.dn;})){alert('분할 기사명을 최소 1개 입력하세요.');return;}
-      for(var j=0;j<asg.length;j++){await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:asg[j].rt,p_driver:asg[j].dn,p_camp:camp});}
-      await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:"",p_camp:camp});
-    } else {
-      var nv=document.getElementById('sce-name').value.trim();
-      await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:rt,p_driver:nv,p_camp:camp});
-      var msubs=splitRt(rt);
-      if(msubs.length>=2){var wsr2=schedCache[iso(weekStart)]||[];
-        for(var s=0;s<msubs.length;s++){var had=wsr2.some(function(r){return r.work_date===wd&&r.route===msubs[s]&&r.driver_name;});
-          if(had){await rpc("set_schedule_cell",{p_token:S.token,p_week_start:iso(weekStart),p_work_date:wd,p_route:msubs[s],p_driver:"",p_camp:camp});}}}
+    if(st.mode==='whole'){
+      for(var i=0;i<st.subs.length;i++){var su=st.subs[i];if(su!==rt){await setC(su,"");}await setC(su+"@1","");await setC(su+"@2","");}
+      if(!st.rotWhole){await setC(rt,st.base);await setC(rt+"@1","");await setC(rt+"@2","");}
+      else{await setC(rt,"");await setC(rt+"@1",st.w1);await setC(rt+"@2",st.w2);}
+    }else{
+      await setC(rt,"");await setC(rt+"@1","");await setC(rt+"@2","");
+      for(var j=0;j<st.subs.length;j++){var s2=st.subs[j];var sd=st.sub[s2];
+        if(!sd.rot){await setC(s2,sd.base);await setC(s2+"@1","");await setC(s2+"@2","");}
+        else{await setC(s2,"");await setC(s2+"@1",sd.r1);await setC(s2+"@2",sd.r2);}}
     }
-    if(ov)ov.remove();delete schedCache[iso(weekStart)];loadSched();
+    var ov=document.getElementById('sc-ov');if(ov)ov.remove();delete schedCache[ws];loadSched();
   }catch(e){alert(e.message);}
 };
 /* 정산 */
