@@ -1260,7 +1260,7 @@ async function loadSched(){
     allRts.forEach(function(C){if(splitRt(C).length>=2){splitRt(C).forEach(function(sub){if(!parentOf[sub])parentOf[sub]=C;});}});
     const map={},splitMap={},rotMap={},campR={};
     rows.forEach(function(r){var _pr=_splitRot(r.route);var _phys=_pr.base;var _rot=_pr.rot;var disp=parentOf[_phys]||_phys;var cp=r.camp||"기타";(campR[cp]=campR[cp]||new Set()).add(disp);
-      if(_rot){var _rk=disp+"|"+r.work_date;(rotMap[_rk]=rotMap[_rk]||{});(rotMap[_rk][_phys]=rotMap[_rk][_phys]||{})[_rot]=r.driver_name||"";}
+      if(_rot){if(r.driver_name){var _rk=disp+"|"+r.work_date;(rotMap[_rk]=rotMap[_rk]||{});(rotMap[_rk][_phys]=rotMap[_rk][_phys]||{})[_rot]=r.driver_name;}}
       else if(parentOf[_phys]){if(r.driver_name)(splitMap[disp+"|"+r.work_date]=splitMap[disp+"|"+r.work_date]||{})[_phys]=r.driver_name;}
       else{map[disp+"|"+r.work_date]=r.driver_name;}});
     const camps=Object.keys(campR).sort((a,b)=>((parseInt(b.replace(/\D/g,''))||0)-(parseInt(a.replace(/\D/g,''))||0)));
@@ -1297,8 +1297,8 @@ async function loadSched(){
         h+='<tr><td class="cRoute">'+rt+'</td>';
         dates.forEach(d=>{const kk=rt+"|"+d;if(_hide[kk])return;const rs=(_span[kk]>1)?' rowspan="'+_span[kk]+'"':'';const mg=(_span[kk]>1)?' schmrg':'';const to=(d===today);const sp=splitMap[rt+"|"+d];const rp=rotMap[rt+"|"+d];const _nw=(window.scIsNew?scIsNew(rt,d):false);const _nc=_nw?" sched-new":"";const _nb=_nw?'<span class="sched-new-badge">New</span>':"";
           if((sp&&Object.keys(sp).length)||(rp&&Object.keys(rp).length)){var _ln=function(nm){var sr=RANKMAP[nm];var sic=isTopRank(sr)?RMARK[sr]+" ":"";return sic+escN(nm||"");};var _lines=[];
-            if(rp&&rp[rt]){_lines.push([rt+" 1회전",rp[rt][1]]);_lines.push([rt+" 2회전",rp[rt][2]]);}
-            splitRt(rt).forEach(function(su){if(su===rt)return;if(rp&&rp[su]){_lines.push([su+" 1회전",rp[su][1]]);_lines.push([su+" 2회전",rp[su][2]]);}else if(sp&&sp[su]!==undefined){_lines.push([su,sp[su]]);}});
+            if(rp&&rp[rt]){if(rp[rt][1])_lines.push([rt+" 1회전",rp[rt][1]]);if(rp[rt][2])_lines.push([rt+" 2회전",rp[rt][2]]);}
+            splitRt(rt).forEach(function(su){if(su===rt)return;if(rp&&rp[su]&&(rp[su][1]||rp[su][2])){if(rp[su][1])_lines.push([su+" 1회전",rp[su][1]]);if(rp[su][2])_lines.push([su+" 2회전",rp[su][2]]);}else if(sp&&sp[su]!==undefined&&sp[su]!==""){_lines.push([su,sp[su]]);}});
             var inner=_lines.map(function(l){return '<div class="sch-half">'+l[0]+' : '+_ln(l[1])+'</div>';}).join("");
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':"";
             h+='<td class="scsplit'+(to?" tcol":"")+_nc+'"'+rs+da+'>'+_nb+inner+'</td>';
@@ -1337,8 +1337,8 @@ window.editCell=async(wd,rt,camp,cur)=>{
   subs.forEach(function(su){st.sub[su]={rot:false,base:'',r1:'',r2:''};});
   var anySub=false,anyWholeRot=false;
   wsr.forEach(function(r){if(r.work_date!==wd)return;var pr=_rotParse(r.route);var base=pr.base;var rot=pr.rot;
-    if(base===rt){if(rot){anyWholeRot=true;if(rot===1)st.w1=r.driver_name||'';else st.w2=r.driver_name||'';}else{st.base=r.driver_name||'';}}
-    else if(subs.indexOf(base)>=0){anySub=true;if(rot){st.sub[base].rot=true;if(rot===1)st.sub[base].r1=r.driver_name||'';else st.sub[base].r2=r.driver_name||'';}else{st.sub[base].base=r.driver_name||'';}}});
+    if(base===rt){if(rot){if(r.driver_name){anyWholeRot=true;if(rot===1)st.w1=r.driver_name;else st.w2=r.driver_name;}}else{st.base=r.driver_name||'';}}
+    else if(subs.indexOf(base)>=0){if(rot){if(r.driver_name){anySub=true;st.sub[base].rot=true;if(rot===1)st.sub[base].r1=r.driver_name;else st.sub[base].r2=r.driver_name;}}else{if(r.driver_name)anySub=true;st.sub[base].base=r.driver_name||'';}}});
   if(anySub)st.mode='split';else if(anyWholeRot){st.mode='whole';st.rotWhole=true;}
   _sceState=st;
   var roster=sceRoster(cur);
