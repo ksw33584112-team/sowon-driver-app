@@ -1205,7 +1205,7 @@ window.wkChangeList=function(){_sxEnsure(async function(){try{
     var fmap={};rows.forEach(function(r){if(r.work_date===dt&&r.driver_name)fmap[r.route]=r.driver_name;});
     var byRoute={};chg.forEach(function(c){if(c.work_date!==dt)return;(byRoute[c.route]=byRoute[c.route]||[]).push(c);});
     var orig={};for(var rt in fmap)orig[rt]=fmap[rt];
-    Object.keys(byRoute).forEach(function(rt){var od=byRoute[rt][0].old_driver||'';if(od)orig[rt]=od;else delete orig[rt];});
+    Object.keys(byRoute).forEach(function(rt){var _last=byRoute[rt][byRoute[rt].length-1];var od=(_last&&_last.old_driver)||'';if(od)orig[rt]=od;else delete orig[rt];});
     var oR=inv(orig),fR=inv(fmap);
     // 변경에 관여된 최종 담당(원복=New 재삽입 대상)
     var changedFinal={};
