@@ -1400,7 +1400,7 @@ let _admView=null; // 관리자 전체정산 현재 연/월
 async function loadMonths(){
   $("#st-detail").innerHTML="";$("#st-list").innerHTML='<div class="center">불러오는 중…</div>';
   try{
-    const rows=await rpc("get_my_months",{p_token:S.token});
+    const rows=await rpc("get_my_months",{p_token:S.token});rows.sort((a,b)=>(b.year*12+b.month)-(a.year*12+a.month));
     let h='';
     if(IS_ADMIN()){
       h+='<div class="segtab"><button id="seg-all" class="'+(rows.length?'':'on')+'" onclick="stTab(1)">전체 정산</button><button id="seg-mine" class="'+(rows.length?'on':'')+'" onclick="stTab(0)">내 정산</button><button id="seg-act" onclick="toggleSettleActive()" style="'+(SETTLECFG.active?'background:#e6f7ec;color:#1e7d3c;border-color:#a7e0bb':'background:#fdecec;color:#c0392b;border-color:#f0b4b4')+'">'+(SETTLECFG.active?'노출 ON':'노출 OFF')+'</button><button id="seg-notify" onclick="toggleSettleNotify()" style="'+(SETTLECFG.notify?'background:#e6f7ec;color:#1e7d3c;border-color:#a7e0bb':'background:#fdecec;color:#c0392b;border-color:#f0b4b4')+'">'+(SETTLECFG.notify?'알림 ON':'알림 OFF')+'</button></div>';
@@ -1414,7 +1414,7 @@ async function loadMonths(){
     }
     h+='<div id="st-all"></div>';
     $("#st-list").innerHTML=h;
-    if(IS_ADMIN()){ if(!_admView)_admView={y:2026,m:6}; renderAdminSettle(_admView.y,_admView.m); if(!rows.length)stTab(1); else stTab(0); }
+    if(IS_ADMIN()){ if(!_admView){if(rows.length)_admView={y:rows[0].year,m:rows[0].month};else{var _n=kstNow();_admView={y:_n.getFullYear(),m:_n.getMonth()+1};}} renderAdminSettle(_admView.y,_admView.m); if(!rows.length)stTab(1); else stTab(0); }
   }catch(e){$("#st-list").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 var SETTLECFG={active:true,notify:true};
