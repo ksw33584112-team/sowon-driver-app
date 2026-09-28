@@ -1301,7 +1301,7 @@ async function loadSched(){
             splitRt(rt).forEach(function(su){if(su===rt)return;if(rp&&rp[su]&&(rp[su][1]||rp[su][2])){if(rp[su][1])_lines.push([su+" 1회전",rp[su][1]]);if(rp[su][2])_lines.push([su+" 2회전",rp[su][2]]);}else if(sp&&sp[su]!==undefined&&sp[su]!==""){_lines.push([su,sp[su]]);}});
             var inner=_lines.map(function(l){return '<div class="sch-half">'+l[0]+' : '+_ln(l[1])+'</div>';}).join("");
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="" style="cursor:pointer"':"";
-            h+='<td class="scsplit'+(to?" tcol":"")+_nc+_rcls(nm)+'"'+rs+da+'>'+_nb+inner+'</td>';
+            h+='<td class="scsplit'+(to?" tcol":"")+_nc+'"'+rs+da+'>'+_nb+inner+'</td>';
           } else {const nm=map[rt+"|"+d]||"";const rk=RANKMAP[nm];
             const da=ed?' data-d="'+d+'" data-rt="'+rt+'" data-cp="'+cp+'" data-nm="'+escN(nm)+'" style="cursor:pointer"':'';
             if(nm&&rk){const c=nameColor(nm);const ic=isTopRank(rk)?RMARK[rk]+' ':'';h+='<td class="'+(to?'tcol':'')+mg+_nc+_rcls(nm)+'" style="background:'+c.bg+';color:'+c.tx+';font-weight:800"'+rs+da+'>'+_nb+escN(nm)+_rbadge(nm)+'</td>';}
