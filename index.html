@@ -606,7 +606,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-soon{display:inline-block;margin-top:16px;background:#f0f0f8;color:#8a86b8;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:800}
 .pl-foot{text-align:center;font-size:11px;color:#a8afc2;margin:16px 0 4px;line-height:1.6}
 /* 이달의 게임왕 배너 (화려한 애니메이션) */
-.king{position:relative;overflow:hidden;border-radius:20px;padding:14px 13px 14px;margin-bottom:12px;background:radial-gradient(circle at 50% 0%,#6a3fd0 0%,#3a2380 55%,#1e1450 100%);border:2px solid #ffd54f;box-shadow:0 8px 26px rgba(90,40,180,.38);text-align:center}
+.pl-prev{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 8px;text-align:left;z-index:3}.pl-prev-t{font-size:10px;color:#cdb8ff;font-weight:800;margin-bottom:3px;text-align:center;letter-spacing:.5px}.pl-prev-r{font-size:11px;color:#fff;display:flex;align-items:center;gap:4px;line-height:1.75;white-space:nowrap}.pl-prev-r b{font-weight:700}.pl-prev-r span{color:#c9b8e8;font-size:10px;margin-left:2px}.king{position:relative;overflow:hidden;border-radius:20px;padding:14px 13px 14px;margin-bottom:12px;background:radial-gradient(circle at 50% 0%,#6a3fd0 0%,#3a2380 55%,#1e1450 100%);border:2px solid #ffd54f;box-shadow:0 8px 26px rgba(90,40,180,.38);text-align:center}
 .king.empty{padding:16px 14px 15px}
 .king.empty .king-rays{opacity:.5}
 .king-crown.sm{font-size:26px;margin-top:6px}
@@ -1768,7 +1768,7 @@ function plGame(k){return PL_GAMES.find(function(g){return g.k===k;});}
 window.__PLAY=null;
 async function loadPlay(){
   var box=$("#play-body");box.innerHTML='<div class="center">불러오는 중…</div>';
-  var d;try{d=await rpc("game_hub",{p_token:S.token});}catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';return;}
+  var d;try{d=await rpc("game_hub",{p_token:S.token});try{d.prev_top3=await rpc("game_prev_top3",{p_token:S.token});}catch(_pe){}}catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';return;}
   window.__PLAY=d;var cfg=d.config||{};var scores=d.scores||[];var me=d.me;var isAdm=!!d.is_admin;
   var exAdm=cfg.exclude_admin!==false;
   var vsc=scores.filter(function(s){return !(exAdm&&s.is_admin);});
@@ -1821,14 +1821,14 @@ function kingVal(st,p){return st.mode==='king'?(p.val+'점'):(+p.val).toLocaleSt
 function kingPub(cfg,isAdm){if(!isAdm)return '';var pub=cfg.public_on!==false;return '<div class="king-pub'+(pub?' on':'')+'">'+(pub?'🔓 공개중 (기사에게 보임)':'🔒 비공개 (관리자만 보임)')+'<span onclick="event.stopPropagation();cfgTogglePublic('+(pub?'false':'true')+')">'+(pub?'비공개로':'공개하기')+'</span></div>';}
 function kingBanner(d){
   var cfg=d.config||{},me=d.me,isAdm=!!d.is_admin;
-  var st=kingStandings(d),list=st.list;
+  var st=kingStandings(d),list=st.list;var _pv='';try{var _pt=(d&&d.prev_top3&&d.prev_top3.top)||[];if(_pt.length){var _mk=['🥇','🥈','🥉'];_pv='<div class="pl-prev"><div class="pl-prev-t">지난달</div>';for(var _i=0;_i<_pt.length;_i++){_pv+='<div class="pl-prev-r">'+_mk[_i]+'<b>'+String(_pt[_i].name||'').replace(/</g,'&lt;')+'</b><span>'+_pt[_i].pts+'점</span></div>';}_pv+='</div>';}}catch(_e){}
   var period=(cfg.start_date&&cfg.end_date)?(cfg.start_date.replace(/-/g,'.')+' ~ '+cfg.end_date.replace(/-/g,'.')):'상시 진행';
   var oc=isAdm?' onclick="gameCfgOpen()"':'';
   if(!list.length){
-    var e='<div class="king empty'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div><div class="king-crown sm">👑</div><div class="king-empty">아직 기록이 없어요<br>가장 먼저 왕좌에 도전하세요! 🏆</div>'+(isAdm?'<div class="king-edit">✎ 탭하여 설정</div>':'')+'</div>';
+    var e='<div class="king empty'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div>'+_pv+'<div class="king-badge">👑 이달의 게임왕</div><div class="king-crown sm">👑</div><div class="king-empty">아직 기록이 없어요<br>가장 먼저 왕좌에 도전하세요! 🏆</div>'+(isAdm?'<div class="king-edit">✎ 탭하여 설정</div>':'')+'</div>';
     return e+kingPub(cfg,isAdm);
   }
-  var h='<div class="king'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div><div class="king-badge">👑 이달의 게임왕</div>';
+  var h='<div class="king'+(isAdm?' clk':'')+'"'+oc+'><div class="king-rays"></div>'+_pv+'<div class="king-badge">👑 이달의 게임왕</div>';
   var cc=['#ffd54f','#ff6b9d','#6b8cff','#7bed9f','#ffb74d'];
   for(var i=0;i<14;i++)h+='<span class="king-cf" style="left:'+((i*7+5)%92)+'%;background:'+cc[i%5]+';animation-delay:'+((i%7)*0.3)+'s"></span>';
   var k1=list[0];
