@@ -571,6 +571,21 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-gtr b{flex:1;color:#fff;font-weight:700;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pl-gtr i{color:#ffe082;font-weight:800;font-style:normal;font-size:10.5px;flex-shrink:0}
 .pl-gwait{margin-top:8px;background:rgba(0,0,0,.18);border-radius:7px;padding:7px;text-align:center;font-size:10.5px;color:rgba(255,255,255,.92);font-weight:700}
+.pl-rbanner{margin:2px 0 12px;padding:10px 13px;border-radius:12px;font-size:12px;font-weight:800;color:#fff;text-align:center;line-height:1.5;background:linear-gradient(100deg,#ff8a00,#ff5252 55%,#e53935);box-shadow:0 4px 14px rgba(255,90,60,.35);position:relative;overflow:hidden}
+.pl-rbanner b{font-weight:900}
+.pl-rbanner em{font-style:normal;font-weight:900;background:rgba(255,255,255,.25);padding:1px 6px;border-radius:6px;margin:0 1px}
+.pl-rbanner em.mn{background:rgba(0,0,0,.22)}
+.pl-rbanner::after{content:"";position:absolute;top:0;left:-50%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-18deg);animation:grecSweep 3.5s ease-in-out infinite}
+.pl-grec{position:relative;display:flex;align-items:center;gap:5px;margin:-2px -3px 9px;padding:5px 8px;border-radius:10px;background:linear-gradient(180deg,#fff6d8 0%,#ffe9a0 32%,#f5c34b 52%,#e8ad2e 68%,#ffe9a0 100%);border:1.5px solid #c8901f;box-shadow:0 2px 6px rgba(180,120,0,.35),inset 0 1px 0 rgba(255,255,255,.7);overflow:hidden}
+.pl-grec::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-18deg);animation:grecSweep 3.2s ease-in-out infinite}
+@keyframes grecSweep{0%{left:-60%}55%{left:130%}100%{left:130%}}
+.pgr-lab{font-size:8.5px;font-weight:900;background:linear-gradient(90deg,#e53935,#fb8c00,#2e9e5b,#1e88e5,#7c4dff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;flex-shrink:0}
+.pgr-cr{font-size:12px;animation:grecCrown 1.6s ease-in-out infinite;flex-shrink:0}
+@keyframes grecCrown{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+.pgr-nm{flex:1;font-size:11px;font-weight:900;color:#5b3410;text-shadow:0 1px 0 rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pgr-sc{font-style:normal;font-weight:900;font-size:11px;color:#c62828;text-shadow:0 1px 0 #fff,0 0 2px rgba(255,255,255,.8);flex-shrink:0}
+.pgr-sp{font-size:9px;color:#fff3b0;animation:grecSpark 1.4s ease-in-out infinite;flex-shrink:0}
+@keyframes grecSpark{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
 .pl-gtop b{color:#ff8f00}
 /* 관리자 이달의 게임 설정 */
 .pl-adm{background:linear-gradient(135deg,#eef2ff,#f6eeff);border:1px solid #dfe3f5;border-radius:16px;padding:13px 14px;margin-bottom:14px;display:flex;align-items:center;gap:11px}
@@ -1768,7 +1783,7 @@ function plGame(k){return PL_GAMES.find(function(g){return g.k===k;});}
 window.__PLAY=null;
 async function loadPlay(){
   var box=$("#play-body");box.innerHTML='<div class="center">불러오는 중…</div>';
-  var d;try{d=await rpc("game_hub",{p_token:S.token});try{d.prev_top3=await rpc("game_prev_top3",{p_token:S.token});}catch(_pe){}}catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';return;}
+  var d;try{d=await rpc("game_hub",{p_token:S.token});try{d.prev_top3=await rpc("game_prev_top3",{p_token:S.token});}catch(_pe){}try{d.records=await rpc("game_records",{});}catch(_re){}}catch(e){box.innerHTML='<div class="center">'+e.message+'</div>';return;}
   window.__PLAY=d;var cfg=d.config||{};var scores=d.scores||[];var me=d.me;var isAdm=!!d.is_admin;
   var exAdm=cfg.exclude_admin!==false;
   var vsc=scores.filter(function(s){return !(exAdm&&s.is_admin);});
@@ -1781,6 +1796,7 @@ async function loadPlay(){
   h+=kingBanner(d);
   /* 인기 게임 */
   h+='<div class="pl-sec">🕹️ 인기 게임<span class="pl-more">'+PL_GAMES.length+'종</span></div>';
+  h+='<div class="pl-rbanner">👑 <b>역대 최고기록</b> 갱신 시 게임왕 <em>+1점</em> · 단, 해당 월에 뺏기면 <em class="mn">-1점</em></div>';
   h+='<div class="pl-grid">';
   var GMED=['🥇','🥈','🥉'];
   PL_GAMES.forEach(function(g){
@@ -1788,7 +1804,9 @@ async function loadPlay(){
     var best={};gs.forEach(function(s){if(!(s.name in best)||+s.score>best[s.name])best[s.name]=+s.score||0;});
     var top=Object.keys(best).map(function(n){return {name:n,score:best[n]};}).sort(function(a,b){return b.score-a.score;}).slice(0,3);
     var feat=(cfg.mode==='game'&&cfg.featured_game===g.k);
+    var rec=(d.records&&d.records[g.k])||null;
     h+='<div class="pl-gcard'+(feat?' feat':'')+'" style="background:'+g.g+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">🔥 HOT</div>':'');
+    if(rec)h+='<div class="pl-grec"><span class="pgr-lab">최고기록</span><span class="pgr-cr">👑</span><b class="pgr-nm">'+escN(rec.name)+'</b><i class="pgr-sc">'+ghFmtScore(g.k,rec.score)+'</i><span class="pgr-sp">✦</span></div>';
     h+='<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
     if(top.length){h+='<div class="pl-gtops">';top.forEach(function(p,i){h+='<div class="pl-gtr"><span'+(i===0?' class="gm1"':'')+'>'+GMED[i]+'</span><b>'+escN(p.name)+'</b><i>'+ghFmtScore(g.k,p.score)+'</i></div>';});h+='</div>';}
     else{h+='<div class="pl-gwait">랭킹 대기중 · 1등 도전! 🏆</div>';}
@@ -1918,15 +1936,14 @@ function ghToggleSound(){GHS.on=!GHS.on;try{localStorage.setItem('gh_mute',GHS.o
 function ghMonthLabel(){var d=new Date();return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0');}
 function ghGameMeta(g){var x=plGame(g);return x?[x.e,x.n]:['🎮',g];}
 function ghGameShell(g){var m=ghGameMeta(g);
-  return '<div style="min-height:100%;display:flex;flex-direction:column;padding:12px 12px 40px;box-sizing:border-box">'
+  return '<div style="height:100%;display:flex;flex-direction:column;padding:8px 8px 8px;box-sizing:border-box">'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
       +'<button onclick="ghBack()" style="background:#ffffff18;border:1px solid #ffffff33;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:800;color:#fff;cursor:pointer">← 게임 목록</button>'
       +'<span style="font-weight:900;font-size:17px;color:#fff">'+m[0]+' '+m[1]+'</span>'
       +'<button id="gh-sound-btn" onclick="ghToggleSound()" style="margin-left:auto;background:#ffffff18;border:1px solid #ffffff33;border-radius:9px;padding:7px 11px;font-size:16px;cursor:pointer">'+(GHS.on?'🔊':'🔇')+'</button>'
       +'<span style="font-size:11px;color:#90a4ae">'+ghMonthLabel()+'</span>'
     +'</div>'
-    +'<div id="g-stage" style="text-align:center"></div>'
-    +'<div id="g-board" style="margin:18px auto 0;max-width:460px;width:100%"></div>'
+    +'<div id="g-stage" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0;text-align:center"></div>'
   +'</div>';
 }
 function ghRemoveKeys(){try{['gFlapKey','gTetKey','gRunKey','gJumpKey','gJumpKeyUp','gMatchKey','gTimberKey','gKnifeKey'].forEach(function(fn){if(window[fn]){document.removeEventListener('keydown',window[fn]);document.removeEventListener('keyup',window[fn]);}});}catch(e){}}
@@ -1947,12 +1964,14 @@ function ghRenderBoard(g){var el=document.getElementById('g-board');if(!el)retur
   el.innerHTML=html;
 }
 function ghLoad(g){ghRenderBoard(g);}
+function ghFitStage(){try{var st=document.getElementById('g-stage');if(!st)return;var wrap=st.querySelector(':scope > .gh-fit');if(!wrap){wrap=document.createElement('div');wrap.className='gh-fit';wrap.style.display='inline-block';while(st.firstChild)wrap.appendChild(st.firstChild);st.appendChild(wrap);}wrap.style.transform='';var cw=wrap.offsetWidth,ch=wrap.offsetHeight;if(!cw||!ch)return;var pop=document.getElementById('gpop');var availW=(pop?pop.clientWidth:window.innerWidth)-12;var availH=(pop?pop.clientHeight:window.innerHeight)-58;var sc=Math.min(availW/cw,availH/ch);sc=Math.max(0.7,Math.min(sc,2.8));wrap.style.transformOrigin='center center';wrap.style.transform='scale('+sc+')';}catch(e){}}
+window.addEventListener('resize',function(){var p=document.getElementById('gpop');if(p&&p.style.display!=='none')ghFitStage();});
 async function ghSave(game,score){try{await rpc('submit_game_score',{p_token:S.token,p_game:game,p_score:score});try{window.__PLAY=await rpc('game_hub',{p_token:S.token});}catch(e){}ghRenderBoard(game);}catch(e){}}
 function ghStartGame(g){ghAudio();if(GH.raf){try{cancelAnimationFrame(GH.raf);}catch(e){}GH.raf=0;}GH.gen++;ghRemoveKeys();GH.view=g;
   var pop=document.getElementById('gpop');
   if(!pop){pop=document.createElement('div');pop.id='gpop';pop.style.cssText='display:none;position:fixed;inset:0;z-index:99990;background:linear-gradient(#0d1117,#161b22);overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(pop);}
   pop.innerHTML=ghGameShell(g);pop.style.display='block';pop.scrollTop=0;try{document.body.style.overflow='hidden';}catch(e){}
-  setTimeout(function(){if(g==='flap')gFlapStart();else if(g==='tetris')gTetStart();else if(g==='runner')gRunStart();else if(g==='jump')gJumpStart();else if(g==='match')gMatchStart();else if(g==='timber')gTimberStart();else if(g==='knife')gKnifeStart();else if(g==='sichuan')gSichuanStart();},40);}
+  setTimeout(function(){if(g==='flap')gFlapStart();else if(g==='tetris')gTetStart();else if(g==='runner')gRunStart();else if(g==='jump')gJumpStart();else if(g==='match')gMatchStart();else if(g==='timber')gTimberStart();else if(g==='knife')gKnifeStart();else if(g==='sichuan')gSichuanStart();setTimeout(ghFitStage,90);},40);}
 window.openGame=function(k){ghStartGame(k);};
 /* 공용 캔버스 헬퍼 */
 function gRR(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
