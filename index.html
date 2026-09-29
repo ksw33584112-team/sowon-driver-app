@@ -1971,7 +1971,7 @@ function ghStartGame(g){ghAudio();if(GH.raf){try{cancelAnimationFrame(GH.raf);}c
   var pop=document.getElementById('gpop');
   if(!pop){pop=document.createElement('div');pop.id='gpop';pop.style.cssText='display:none;position:fixed;inset:0;z-index:99990;background:linear-gradient(#0d1117,#161b22);overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(pop);}
   pop.innerHTML=ghGameShell(g);pop.style.display='block';pop.scrollTop=0;try{document.body.style.overflow='hidden';}catch(e){}
-  setTimeout(function(){if(g==='flap')gFlapStart();else if(g==='tetris')gTetStart();else if(g==='runner')gRunStart();else if(g==='jump')gJumpStart();else if(g==='match')gMatchStart();else if(g==='timber')gTimberStart();else if(g==='knife')gKnifeStart();else if(g==='sichuan')gSichuanStart();setTimeout(ghFitStage,90);},40);}
+  setTimeout(function(){if(g==='flap')gFlapStart();else if(g==='tetris')gTetStart();else if(g==='runner')gRunStart();else if(g==='jump')gJumpStart();else if(g==='match')gMatchStart();else if(g==='timber')gTimberStart();else if(g==='knife')gKnifeStart();else if(g==='sichuan')gSichuanStart();[150,500,1200].forEach(function(_ms){setTimeout(ghFitStage,_ms);});},40);}
 window.openGame=function(k){ghStartGame(k);};
 /* 공용 캔버스 헬퍼 */
 function gRR(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
