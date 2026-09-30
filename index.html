@@ -576,6 +576,15 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .pl-rbanner em{font-style:normal;font-weight:900;background:rgba(255,255,255,.25);padding:1px 6px;border-radius:6px;margin:0 1px}
 .pl-rbanner em.mn{background:rgba(0,0,0,.22)}
 .pl-rbanner::after{content:"";position:absolute;top:0;left:-50%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-18deg);animation:grecSweep 3.5s ease-in-out infinite}
+.gc-reset{background:#fff4f4;border:1px solid #f3c9c9;border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.gc-reset-t{font-size:12px;font-weight:800;color:#c0392b}
+.gc-reset-t span{font-weight:600;color:#c98;font-size:10.5px;margin-left:4px}
+.gc-reset-row{display:flex;gap:6px;margin-top:8px}
+.gcr-btn{border:none;border-radius:9px;padding:9px 6px;font-size:12px;font-weight:800;cursor:pointer;color:#fff}
+.gcr-btn.all{background:#e53935;flex:1}
+.gcr-btn.month{background:#fb8c00;flex:1}
+.gcr-btn.game{background:#8e44ad;flex:0 0 auto;padding:9px 12px}
+.gc-reset-row select{flex:1;padding:8px;border:1px solid #ddd;border-radius:9px;font-size:12px;background:#fff}
 .pl-grec{position:absolute;top:7px;right:7px;z-index:3;display:inline-flex;align-items:center;gap:4px;max-width:82%;padding:3px 7px;border-radius:11px;background:linear-gradient(180deg,#fff6d8 0%,#ffe9a0 32%,#f5c34b 52%,#e8ad2e 68%,#ffe9a0 100%);border:1.5px solid #c8901f;box-shadow:0 2px 6px rgba(180,120,0,.4),inset 0 1px 0 rgba(255,255,255,.75);overflow:hidden}
 .pl-grec::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-18deg);animation:grecSweep 3.2s ease-in-out infinite}
 @keyframes grecSweep{0%{left:-60%}55%{left:130%}100%{left:130%}}
@@ -1874,6 +1883,7 @@ window.gameCfgOpen=function(){
   var prizes=Array.isArray(cfg.prizes)&&cfg.prizes.length?cfg.prizes:[{rank:'1등',item:'',cash:''},{rank:'2등',item:'',cash:''},{rank:'3등',item:'',cash:''}];
   var przHtml=prizes.map(function(p,i){return plPrzRow(i,p.rank||((i+1)+'등'),p.item||'',p.cash||'');}).join('');
   var h='<div id="gc-ov" class="ovbg" onclick="if(event.target.id===\'gc-ov\')this.remove()"><div class="plmodal" onclick="event.stopPropagation()"><div class="plmh"><div><b>🛠️ 이달의 게임 선정</b><i>선정 방식·순위 상품을 기사 전원에게 공개해요</i></div><span onclick="document.getElementById(\'gc-ov\').remove()" style="cursor:pointer;font-size:20px;color:#aaa">×</span></div><div class="plmb">';
+  h+='<div class="gc-reset"><div class="gc-reset-t">🧹 기록 초기화 <span>김소원 비번 필요</span></div><div class="gc-reset-row"><button class="gcr-btn all" onclick="gameResetAll()">🏆 최고기록 초기화</button><button class="gcr-btn month" onclick="gameResetMonth()">📅 이달 기록 초기화</button></div><div class="gc-reset-row"><select id="gcr-game">'+PL_GAMES.map(function(g){return '<option value="'+g.k+'">'+g.n+'</option>';}).join('')+'</select><button class="gcr-btn game" onclick="gameResetGame()">🎮 이 게임 초기화</button></div></div>';
   h+='<label class="fl">선정 방식</label><div class="gc-modetab"><button id="gcm-game" onclick="gcSetMode(\'game\')">🎮 게임 선정</button><button id="gcm-king" onclick="gcSetMode(\'king\')">👑 종합 게임왕</button></div>';
   h+='<div id="gc-modebox"></div>';
   h+='<div style="display:flex;gap:10px"><div style="flex:1"><label class="fl">시작일</label><input id="gc-start" type="date" value="'+(cfg.start_date||'')+'"></div><div style="flex:1"><label class="fl">종료일</label><input id="gc-end" type="date" value="'+(cfg.end_date||'')+'"></div></div>';
@@ -1901,6 +1911,10 @@ window.gcSetMode=function(m){
 };
 function plPrzRow(i,rk,item,cash){var med=PRZ_MED[i]||'🏅';return '<div class="pl-prz"><span class="rkm">'+med+'</span><input class="gc-rk" style="display:none" value="'+escN(rk)+'"><input class="gc-it" value="'+escN(item)+'" placeholder="상품(예: 치킨 기프티콘)"><input class="gc-ca" style="width:74px;flex:none" value="'+escN(cash)+'" placeholder="상금"></div>';}
 window.plAddPrz=function(){var box=document.getElementById("gc-prizes");if(!box)return;var i=box.children.length;var d=document.createElement("div");d.innerHTML=plPrzRow(i,(i+1)+'등','','');box.appendChild(d.firstElementChild);};
+window.gameResetAll=function(){_gameReset('all',null,'모든 게임의 역대 기록(전체)을 삭제할까요? 되돌릴 수 없습니다.');};
+window.gameResetMonth=function(){_gameReset('month',null,'이번 기간(이달) 기록을 삭제할까요? 되돌릴 수 없습니다.');};
+window.gameResetGame=function(){var s=document.getElementById('gcr-game');if(!s)return;var g=s.value,nm=s.options[s.selectedIndex].text;_gameReset('game',g,'['+nm+'] 게임의 역대 기록을 삭제할까요? 되돌릴 수 없습니다.');};
+async function _gameReset(scope,game,msg){if(!confirm(msg))return;var pw=prompt('김소원 비밀번호를 입력하세요');if(!pw)return;try{var r=await rpc('game_reset',{p_token:S.token,p_scope:scope,p_pw:pw,p_game:game});var n=(r&&(r.deleted!=null))?(r.deleted+'건 삭제'):'완료';alert('✅ 초기화 '+n);var o=document.getElementById('gc-ov');if(o)o.remove();loadPlay();}catch(e){var m=(e&&e.message)||String(e);if(/bad_password/.test(m))alert('❌ 비밀번호가 올바르지 않습니다.');else if(/invalid_or_expired_session/.test(m))alert('세션이 만료됐어요. 새로고침 후 다시 시도하세요.');else alert('초기화 실패: '+m);}}
 window.gameCfgDelete=async function(){if(!confirm('이달의 게임 선정을 초기화할까요?'))return;try{await rpc("admin_set_game_config",{p_token:S.token,p_method:'종합 게임왕',p_start:null,p_end:null,p_prizes:[],p_exclude_admin:true,p_footer:'상품, 상금은 교환 불가 !',p_public:true,p_featured:'',p_mode:'king'});var o=document.getElementById("gc-ov");if(o)o.remove();loadPlay();}catch(e){alert(e.message);}};
 window.gameCfgSave=async function(){
   var prz=[].slice.call(document.querySelectorAll("#gc-prizes .pl-prz")).map(function(row){return {rank:row.querySelector(".gc-rk").value.trim(),item:row.querySelector(".gc-it").value.trim(),cash:row.querySelector(".gc-ca").value.trim()};}).filter(function(p){return p.item||p.cash;});
