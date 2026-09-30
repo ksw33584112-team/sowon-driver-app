@@ -585,6 +585,7 @@ td.dae{background:#c79a1e}td.chg{background:#7e57c2}td.tea{background:#e8862e}td
 .gcr-btn.month{background:#fb8c00;flex:1}
 .gcr-btn.game{background:#8e44ad;flex:0 0 auto;padding:9px 12px}
 .gc-reset-row select{flex:1;padding:8px;border:1px solid #ddd;border-radius:9px;font-size:12px;background:#fff}
+.pl-grdur{margin-top:6px;display:inline-block;font-size:10px;font-weight:800;color:#fff;background:rgba(0,0,0,.22);border-radius:7px;padding:3px 8px}
 .pl-grec{position:absolute;top:7px;right:7px;z-index:3;display:inline-flex;align-items:center;gap:4px;max-width:82%;padding:3px 7px;border-radius:11px;background:linear-gradient(180deg,#fff6d8 0%,#ffe9a0 32%,#f5c34b 52%,#e8ad2e 68%,#ffe9a0 100%);border:1.5px solid #c8901f;box-shadow:0 2px 6px rgba(180,120,0,.4),inset 0 1px 0 rgba(255,255,255,.75);overflow:hidden}
 .pl-grec::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-18deg);animation:grecSweep 3.2s ease-in-out infinite}
 @keyframes grecSweep{0%{left:-60%}55%{left:130%}100%{left:130%}}
@@ -1791,6 +1792,7 @@ var PL_GAMES=[
  {k:"jump",   n:"무한 점프",  e:"⬆️", d:"발판을 밟고 끝없이 올라가요", g:"linear-gradient(135deg,#5e35b1,#9575cd)"}
 ];
 function plGame(k){return PL_GAMES.find(function(g){return g.k===k;});}
+function _durTxt(s){s=parseInt(s||0);if(!s)return '';var m=Math.floor(s/60),ss=s%60;return m?(m+'분'+(ss?(' '+ss+'초'):'')):(ss+'초');}
 window.__PLAY=null;
 async function loadPlay(){
   var box=$("#play-body");box.innerHTML='<div class="center">불러오는 중…</div>';
@@ -1819,6 +1821,7 @@ async function loadPlay(){
     h+='<div class="pl-gcard'+(feat?' feat':'')+'" style="background:'+g.g+'" onclick="openGame(\''+g.k+'\')">'+(feat?'<div class="pl-gfe">🔥 HOT</div>':'');
     if(rec)h+='<div class="pl-grec"><span class="pgr-lab">최고기록</span><span class="pgr-cr">👑</span><b class="pgr-nm">'+escN(rec.name)+'</b><i class="pgr-sc">'+ghFmtScore(g.k,rec.score)+'</i><span class="pgr-sp">✦</span></div>';
     h+='<div class="pl-gemo">'+g.e+'</div><div class="pl-gnm">'+g.n+'</div><div class="pl-gdesc">'+g.d+'</div>';
+    if(rec)h+='<div class="pl-grdur">⏱ 최고기록 소요 '+(rec.dur?_durTxt(rec.dur):'측정 불가')+'</div>';
     if(top.length){h+='<div class="pl-gtops">';top.forEach(function(p,i){h+='<div class="pl-gtr"><span'+(i===0?' class="gm1"':'')+'>'+GMED[i]+'</span><b>'+escN(p.name)+'</b><i>'+ghFmtScore(g.k,p.score)+'</i></div>';});h+='</div>';}
     else{h+='<div class="pl-gwait">랭킹 대기중 · 1등 도전! 🏆</div>';}
     h+='</div>';
