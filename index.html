@@ -1534,8 +1534,8 @@ async function uploadPhoto(f){
   if(!r.ok)throw new Error("사진 업로드 실패");
   return SUPABASE_URL+"/storage/v1/object/public/pback-images/"+p;
 }
-function pbCycle(d){d=(d instanceof Date)?d:new Date(String(d).slice(0,10)+"T00:00");var y=d.getFullYear(),m=d.getMonth();if(d.getDate()>=26){m+=1;if(m>11){m=0;y+=1;}}return y+"-"+String(m+1).padStart(2,"0");}
-function pbPeriod(){var d=kstNow();var y=d.getFullYear(),m=d.getMonth();var last=new Date(y,m+1,0).getDate();if(d.getDate()>=last){m+=1;if(m>11){m=0;y+=1;}}return y+"-"+String(m+1).padStart(2,"0");}
+function pbCycle(d){d=(d instanceof Date)?d:new Date(String(d).slice(0,10)+"T00:00");return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+function pbPeriod(){var d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
 /* 프백 소명 → 구글폼(서베이) 자동전송 (관리자 승인 시) */
 var PB_FORM={url:"",defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",company:"소원물류",phone:"01071398602",entry:{company:"482875263",phone:"779622344",wave:"1389640317",date:"954374004",camp:"358739403",route:"380559549",reason:"895085804",confirm:"1853853931"},waveMap:{"주간":"WAVE 2","야간":"WAVE 1"},confirmVal:"확인"};
 async function pbFormSubmit(o){
