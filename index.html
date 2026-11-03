@@ -1073,7 +1073,7 @@ async function homeAdminStat(){
   const el=$("#hm-stat");if(!el)return;
   let drivers="–",pending="–";
   try{const d=await rpc("admin_list_drivers",{p_token:S.token});drivers=d.length;}catch(e){}
-  try{const pb=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});pending=pb.pending_cnt||0;}catch(e){pending=0;}
+  try{const pb=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbViewP()});pending=pb.pending_cnt||0;}catch(e){pending=0;}
   el.innerHTML='<div class="hs" onclick="switchView(\'pback\')"><div class="hs-n">'+pending+'</div><div class="hs-l">승인 대기</div></div><div class="hs hs-mid" onclick="switchView(\'set\')"><div class="hs-n">'+drivers+'</div><div class="hs-l">활성 기사</div></div><div class="hs" onclick="switchView(\'sched\')"><div class="hs-n">🗓️</div><div class="hs-l">스케줄</div></div>';
 }
 /* 스케줄 */
@@ -1536,6 +1536,11 @@ async function uploadPhoto(f){
 }
 function pbCycle(d){d=(d instanceof Date)?d:new Date(String(d).slice(0,10)+"T00:00");return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
 function pbPeriod(){var d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+window.__PB_PERIOD=null;
+function pbDefaultP(){var d=kstNow();if(d.getDate()<=10){var p=new Date(d.getFullYear(),d.getMonth()-1,1);return p.getFullYear()+"-"+String(p.getMonth()+1).padStart(2,"0");}return pbPeriod();}
+function pbViewP(){return window.__PB_PERIOD||pbDefaultP();}
+function pbShiftMonth(n){var s=(window.__PB_PERIOD||pbDefaultP()).split("-");var dd=new Date(+s[0],+s[1]-1+n,1);window.__PB_PERIOD=dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,"0");loadPback();}
+function pbNav(){var p=pbViewP();return '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 10px"><button onclick="pbShiftMonth(-1)" style="border:0.5px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 13px;font-size:15px;cursor:pointer">\u25C0</button><b style="font-size:15px;min-width:90px;text-align:center">'+p+'</b><button onclick="pbShiftMonth(1)" style="border:0.5px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 13px;font-size:15px;cursor:pointer">\u25B6</button></div>';}
 /* 프백 소명 → 구글폼(서베이) 자동전송 (관리자 승인 시) */
 var PB_FORM={url:"",defaultUrl:"https://docs.google.com/forms/d/e/1FAIpQLSdTG3_eJRWqvzi0xsgDcQ3mrv1j9gGo91zQpfF8w9IYZi7Buw/viewform",company:"소원물류",phone:"01071398602",entry:{company:"482875263",phone:"779622344",wave:"1389640317",date:"954374004",camp:"358739403",route:"380559549",reason:"895085804",confirm:"1853853931"},waveMap:{"주간":"WAVE 2","야간":"WAVE 1"},confirmVal:"확인"};
 async function pbFormSubmit(o){
@@ -1556,14 +1561,14 @@ function pbStatusPill(st){var m={"미작성":["p-todo","미작성"],"작성완�
 var __PB_TAB="미작성",__PB_MY=[],__PB_DASH=null,__PB_MODE="승인";
 async function loadPback(){
   if(IS_ADMIN()){
-    try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbPeriod()})||[];}catch(e){__PB_MY=[];}
+    try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbViewP()})||[];}catch(e){__PB_MY=[];}
     if(__PB_MY.length&&window.__PB_SELF){$("#pb-admin").style.display="none";$("#pb-driver").style.display="block";renderMyList();}
     else{$("#pb-driver").style.display="none";$("#pb-admin").style.display="block";renderPbackAdmin();}
     return;
   }
   $("#pb-driver").style.display="block";$("#pb-admin").style.display="none";
   $("#pb-driver").innerHTML='<div class="center">불러오는 중…</div>';
-  try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbPeriod()})||[];renderMyList();}
+  try{__PB_MY=await rpc("list_my_pback",{p_token:S.token,p_period:pbViewP()})||[];renderMyList();}
   catch(e){$("#pb-driver").innerHTML='<div class="center">'+e.message+'</div>';}
 }
 window.pbSelfToggle=function(self){window.__PB_SELF=self;loadPback();};
@@ -1680,12 +1685,12 @@ window.pbExcelDown=async function(){
 async function renderPbackAdmin(){
   const box=$("#pb-admin");box.innerHTML='<div class="center">불러오는 중…</div>';
   try{
-    const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbPeriod()});
+    const d=await rpc("admin_pback_dashboard",{p_token:S.token,p_period:pbViewP()});
     __PB_DASH=d;const cfg=d.config||{};PB_FORM.url=cfg.form_url||"";if(cfg.submit_mode)__PB_MODE=cfg.submit_mode;
     try{var _pc=await rpc("pback_get_cfg",{p_token:S.token,p_period:pbPeriod()});if(_pc){window.__PBCFG=_pc;if(_pc.form_url)PB_FORM.url=_pc.form_url;if(_pc.company)PB_FORM.company=_pc.company;if(_pc.phone)PB_FORM.phone=_pc.phone;cfg.form_url=PB_FORM.url;cfg.company=PB_FORM.company;cfg.phone=PB_FORM.phone;}}catch(e){}
     var ns=d.not_submitted||[],pend=d.pending||[],done=d.submitted||[],imp=d.impossible||[];
     let h=pbSelfBar()+'<div class="admnav"><b>🧾 프백 소명 · 관리자</b><span style="font-size:11px;color:#98a3b3">'+d.period+'</span></div>';
-    h+=lcUpBar('pback');
+    h+=pbNav();h+=lcUpBar('pback');
     h+=pbDeadlineBanner();
     h+='<div style="margin:8px 0"><button onclick="pbExcelDown()" style="width:100%;background:linear-gradient(135deg,#1f7a4d,#15663f);color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:800;cursor:pointer">📥 소명 엑셀 다운로드 <span style="font-weight:600;opacity:.85">(스케줄 프로그램 양식)</span></button></div>';
     h+='<div class="admstat pb-stat"><div class="s"><div class="l">대상</div><div class="v">'+(d.target_cnt||0)+'</div></div><div class="s"><div class="l">제출완료</div><div class="v">'+(d.submitted_cnt||0)+'</div></div><div class="s"><div class="l">소명불가</div><div class="v">'+(d.impossible_cnt||0)+'</div></div><div class="s main" onclick="pbToggleNs()" style="cursor:pointer"><div class="l">미제출 ▾</div><div class="v">'+(d.not_submitted_cnt||0)+'</div></div></div>';
