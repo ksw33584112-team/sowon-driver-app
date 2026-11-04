@@ -3419,7 +3419,7 @@ window.scIsNew=function(rt,d){var s=window.__SCNEW&&window.__SCNEW.set;if(!s)ret
 
   /* ---- 세션 토큰/기간 안전 접근 ---- */
   function tok(){ try{ if(typeof S!=='undefined' && S && S.token) return S.token; }catch(e){} try{ if(window.S&&window.S.token) return window.S.token; }catch(e){} return null; }
-  function period(){ try{ if(typeof pbPeriod==='function') return pbPeriod(); }catch(e){} try{ return window.__PB_DASH&&window.__PB_DASH.period; }catch(e){} return ''; }
+  function period(){ try{ if(typeof pbViewP==='function') return pbViewP(); }catch(e){} try{ if(typeof pbPeriod==='function') return pbPeriod(); }catch(e){} try{ return window.__PB_DASH&&window.__PB_DASH.period; }catch(e){} return ''; }
   function callRpc(fn,args){ if(typeof rpc==='function') return rpc(fn,args); if(window.rpc) return window.rpc(fn,args); return Promise.reject('no rpc'); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 
