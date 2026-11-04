@@ -1534,11 +1534,11 @@ async function uploadPhoto(f){
   if(!r.ok)throw new Error("사진 업로드 실패");
   return SUPABASE_URL+"/storage/v1/object/public/pback-images/"+p;
 }
-function pbCycle(d){d=(d instanceof Date)?d:new Date(String(d).slice(0,10)+"T00:00");return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
-function pbPeriod(){var d=kstNow();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");}
+function pbCycle(d){d=(d instanceof Date)?d:new Date(String(d).slice(0,10)+"T00:00");var y=d.getFullYear(),m=d.getMonth();if(d.getDate()>=26){m+=1;if(m>11){m=0;y+=1;}}return y+"-"+String(m+1).padStart(2,"0");}
+function pbPeriod(){return pbCycle(kstNow());}
 window.__PB_PERIOD=null;
 function pbDefaultP(){var d=kstNow();if(d.getDate()<=10){var p=new Date(d.getFullYear(),d.getMonth()-1,1);return p.getFullYear()+"-"+String(p.getMonth()+1).padStart(2,"0");}return pbPeriod();}
-function pbViewP(){return window.__PB_PERIOD||pbDefaultP();}
+function pbViewP(){return window.__PB_PERIOD||pbPeriod();}
 function pbShiftMonth(n){var s=(window.__PB_PERIOD||pbDefaultP()).split("-");var dd=new Date(+s[0],+s[1]-1+n,1);window.__PB_PERIOD=dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,"0");loadPback();}
 function pbNav(){var p=pbViewP();return '<div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0 10px"><button onclick="pbShiftMonth(-1)" style="border:0.5px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 13px;font-size:15px;cursor:pointer">\u25C0</button><b style="font-size:15px;min-width:90px;text-align:center">'+p+'</b><button onclick="pbShiftMonth(1)" style="border:0.5px solid #cbd5e1;background:#fff;border-radius:8px;padding:6px 13px;font-size:15px;cursor:pointer">\u25B6</button></div>';}
 /* 프백 소명 → 구글폼(서베이) 자동전송 (관리자 승인 시) */
